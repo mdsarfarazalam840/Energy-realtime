@@ -58,28 +58,28 @@ def fetch_entsoe():
 
     client = EntsoePandasClient(api_key=api_key)
     
-    # --- FIX STARTS HERE ---
-    # Original code (will cause errors):
-    # end = datetime.now(timezone.utc)
-    # start = end - timedelta(hours=2)
+    # 1. Generate native datetime first
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(hours=2)
+
+    # 2. Force conversion to pd.Timestamp with timezone
+    end = pd.Timestamp(end_dt)
+    start = pd.Timestamp(start_dt)
     
-    # Corrected code: Use pd.Timestamp and specify timezone
-    end = pd.Timestamp.now(tz='UTC')
-    start = end - pd.Timedelta(hours=2)
-    
-    # Fetch recent 2 hours of data
-    end = datetime.now(timezone.utc)
-    start = end - timedelta(hours=2)
-    
-    # Print type for debugging (you can view it in the GitHub Actions logs)
+    # Ensure timezone is not lost (safety check)
+    if start.tzinfo is None:
+        start = start.tz_localize('UTC')
+    if end.tzinfo is None:
+        end = end.tz_localize('UTC')
+
+    # 3. Print debug information
     print(f"Debug - start type: {type(start)}, tz: {start.tz}")
     print(f"Debug - end type: {type(end)}, tz: {end.tz}")
 
     try:
-        # Note: The country code for DE-LU is 'DE_LU'
+        # Pass the strongly validated timestamp
         prices = client.query_day_ahead_prices("DE_LU", start=start, end=end)
         if not prices.empty:
-            # Get the latest record
             latest_ts = prices.index[-1]
             latest_price = prices.iloc[-1]
             msg = {
