@@ -2,6 +2,7 @@ import os, json, requests
 from datetime import datetime, timezone, timedelta
 from confluent_kafka import Producer
 from entsoe import EntsoePandasClient
+import pandas as pd
 
 # --- Kafka Configuration ---
 conf = {
@@ -55,6 +56,16 @@ def fetch_entsoe():
         return
 
     client = EntsoePandasClient(api_key=api_key)
+    
+    # --- FIX STARTS HERE ---
+    # Original code (will cause errors):
+    # end = datetime.now(timezone.utc)
+    # start = end - timedelta(hours=2)
+    
+    # Corrected code: Use pd.Timestamp and specify timezone
+    end = pd.Timestamp.now(tz='UTC')
+    start = end - pd.Timedelta(hours=2)
+    
     # Fetch recent 2 hours of data
     end = datetime.now(timezone.utc)
     start = end - timedelta(hours=2)
