@@ -1,0 +1,23 @@
+name: Dual Energy Data to Kafka
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install requests confluent-kafka entsoe-py
+      - name: Run Dual Producer
+        run: python producer_dual.py
+        env:
+          KAFKA_BOOTSTRAP: ${{ secrets.KAFKA_BOOTSTRAP }}
+          KAFKA_PASSWORD: ${{ secrets.KAFKA_PASSWORD }}
+          ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
+          # KAFKA_CA_PEM: ${{ secrets.KAFKA_CA_PEM }}  # Can leave commented out temporarily

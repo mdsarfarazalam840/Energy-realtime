@@ -1,0 +1,8 @@
+resources:
+  jobs:
+    energy_kafka_job:
+      name: energy_kafka_job
+      tasks:
+      - task_key: kafka_streaming
+        notebook_task:
+          notebook_path: ../src/kafka_ingest.ipynb
