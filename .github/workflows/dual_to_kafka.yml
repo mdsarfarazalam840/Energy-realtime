@@ -19,6 +19,13 @@ jobs:
           echo "${{ secrets.KAFKA_CA_PEM }}" > aiven_ca.pem
       - name: Run Dual Producer
         run: python producer_dual.py
+      - name: Trigger Databricks Job
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.DATABRICKS_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"job_id": "913950436608512"}' \
+            https://${{ secrets.DATABRICKS_HOST }}/api/2.1/jobs/run-now
         env:
           KAFKA_BOOTSTRAP: ${{ secrets.KAFKA_BOOTSTRAP }}
           KAFKA_PASSWORD: ${{ secrets.KAFKA_PASSWORD }}
