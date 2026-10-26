@@ -1,8 +1,9 @@
 import os, json, requests
+import pandas as pd
 from datetime import datetime, timezone, timedelta
 from confluent_kafka import Producer
 from entsoe import EntsoePandasClient
-import pandas as pd
+
 
 # --- Kafka Configuration ---
 conf = {
@@ -69,6 +70,10 @@ def fetch_entsoe():
     # Fetch recent 2 hours of data
     end = datetime.now(timezone.utc)
     start = end - timedelta(hours=2)
+    
+    # Print type for debugging (you can view it in the GitHub Actions logs)
+    print(f"Debug - start type: {type(start)}, tz: {start.tz}")
+    print(f"Debug - end type: {type(end)}, tz: {end.tz}")
 
     try:
         # Note: The country code for DE-LU is 'DE_LU'
