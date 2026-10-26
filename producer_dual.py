@@ -11,6 +11,7 @@ conf = {
     'sasl.username': 'avnadmin',
     'sasl.password': os.environ["KAFKA_PASSWORD"],
     # 'ssl.ca.pem': os.environ["KAFKA_CA_PEM"],  <-- Remove this line to avoid permission error
+     'ssl.ca.location': 'aiven_ca.pem',   # <--- New line: point to the local CA file
 }
 producer = Producer(conf)
 topic = "energy-prices"

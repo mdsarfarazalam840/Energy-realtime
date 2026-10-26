@@ -14,6 +14,9 @@ jobs:
           python-version: '3.11'
       - name: Install dependencies
         run: pip install requests confluent-kafka entsoe-py
+      - name: Write CA Certificate to File
+        run: |
+          echo "${{ secrets.KAFKA_CA_PEM }}" > aiven_ca.pem
       - name: Run Dual Producer
         run: python producer_dual.py
         env:
