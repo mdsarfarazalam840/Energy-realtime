@@ -1,0 +1,22 @@
+name: Elecz to Kafka Producer
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # Runs every 30 minutes
+  workflow_dispatch:          # Allows you to manually trigger it
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install requests confluent-kafka
+      - name: Run Producer
+        run: python elecz_producer.py
+        env:
+          KAFKA_BOOTSTRAP: ${{ secrets.KAFKA_BOOTSTRAP }}
+          KAFKA_PASSWORD: ${{ secrets.KAFKA_PASSWORD }}
+          KAFKA_CA_PEM: ${{ secrets.KAFKA_CA_PEM }}
