@@ -26,7 +26,7 @@ export function parseSnapshot(raw) {
     if (!Number.isFinite(t) || !Number.isFinite(p)) continue;
     const s = String(row.s || "unknown");
     const z = String(row.z || "unknown");
-    const key = `${s}|${t}`;
+    const key = `${s}|${t}|${z}`;
     if (seen.has(key)) continue;
     seen.add(key);
     points.push({ t, p, z, s });
