@@ -6,13 +6,14 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { laneLabel, laneOf, pointKey } from "./data.js?v=20261028-2";
+import { laneLabel, laneOf, pointKey } from "./data.js?v=20261029-2";
 
 const STAGE_WIDTH = 30;
 const MAX_HEIGHT = 13;
 const LANE_GAP = 3.4;
 const REVEAL_MS = 620;
 const STAGGER_MS = 260;
+const MAX_RENDER_BARS = 12000;
 
 const THEMES = {
   dark: {
@@ -368,8 +369,8 @@ export class PriceScene {
     if (!model) return;
 
     this.disposeBars();
-    const points = model.points || [];
-    if (!points.length) {
+    const sourcePoints = model.points || [];
+    if (!sourcePoints.length) {
       this.layoutState = null;
       this.laneSpan = 0;
       for (const label of this.labels) label.element.remove();
@@ -380,6 +381,10 @@ export class PriceScene {
       this.updateOutline();
       return;
     }
+    // Drawing one column per reading stops being meaningful long before the
+    // 80k-row contract cap. Sample per lane for the 3D stage only; KPIs,
+    // charts, and the focus panel still use every row.
+    const points = this.sampleForRender(sourcePoints);
 
     const lanes = model.lanes?.length
       ? model.lanes
@@ -453,6 +458,14 @@ export class PriceScene {
     capMesh.frustumCulled = false;
 
     const white = new THREE.Color(0xffffff);
+    const lanePalette = new Map();
+    for (const lane of lanes) lanePalette.set(lane, new THREE.Color(model.colors?.[lane] || "#9fb2cc"));
+    const scratchColor = new THREE.Color();
+    const scratchCap = new THREE.Color();
+    const scratchMatrix = new THREE.Matrix4();
+    const scratchPosition = new THREE.Vector3();
+    const scratchScale = new THREE.Vector3();
+    const scratchQuaternion = new THREE.Quaternion();
     const now = performance.now();
     const bars = [];
 
@@ -475,12 +488,12 @@ export class PriceScene {
       }
       height = Math.max(0.05, Math.min(height, MAX_HEIGHT * 1.04));
 
-      const baseColor = new THREE.Color(model.colors?.[point.l || laneOf(point)] || "#9fb2cc");
+      const baseColor = lanePalette.get(point.l || laneOf(point)) || lanePalette.get(lanes[lane]);
       const norm = Math.max(0, Math.min(1, (value - layout.domainMin) / Math.max(1e-9, layout.domainMax - layout.domainMin)));
       const lift = this.theme === "light" ? 0.02 + norm * 0.2 : 0.06 + norm * 0.34;
-      const color = baseColor.clone().lerp(white, lift);
+      const color = scratchColor.copy(baseColor).lerp(white, lift);
       const active = this.playhead == null || point.t <= this.playhead;
-      const shownColor = active ? color : color.clone().multiplyScalar(0.2);
+      const shownColor = active ? color : scratchCap.copy(color).multiplyScalar(0.2);
 
       const key = pointKey(point);
       const bar = {
@@ -495,8 +508,7 @@ export class PriceScene {
         height,
         direction,
         ratio,
-        color,
-        shownColor,
+        color: color.clone(),
         active,
         reveal: 0,
         vis: active ? 1 : 0.08,
@@ -506,20 +518,19 @@ export class PriceScene {
       this.byKey.set(key, bar);
 
       mesh.setColorAt(index, shownColor);
-      const capColor = color.clone().lerp(white, 0.5);
+      const capColor = scratchCap.copy(color).lerp(white, 0.5);
       capMesh.setColorAt(index, active ? capColor : capColor.multiplyScalar(0.2));
 
       const sx = bar.width;
       const sy = Math.max(0.001, bar.height * bar.vis * (animate ? 0.001 : 1));
       const sz = bar.depth;
-      const matrix = new THREE.Matrix4();
-      matrix.compose(
-        new THREE.Vector3(bar.x, (bar.height * bar.vis * (animate ? 0.001 : 1) * bar.direction) / 2, bar.z),
-        new THREE.Quaternion(),
-        new THREE.Vector3(sx, sy, sz)
+      scratchMatrix.compose(
+        scratchPosition.set(bar.x, (bar.height * bar.vis * (animate ? 0.001 : 1) * bar.direction) / 2, bar.z),
+        scratchQuaternion,
+        scratchScale.set(sx, sy, sz)
       );
-      mesh.setMatrixAt(index, matrix);
-      capMesh.setMatrixAt(index, matrix.clone());
+      mesh.setMatrixAt(index, scratchMatrix);
+      capMesh.setMatrixAt(index, scratchMatrix);
     }
 
     mesh.instanceColor.needsUpdate = true;
@@ -544,7 +555,7 @@ export class PriceScene {
     }
 
     // Newest reading marker on the floor.
-    const latest = points.reduce((acc, point) => (point.t > acc.t ? point : acc), points[0]);
+    const latest = sourcePoints.reduce((acc, point) => (point.t > acc.t ? point : acc), sourcePoints[0]);
     this.nowRing.visible = true;
     this.nowRing.position.x = layout.x(latest.t);
     this.nowRing.position.z = laneSpan / 2 + 1.5;
@@ -556,6 +567,29 @@ export class PriceScene {
       this.updateCameraForAspect();
       this.cameraFramed = true;
     }
+  }
+
+  /** Even per-lane decimation for the instanced mesh, capped at MAX_RENDER_BARS. */
+  sampleForRender(points) {
+    if (points.length <= MAX_RENDER_BARS) return points;
+    const counts = new Map();
+    for (const point of points) {
+      const lane = point.l || laneOf(point);
+      counts.set(lane, (counts.get(lane) || 0) + 1);
+    }
+    const lanes = Math.max(1, counts.size);
+    const perLane = Math.max(2, Math.floor(MAX_RENDER_BARS / lanes));
+    const strides = new Map();
+    for (const [lane, count] of counts) strides.set(lane, Math.max(1, Math.ceil(count / perLane)));
+    const seen = new Map();
+    const sampled = [];
+    for (const point of points) {
+      const lane = point.l || laneOf(point);
+      const index = seen.get(lane) || 0;
+      seen.set(lane, index + 1);
+      if (index % strides.get(lane) === 0) sampled.push(point);
+    }
+    return sampled;
   }
 
   layout(points, lanes) {
@@ -571,7 +605,8 @@ export class PriceScene {
       const value = point.v ?? point.p;
       if (value < domainMin) domainMin = value;
       if (value > domainMax) domainMax = value;
-      laneCounts.set(point.s, (laneCounts.get(point.s) || 0) + 1);
+      const lane = point.l || laneOf(point);
+      laneCounts.set(lane, (laneCounts.get(lane) || 0) + 1);
     }
 
     if (this.model?.domain) {
@@ -635,6 +670,8 @@ export class PriceScene {
   setPlayhead(ms) {
     this.playhead = ms;
     if (!this.bars.length) return;
+    const white = this.capWhite || (this.capWhite = new THREE.Color(0xffffff));
+    const scratch = this.capScratch || (this.capScratch = new THREE.Color());
     let changed = false;
     for (const bar of this.bars) {
       const active = ms == null || bar.point.t <= ms;
@@ -642,9 +679,9 @@ export class PriceScene {
       if (bar.active !== active) {
         bar.active = active;
         if (this.barMesh) {
-          this.barMesh.setColorAt(bar.index, active ? bar.color : bar.color.clone().multiplyScalar(0.2));
+          this.barMesh.setColorAt(bar.index, active ? bar.color : scratch.copy(bar.color).multiplyScalar(0.2));
           if (this.capMesh) {
-            const cap = bar.color.clone().lerp(new THREE.Color(0xffffff), 0.5);
+            const cap = scratch.copy(bar.color).lerp(white, 0.5);
             this.capMesh.setColorAt(bar.index, active ? cap : cap.multiplyScalar(0.2));
           }
         }

@@ -1,4 +1,4 @@
-name: Dual Energy Data to Kafka
+name: Energy Market Data to Kafka
 on:
   schedule:
     - cron: '*/30 * * * *'
@@ -23,13 +23,12 @@ jobs:
           KAFKA_BOOTSTRAP: ${{ secrets.KAFKA_BOOTSTRAP }}
           KAFKA_PASSWORD: ${{ secrets.KAFKA_PASSWORD }}
           ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
-          # Optional overrides. Leave the repository variables unset to use the
-          # built-in 48-zone list and Elecz DE spot.
+          # AEMO's public NEMWeb feed requires no API key. Leave AEMO_REGIONS
+          # unset to collect the five NEM regions on every scheduled run.
+          AEMO_REGIONS: ${{ vars.AEMO_REGIONS }}
           ENTSOE_ZONES: ${{ vars.ENTSOE_ZONES }}
           ELECZ_ZONES: ${{ vars.ELECZ_ZONES }}
           ENTSOE_LOOKBACK_HOURS: ${{ vars.ENTSOE_LOOKBACK_HOURS }}
-          # KAFKA_CA_PEM: ${{ secrets.KAFKA_CA_PEM }}  # Can leave commented out temporarily
-          
       - name: Trigger Databricks Job
         run: |
           curl -X POST \

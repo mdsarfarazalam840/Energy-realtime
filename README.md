@@ -1,12 +1,12 @@
 # VoltScope
 
-**Live 3D energy price intelligence for Europe's day-ahead markets.**
+**Live 3D energy price intelligence for Australia's NEM and Europe's day-ahead markets.**
 
-VoltScope turns two public electricity price feeds into a durable lakehouse table and a public, browser-safe 3D dashboard. ENTSO-E day-ahead prices cover 48 bidding zones across 34 countries; Elecz adds DE spot. Market data arrives through GitHub Actions and Kafka, lands in Delta Lake through Databricks, and reaches GitHub Pages as a compact static snapshot. No Databricks token ever reaches the browser.
+VoltScope collects AEMO five-minute dispatch prices for Australia's five National Electricity Market regions from the free, public NEMWeb feed, alongside ENTSO-E day-ahead prices and Elecz DE spot. GitHub Actions sends normalized readings through Kafka into Databricks Delta Lake, then publishes a compact static snapshot to GitHub Pages. No Databricks token ever reaches the browser.
 
 [![Live dashboard](https://img.shields.io/badge/dashboard-live-4cd7ff?style=flat-square)](https://mdsaifedu.eu.cc/Energy-realtime/)
 [![Publish Dashboard Snapshot](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/publish_dashboard.yml/badge.svg?branch=main)](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/publish_dashboard.yml)
-[![Dual Energy Data to Kafka](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/dual_to_kafka.yml/badge.svg?branch=main)](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/dual_to_kafka.yml)
+[![Energy Market Data to Kafka](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/dual_to_kafka.yml/badge.svg?branch=main)](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/dual_to_kafka.yml)
 [![Python](https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)](#tech-stack)
 [![Databricks](https://img.shields.io/badge/Databricks-DAB-FF3621?style=flat-square&logo=databricks&logoColor=white)](#tech-stack)
 [![Three.js](https://img.shields.io/badge/Three.js-r169-000000?style=flat-square&logo=three.js&logoColor=white)](#tech-stack)
@@ -45,9 +45,9 @@ VoltScope turns two public electricity price feeds into a durable lakehouse tabl
 
 ## Overview
 
-Europe's day-ahead and spot electricity markets publish the same physical quantity through different APIs, at different cadences, with different schemas. VoltScope demonstrates a small, production-shaped path from those feeds to a public product:
+Australia's NEM dispatch and Europe's day-ahead and spot electricity markets publish prices through different feeds, at different cadences, and with different schemas. VoltScope demonstrates a small, production-shaped path from those feeds to a public product:
 
-1. **Collect** Elecz DE spot prices and ENTSO-E day-ahead prices for 48 bidding zones across 34 countries.
+1. **Collect** AEMO five-minute dispatch prices for NSW, Queensland, Victoria, South Australia, and Tasmania, plus ENTSO-E day-ahead prices and Elecz DE spot.
 2. **Buffer** every feed on one Kafka topic with TLS and SCRAM authentication.
 3. **Land** parsed JSON in a Delta table through Databricks Structured Streaming.
 4. **Publish** a compact, deduplicated JSON snapshot through the Databricks SQL Statement API.
@@ -109,8 +109,10 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 
 ### Pipeline
 
-- **Multi-zone feeds** in one producer: ENTSO-E day-ahead for 48 bidding zones across 34 countries plus Elecz DE spot.
-- **Zone registry**: one `ZoneConfig` line per market, with aliases such as `SE1` / `SE_1` and an `ENTSOE_ZONES` override.
+- **Public AEMO feed**: NEMWeb five-minute dispatch prices for all five NEM regions, no API key or signup required.
+- **Multi-zone feeds** in one producer: AEMO NEM dispatch, ENTSO-E day-ahead for 48 bidding zones across 34 countries, and Elecz DE spot.
+- **One price scale**: AEMO's native AUD/MWh is converted to EUR/MWh using the daily public Frankfurter FX rate; native price and conversion rate are retained in Kafka.
+- **Zone registry**: market zones and source mappings are centralized, with `AEMO_REGIONS`, `ENTSOE_ZONES`, and `ELECZ_ZONES` overrides.
 - **Per-zone isolation**: a failed fetch logs and skips that zone; the other zones still publish.
 - **Kafka security**: SASL_SSL with SCRAM-SHA-256 and a CA certificate.
 - **Databricks secret scope** for the Kafka password; no password in the notebook.
@@ -134,6 +136,7 @@ flowchart LR
     direction TB
     E["ENTSO-E<br/>48 day-ahead zones"]
     Z["Elecz<br/>DE spot"]
+    A["AEMO NEMWeb<br/>5-min dispatch"]
   end
 
   subgraph CICD["GitHub Actions"]
@@ -144,16 +147,17 @@ flowchart LR
 
   K[("Aiven Kafka<br/>energy-prices")]
   D["Databricks job<br/>Spark Structured Streaming"]
-  T[("Delta Lake<br/>workspace.default.energy_prices_realtime")]
+  T[("Delta Lake<br/>energy_prices_realtime")]
   S[("docs/data/energy.json<br/>schema v1")]
   PAGES["GitHub Pages<br/>main /docs"]
   UI["VoltScope<br/>Three.js dashboard"]
 
   E -->|"day-ahead"| P
   Z -->|"spot"| P
+  A -->|"5-minute regional RRP"| P
   P -->|"SASL_SSL produce"| K
   K -->|"readStream"| D
-  D -->|"append"| T
+  D -->|"price append"| T
   T -->|"SQL Statement API"| X
   X -->|"atomic commit"| S
   S -->|"Pages build"| PAGES
@@ -168,9 +172,9 @@ flowchart LR
 
 | Component | Source | Responsibility |
 |---|---|---|
-| Dual producer | `producer_dual.py` | Fetch ENTSO-E day-ahead for 48 zones and Elecz DE spot, normalize to one JSON contract, produce to Kafka |
-| Kafka topic | Aiven Kafka | Durable buffer for every zone; topic `energy-prices` |
-| Databricks job | `src/kafka_ingest.ipynb`, `resources/energy_job.yml` | Read Kafka with Structured Streaming, parse JSON, append to Delta |
+| Market producer | `producer_dual.py` | Fetch AEMO five-minute NEM dispatch prices, ENTSO-E day-ahead prices, and Elecz DE spot; normalize and produce to Kafka |
+| Kafka topic | Aiven Kafka | Durable buffer for all market price readings; topic `energy-prices` |
+| Databricks job | `src/kafka_ingest.ipynb`, `resources/energy_job.yml` | Read Kafka with Structured Streaming and append price rows to Delta |
 | Delta table | `workspace.default.energy_prices_realtime` | Append-only price history in Unity Catalog |
 | Checkpoint volume | `/Volumes/workspace/default/energy_realtime/checkpoints` | Streaming checkpoint state |
 | CA volume | `/Volumes/workspace/default/energy_realtime/aiven_ca.pem` | Kafka TLS trust material for Databricks |
@@ -181,7 +185,7 @@ flowchart LR
 
 ### Trust boundaries
 
-- **Market APIs → GitHub Actions**: public HTTPS APIs; the only secret is the ENTSO-E API key.
+- **Market APIs → GitHub Actions**: public HTTPS feeds; AEMO NEMWeb requires no key, while the optional ENTSO-E feed uses its API key.
 - **GitHub Actions → Kafka**: SASL_SSL, SCRAM-SHA-256, CA file written from `KAFKA_CA_PEM`.
 - **GitHub Actions → Databricks**: bearer token from `DATABRICKS_TOKEN`, warehouse ID from a repository variable.
 - **Databricks → Kafka**: password read from the `kafka-scope` secret scope, not stored in the notebook.
@@ -206,7 +210,7 @@ sequenceDiagram
   participant PGS as GitHub Pages
   participant UI as Browser
 
-  SRC->>GH: ENTSO-E 48 zones + Elecz DE spot
+  SRC->>GH: AEMO five NEM regions + ENTSO-E + Elecz DE
   GH->>K: produce JSON on energy-prices
   GH->>DBX: POST /api/2.1/jobs/run-now
   DBX->>K: readStream with startingOffsets=latest
@@ -227,8 +231,8 @@ sequenceDiagram
 
 | Stage | Input | Output | Guarantee |
 |---|---|---|---|
-| Market feeds | Elecz spot API, ENTSO-E Transparency API (48 zones) | One JSON price reading per zone | Best-effort fetch per zone; a failed zone is logged and skipped |
-| Producer | Normalized messages | Kafka topic `energy-prices` | One message per zone; all zones share one schema |
+| Market feeds | AEMO NEMWeb dispatch ZIP, ENTSO-E Transparency API (48 zones), Elecz spot API | One JSON price reading per selected region/zone | Best-effort fetch per feed; a failed feed is logged and skipped |
+| Producer | Normalized messages | Kafka topic `energy-prices` | One price message per selected region/zone; shared schema |
 | Transport | Kafka topic | Consumer offsets | SASL_SSL, SCRAM-SHA-256, CA-verified TLS |
 | Ingest | Kafka JSON values | Delta rows | `availableNow` drains available offsets, then stops |
 | Storage | Append operations | `energy_prices_realtime` | Append-only history; checkpointed stream |
@@ -240,7 +244,7 @@ sequenceDiagram
 
 | Workflow | Trigger | Cadence | Purpose |
 |---|---|---|---|
-| **Dual Energy Data to Kafka** | `schedule` + `workflow_dispatch` | `*/30 * * * *` | Fetch all configured zones, produce to Kafka, trigger the Databricks job |
+| **Energy Market Data to Kafka** | `schedule` + `workflow_dispatch` | `*/30 * * * *` | Fetch configured regions/zones, produce to Kafka, trigger the Databricks job |
 | **Publish Dashboard Snapshot** | `schedule` + `workflow_dispatch` + `workflow_run` | `7,37 * * * *` | Export a fresh snapshot, commit only when the payload changed |
 
 The publish workflow waits up to 420 seconds for a row newer than the published snapshot when it is triggered by the producer workflow. If no fresh row arrives, it publishes the latest available snapshot and logs a warning. It also warns when the newest row is more than 120 minutes old.
@@ -285,30 +289,48 @@ Every zone produces one message with the same core fields. ENTSO-E messages carr
 |---|---|---|---|
 | `timestamp` | string | `2026-10-28T11:00:00+00:00` | ISO-8601, UTC |
 | `zone` | string | `FR` / `SE3` / `DE_LU` | Public bidding-zone code; Elecz uses its own label (`DE`) |
-| `price` | double | `62.41` | EUR/MWh |
-| `source` | string | `elecz` / `entsoe` | Feed identifier |
+| `price` | double | `62.41` | EUR/MWh; AEMO values are converted from AUD/MWh |
+| `source` | string | `aemo` / `elecz` / `entsoe` | Feed identifier |
 | `country` | string | `FR` | ISO country code; `DE` for `DE_LU` |
-| `market` | string | `day-ahead` / `spot` | Market label |
+| `market` | string | `dispatch` / `day-ahead` / `spot` | Market label |
 | `entsoe_code` | string | `FR` / `SE_3` | entsoe-py Area code; ENTSO-E messages only |
+
+AEMO messages retain both the normalized EUR/MWh price and source-native
+AUD/MWh value with the daily conversion rate:
+
+```json
+{
+  "timestamp": "2026-10-28T16:00:00+00:00",
+  "zone": "NSW1",
+  "price": 78.33,
+  "source": "aemo",
+  "country": "AU",
+  "market": "five-minute dispatch",
+  "price_local": 123.99,
+  "unit_local": "AUD/MWh",
+  "fx_rate": 1.583
+}
+```
 
 ### Delta table
 
-`workspace.default.energy_prices_realtime` is created by the notebook from the parsed Kafka schema.
+`workspace.default.energy_prices_realtime` is created by the notebook from the parsed Kafka schema. AEMO rows carry `source = "aemo"`, one of the five region codes in `zone`, a five-minute UTC timestamp, and prices in EUR/MWh (with the original AUD/MWh in Kafka only).
 
 | Column | Spark type | Notes |
 |---|---|---|
 | `timestamp` | `string` | Parsed from the message; cast to `TIMESTAMP` during export |
 | `zone` | `string` | Bidding zone |
 | `price` | `double` | EUR/MWh |
-| `source` | `string` | `elecz` or `entsoe` |
+| `source` | `string` | `aemo`, `elecz`, or `entsoe` |
 
 The stream writes with `outputMode("append")`, `trigger(availableNow=True)`, and a checkpoint in the Unity Catalog volume. There is no `MERGE` dedupe in the Delta write; the exporter deduplicates the snapshot by `(source, zone, timestamp)`.
 
-The notebook schema reads `timestamp`, `zone`, `price`, and `source` only. The extra `country`, `market`, and `entsoe_code` fields stay in Kafka for future enrichment and are ignored by the stream, so the Delta table needs no migration.
+The notebook schema reads `timestamp`, `zone`, `price`, and `source` only. The extra `country`, `market`, `price_local`, `unit_local`, and `fx_rate` fields stay in Kafka for future enrichment and are ignored by the stream, so the Delta table needs no migration.
+
 
 ### Supported zones
 
-`producer_dual.py` keeps one `ZoneConfig` line per market in `ZONE_REGISTRY`. The default run covers 48 ENTSO-E bidding zones across 34 countries, with Italy split into seven price zones.
+`producer_dual.py` keeps one `ZoneConfig` line per market in `ZONE_REGISTRY`. The default run collects AEMO's five NEM regions, 48 ENTSO-E bidding zones across 34 countries, and Elecz DE spot; Italy is split into seven ENTSO-E price zones.
 
 | Zone | Country | ENTSO-E code | Elecz | Market |
 |---|---|---|---|---|
@@ -360,8 +382,13 @@ The notebook schema reads `timestamp`, `zone`, `price`, and `source` only. The e
 | `IT_SICI` | IT | `IT_SICI` | - | day-ahead |
 | `IT_SARD` | IT | `IT_SARD` | - | day-ahead |
 | `IT_CALA` | IT | `IT_CALA` | - | day-ahead |
+| `NSW1` | AU | - | - | 5-minute dispatch |
+| `QLD1` | AU | - | - | 5-minute dispatch |
+| `VIC1` | AU | - | - | 5-minute dispatch |
+| `SA1` | AU | - | - | 5-minute dispatch |
+| `TAS1` | AU | - | - | 5-minute dispatch |
 
-Aliases `DE`, `DE-LU`, `SE_1`…`SE_4`, `NO_1`…`NO_5`, and `DK_1`/`DK_2` resolve to the public codes. To add a market, add one `ZoneConfig` entry and, if needed, an alias. `--list-zones` prints the current registry.
+Aliases `DE`, `DE-LU`, `SE_1`…`SE_4`, `NO_1`…`NO_5`, and `DK_1`/`DK_2` resolve to the public codes. AEMO's five NEM region codes are `NSW1`, `QLD1`, `VIC1`, `SA1`, and `TAS1`; they are all enabled by default and may be restricted with `AEMO_REGIONS`.
 
 Elecz messages keep Elecz zone labels (for example `DE` for `DE_LU`), so historical rows stay consistent with the original single-market contract.
 
@@ -385,8 +412,8 @@ Elecz reports cents per kWh in EUR for DE, so the producer multiplies by 10 to p
     "max_rows": 80000,
     "truncated": false,
     "fallback": false,
-    "sources": ["elecz", "entsoe"],
-    "zones": ["AT", "BE", "DE", "DE_LU", "DK1", "DK2", "ES", "FR", "NL", "NO1", "NO2", "NO3", "NO4", "NO5", "PL", "SE1", "SE2", "SE3", "SE4"],
+    "sources": ["aemo", "elecz", "entsoe"],
+    "zones": ["AT", "BE", "DE", "DE_LU", "NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
     "currency": "EUR/MWh",
     "first_timestamp": "2026-10-27T05:15:00Z",
     "first_timestamp_ms": 1793078100000,
@@ -396,7 +423,8 @@ Elecz reports cents per kWh in EUR for DE, so the producer multiplies by 10 to p
     "publish_ms": 2101
   },
   "points": [
-    { "t": 1793158423413, "z": "DE", "p": 20.9779, "s": "elecz" }
+    { "t": 1793158423413, "z": "DE", "p": 20.9779, "s": "elecz" },
+    { "t": 1793158500000, "z": "NSW1", "p": 78.326, "s": "aemo" }
   ]
 }
 ```
@@ -437,13 +465,14 @@ LIMIT 80000;
 
 If the window returns no rows, it falls back to the newest rows in the table. The output is written to a temporary file and atomically replaced, so a partial JSON file never reaches Pages.
 
+
 ---
 
 ## Tech stack
 
 | Layer | Technology | Role |
 |---|---|---|
-| Market data | [Elecz](https://elecz.com/), [ENTSO-E Transparency](https://transparency.entsoe.eu/) | DE spot and day-ahead prices for 48 ENTSO-E zones |
+| Market data | [AEMO NEMWeb](https://www.nemweb.com.au/REPORTS/CURRENT/DispatchIS_Reports/), [Elecz](https://elecz.com/), [ENTSO-E Transparency](https://transparency.entsoe.eu/) | Five Australian NEM dispatch regions, DE spot, 48 ENTSO-E zones |
 | Scheduling | GitHub Actions | Cron producer and snapshot publisher |
 | Transport | [Aiven Kafka](https://aiven.io/kafka) | Durable topic `energy-prices`, SASL_SSL, SCRAM-SHA-256 |
 | Processing | [Databricks](https://www.databricks.com/), Apache Spark Structured Streaming | Parse JSON and append to Delta |
@@ -502,7 +531,7 @@ Energy-realtime/
 │   ├── conftest.py                    # Databricks Connect fixtures
 │   └── sample_taxis_test.py           # template sample test
 ├── fixtures/
-├── producer_dual.py                   # multi-zone Elecz + ENTSO-E producer
+├── producer_dual.py                   # AEMO NEM + ENTSO-E + Elecz producer
 ├── databricks.yml                     # bundle, targets, variables
 ├── pyproject.toml                     # Python package and dev tools
 ├── LICENSE
@@ -519,7 +548,7 @@ Energy-realtime/
 - **[uv](https://docs.astral.sh/uv/)** for dependency and virtual environment management.
 - **Databricks CLI** authenticated to a workspace with Unity Catalog and Volumes.
 - **Aiven Kafka** or a compatible Kafka cluster with SASL_SSL and SCRAM-SHA-256.
-- **ENTSO-E API key** for day-ahead prices.
+- **ENTSO-E API key** for day-ahead prices (optional if running AEMO/Elecz only); AEMO NEMWeb prices are public and require no key.
 - A **Databricks SQL warehouse** for the exporter.
 - A GitHub repository with Actions enabled and Pages configured to serve `main` / `docs`.
 
@@ -540,7 +569,7 @@ python -m http.server 8000 --directory docs
 # open http://localhost:8000
 ```
 
-If `docs/data/energy.json` is missing or invalid, the page renders a deterministic demo snapshot and labels it as demo data. The boot overlay has a 15-second timeout so a failed CDN or module graph cannot trap the page.
+If `docs/data/energy.json` is missing or invalid, the page renders a deterministic demo snapshot and labels it as demo data. The boot overlay has a 15-second timeout so a failed module graph cannot trap the page.
 
 ### Run the producer locally
 
@@ -550,11 +579,13 @@ pip install requests confluent-kafka entsoe-py pandas
 # Write the Aiven CA certificate to aiven_ca.pem first.
 export KAFKA_BOOTSTRAP="kafka-host:port"
 export KAFKA_PASSWORD="..."
-export ENTSOE_API_KEY="..."
+export ENTSOE_API_KEY="..."  # optional for AEMO-only run
 
-# Optional: restrict the run to specific zones.
+# Optional: restrict the default five Australian NEM regions.
+export AEMO_REGIONS="NSW1,QLD1,VIC1,SA1,TAS1"
+# Optional European feeds (configured when credentials/API access are available).
 export ENTSOE_ZONES="DE_LU,FR,NL,BE,AT,ES,PL,SE1,NO1,DK1"
-export ELECZ_ZONES="DE"
+export ELECZ_ZONES="DE_LU"
 
 python producer_dual.py
 ```
@@ -564,7 +595,8 @@ On PowerShell:
 ```powershell
 $env:KAFKA_BOOTSTRAP = "kafka-host:port"
 $env:KAFKA_PASSWORD = "..."
-$env:ENTSOE_API_KEY = "..."
+$env:ENTSOE_API_KEY = "..."  # optional for AEMO-only run
+$env:AEMO_REGIONS = "NSW1,QLD1,VIC1,SA1,TAS1"
 $env:ENTSOE_ZONES = "DE_LU,FR,NL,BE,AT,ES,PL,SE1,NO1,DK1"
 python producer_dual.py
 ```
@@ -573,10 +605,12 @@ Inspect the registry and test a fetch without Kafka:
 
 ```bash
 python producer_dual.py --list-zones
-python producer_dual.py --dry-run --zone de,fr,se_1
+python producer_dual.py --dry-run --zone NSW1,QLD1,VIC1,SA1,TAS1
 ```
 
-`--dry-run` prints the resolved zones and the JSON message per zone, and does not need Kafka credentials. `--zone` accepts aliases such as `de`, `se_1`, and `dk_2`. `--lookback-hours` controls how much day-ahead history the producer reads (default 48). If `ENTSOE_API_KEY` is missing, the ENTSO-E zones log a skip and continue; Elecz still runs.
+`--dry-run` fetches the live AEMO report and prints normalized messages without Kafka credentials. `--zone` accepts comma-separated AEMO codes such as `NSW1,SA1`; `--aemo-regions all` selects the five NEM regions. AEMO data needs no key; ENTSO-E zones are skipped if `ENTSOE_API_KEY` is absent, while Elecz remains independently enabled.
+
+**AEMO smoke-test result:** the public NEMWeb current dispatch ZIP was retrieved and parsed successfully, producing one normalized message for each of NSW1, QLD1, VIC1, SA1, and TAS1. This local dry run does not publish to Kafka. Full Kafka → Databricks → GitHub Pages verification still requires the configured Kafka and Databricks credentials/services; do not treat this source test as proof that the hosted end-to-end pipeline is live. After configuring those services, dispatch **Energy Market Data to Kafka**, then confirm the resulting dashboard snapshot includes `aemo` in `meta.sources` and Australian region codes in `meta.zones`.
 
 `producer_dual.py` uses `ssl.ca.location = "aiven_ca.pem"` by default; set `KAFKA_CA_LOCATION` to override. The Kafka username defaults to the non-secret `avnadmin`; set `KAFKA_USERNAME` to change it. The password comes from `KAFKA_PASSWORD`.
 
@@ -651,7 +685,7 @@ Set these under **Settings → Secrets and variables → Actions → Secrets**.
 | `KAFKA_BOOTSTRAP` | Producer | Kafka bootstrap servers |
 | `KAFKA_PASSWORD` | Producer | SCRAM password for `avnadmin` |
 | `KAFKA_CA_PEM` | Producer | CA certificate written to `aiven_ca.pem` |
-| `ENTSOE_API_KEY` | Producer | ENTSO-E Transparency API key |
+| `ENTSOE_API_KEY` | Producer | Optional ENTSO-E Transparency API key |
 | `DATABRICKS_HOST` | Producer trigger, exporter | Workspace URL |
 | `DATABRICKS_TOKEN` | Producer trigger, exporter | Databricks personal access token |
 
@@ -663,17 +697,19 @@ Set these under **Settings → Secrets and variables → Actions → Variables**
 |---|---|---|
 | `DATABRICKS_WAREHOUSE_ID` | none, required | SQL warehouse used by the exporter |
 | `ENERGY_TABLE` | `workspace.default.energy_prices_realtime` | Table queried by the exporter |
+| `AEMO_REGIONS` | `NSW1,QLD1,VIC1,SA1,TAS1` | Comma-separated NEM regions; `all` selects all five |
 | `ENTSOE_ZONES` | 48-zone default | Comma-separated ENTSO-E zones; `all` uses the whole registry |
-| `ELECZ_ZONES` | `DE` | Comma-separated Elecz zones, or `all` |
+| `ELECZ_ZONES` | `DE_LU` | Comma-separated Elecz zones, or `all` |
 | `ENTSOE_LOOKBACK_HOURS` | `48` | Hours of day-ahead history to read |
 
 ### Producer environment
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `ENTSOE_API_KEY` | none, required for ENTSO-E | Transparency API key; Elecz still runs without it |
-| `ENTSOE_ZONES` | 48-zone default | Zones to fetch, comma-separated; `all` uses the whole registry |
-| `ELECZ_ZONES` | `DE` | Elecz zones to fetch; non-EUR prices are skipped |
+| `AEMO_REGIONS` | Five NEM regions | Public AEMO regions, comma-separated or `all`; no API key required |
+| `ENTSOE_API_KEY` | none | Optional ENTSO-E Transparency API key |
+| `ENTSOE_ZONES` | 48-zone default | Zones to fetch, comma-separated; `all` uses the registry |
+| `ELECZ_ZONES` | `DE_LU` | Elecz zones to fetch; non-EUR prices are skipped |
 | `ENTSOE_LOOKBACK_HOURS` | `48` | Hours of day-ahead history read per zone |
 | `KAFKA_BOOTSTRAP` | none, required | Kafka bootstrap servers |
 | `KAFKA_PASSWORD` | none, required | SCRAM password |
@@ -741,7 +777,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 
 | Control | Options | Notes |
 |---|---|---|
-| Sources | Elecz, ENTSO-E | At least one source stays enabled |
+| Sources | AEMO, Elecz, ENTSO-E | At least one source stays enabled |
 | Country | All countries, plus every country in the snapshot | Populated from zone prefixes |
 | Zone | All zones in the selected country, plus every zone in the snapshot (`DE_LU`, `FR`, `SE3`, ...) | Populated from the snapshot |
 | Window | 6h, 24h, 7d, 30d, All | Anchored on the newest raw row |
@@ -761,7 +797,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 
 ### Runbook
 
-1. **Check the producer workflow.** If it failed, the publish workflow will not receive a `workflow_run` event. Run **Dual Energy Data to Kafka** manually from the Actions tab.
+1. **Check the producer workflow.** If it failed, the publish workflow will not receive a `workflow_run` event. Run **Energy Market Data to Kafka** manually from the Actions tab.
 2. **Check the Databricks job run.** The producer workflow calls `/api/2.1/jobs/run-now` with the configured job id. A failed run usually means the secret scope, CA volume, checkpoint volume, or Kafka credentials are wrong.
 3. **Check the exporter run.** The publish workflow logs the table, row count, sources, latest reading, and query time in the job summary.
 4. **Check freshness.** The exporter warns when the newest row is more than 120 minutes old. The dashboard status chip also shows the snapshot age.
@@ -812,6 +848,7 @@ VoltScope is designed so the public artifact contains no credentials.
 
 - **No token in the browser.** The dashboard fetches a static JSON file. The Databricks token exists only in GitHub Actions secrets.
 - **No password in the notebook.** The Kafka password is read at runtime from the Databricks secret scope.
+- **Public AEMO feed.** NEMWeb prices require no API key; the optional ENTSO-E key lives only in GitHub Actions secrets and the browser never sees it.
 - **No secrets in git.** The repository ignores `.databricks/`, local bundle state, and Python build output. `aiven_ca.pem`, tokens, and passwords must never be committed.
 - **Identifier validation.** The exporter rejects table names that do not match `[A-Za-z0-9_.\-]+` before quoting them.
 - **Narrow write scope.** Only the publish workflow requests `contents: write`; the producer workflow does not.
@@ -848,8 +885,8 @@ ruff check .
 # List the zone registry
 python producer_dual.py --list-zones
 
-# Fetch prices for two zones without producing to Kafka
-python producer_dual.py --dry-run --zone de,fr
+# Fetch the public AEMO prices without producing to Kafka
+python producer_dual.py --dry-run --zone NSW1,SA1
 
 # Validate the exporter without writing
 python scripts/export_dashboard_data.py --dry-run
@@ -862,6 +899,28 @@ python -m http.server 8000 --directory docs
 ```
 
 Check the dashboard at desktop and mobile widths, toggle dark/light, test keyboard shortcuts, and enable **Reduce motion** in the OS to confirm the replay and reveal animations respect it.
+
+### Load and user tests
+
+The dashboard has a repeatable load and browser audit suite in `tests/load/`. It
+serves a local mirror of `docs/`, so it never touches the public Pages host.
+
+```bash
+node tests/load/serve_docs.mjs --root docs --port 8000 --workers 4
+node tests/load/load_test.mjs --users 1000 --duration 60 --scenario revalidate
+python tests/load/generate_snapshot.py --points 80000 --zones 49 --out tests/load/data/energy-80k.json
+python tests/load/ui_audit.py --snapshot tests/load/data/energy-80k.json --label 80k --soak 5
+```
+
+At 1000 concurrent users against the 80k-row snapshot, ETag revalidation holds
+p95 at 298 ms with 0.6 KB per poll (about 24.5 GB/month if those users stayed
+connected 24/7). The old cache-busting behaviour needs 878 KB per poll and about
+37.9 TB/month. The browser audit passes 64/64 checks on the published sample, a
+10k-row snapshot, and an 80k-row snapshot at desktop and mobile widths.
+
+Never run a load test against the live site; GitHub's Acceptable Use policy
+forbids unsolicited load. See [`tests/load/README.md`](tests/load/README.md) for
+scenarios, budgets, and results.
 
 ### Diagram validation
 
@@ -925,13 +984,15 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - **The public history is capped.** The exporter defaults to 30 days and 80,000 rows. Older rows remain in Delta but are not published.
 - **The dashboard is not a real-time feed.** It polls a static JSON file every 60 seconds. It is near-real-time, not streaming to the browser.
 - **The template tests are not pipeline tests.** `sample_taxis_test.py` exercises Databricks Connect, not the energy contract.
-- **The frontend depends on jsDelivr.** Three.js is pinned from a CDN via an import map. Offline or air-gapped deployments must vendor the module.
+- **Three.js is vendored, not upgraded automatically.** `docs/assets/vendor/three/` pins r169. Refresh those files together with any addon import when you upgrade.
 - **The demo fallback is synthetic.** It is deterministic and clearly labelled, but it is not market data.
 - **Elecz is DE-only by default.** Other Elecz zones return local currency (`SEK`, `DKK`, `NOK`), so the producer skips them instead of publishing a mixed-unit price.
+- **AEMO prices are FX-converted.** AEMO publishes AUD/MWh. VoltScope converts with the daily Frankfurter AUD/EUR reference rate, so FX movements affect the EUR/MWh comparison lane; the original AUD price and conversion rate remain in Kafka.
+- **NEMWeb is a file feed, not a REST API.** The producer downloads the newest zipped C/I/D/F CSV report and maps the table's declared columns; AEMO may change report schemas or availability.
 - **Older Elecz rows predate the unit conversion.** Rows written before the c/kWh to EUR/MWh fix stay on the old scale in Delta for up to 30 days.
 - **The all-zones view is dense.** Each zone gets its own lane; lane labels are collision-culled as the camera moves. Pick a country or zone for a clean view.
 - **ENTSO-E publishes day-ahead prices in the afternoon.** The producer reads a 48-hour lookback so a run still finds the latest published series.
-- **Zone coverage is opt-in.** The registry ships 48 zones across 34 countries; `ENTSOE_ZONES` limits a run and new markets need one registry line.
+- **Zone coverage is configurable.** The registry includes five AEMO NEM regions and 48 ENTSO-E bidding zones; `AEMO_REGIONS`, `ENTSOE_ZONES`, and `ELECZ_ZONES` limit a run.
 - **There is no alerting.** A failed workflow or stale snapshot is visible in Actions and the dashboard, but it does not page anyone.
 - **Upstream APIs can change.** Elecz is an undocumented spot endpoint; a response change requires a producer update.
 - **The bundle targets are account-specific.** `databricks.yml` contains a workspace host, owner, and root path. Change them before deploying elsewhere.
@@ -945,10 +1006,11 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - [ ] Replace append-only ingest with `MERGE` and a watermark for idempotent rows.
 - [ ] Add freshness alerting to GitHub Issues or a webhook.
 - [x] Add multi-zone support: 48 ENTSO-E zones across 34 countries.
+- [x] Add public AEMO five-minute NEM dispatch prices with regional lanes.
 - [x] Add per-zone lanes, country colours, and a country filter to the scene and timeline.
 - [ ] Add non-DE Elecz zones with EUR conversion.
 - [ ] Add forecast vs actual overlays and negative-price callouts.
-- [ ] Vendor Three.js for offline and air-gapped use.
+- [x] Vendor Three.js for offline and air-gapped use.
 - [ ] Add Terraform or Pulumi for Kafka, volumes, and warehouse resources.
 - [ ] Pin third-party Actions by commit SHA.
 - [ ] Add a screenshot regression check for the dashboard and diagrams.
@@ -981,6 +1043,7 @@ MIT. See [LICENSE](LICENSE).
 - [Databricks](https://www.databricks.com/) for the Declarative Automation Bundle template, Delta Lake, and the SQL Statement API.
 - [Aiven](https://aiven.io/) for managed Kafka.
 - [ENTSO-E](https://transparency.entsoe.eu/) and [Elecz](https://elecz.com/) for the public price feeds.
+- [AEMO NEMWeb](https://www.nemweb.com.au/REPORTS/CURRENT/DispatchIS_Reports/) for free public five-minute NEM dispatch reports.
 - [Three.js](https://threejs.org/) for the WebGL stage.
 - [Archify](https://github.com/tt-a1i/archify) for the interactive architecture and data-flow diagrams.
 - [diagram-design](https://github.com/cathrynlavery/diagram-design) for the editorial diagram rules used by the pipeline overview.

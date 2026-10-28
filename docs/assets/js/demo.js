@@ -37,6 +37,10 @@ export function createDemoSnapshot(now = Date.now()) {
     const eleczSpike = random() > 0.96 ? (random() - 0.55) * 34 : 0;
     const eleczPrice = 21 + eleczDaily * 12 + eleczNoise + eleczSpike;
 
+    const aemoDaily = Math.sin(((hour - 17) / 24) * Math.PI * 2);
+    const aemoNoise = (random() - 0.5) * 32;
+    const aemoPrice = 82 + aemoDaily * 38 + aemoNoise;
+
     points.push({
       t,
       z: "DE_LU",
@@ -49,6 +53,15 @@ export function createDemoSnapshot(now = Date.now()) {
       p: Math.round(eleczPrice * 100) / 100,
       s: "elecz",
     });
+    for (const [index, zone] of ["NSW1", "QLD1", "VIC1", "SA1", "TAS1"].entries()) {
+      const regionalPrice = aemoPrice + (index - 2) * 5 + (random() - 0.5) * 11;
+      points.push({
+        t: t + 8 * 60 * 1000 + index * 12000,
+        z: zone,
+        p: Math.round(regionalPrice * 100) / 100,
+        s: "aemo",
+      });
+    }
   }
 
   const latest = Math.max(...points.map((point) => point.t));
@@ -63,8 +76,8 @@ export function createDemoSnapshot(now = Date.now()) {
       window_days: days,
       row_count: points.length,
       raw_row_count: points.length,
-      sources: ["elecz", "entsoe"],
-      zones: ["DE", "DE_LU"],
+      sources: ["aemo", "elecz", "entsoe"],
+      zones: ["DE", "DE_LU", "NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
       currency: "EUR/MWh",
       first_timestamp: new Date(points[0].t).toISOString(),
       latest_timestamp: new Date(latest).toISOString(),

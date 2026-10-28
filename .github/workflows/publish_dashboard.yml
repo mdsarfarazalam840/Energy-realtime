@@ -9,7 +9,7 @@ on:
     - cron: "7,37 * * * *"
   workflow_dispatch:
   workflow_run:
-    workflows: ["Dual Energy Data to Kafka"]
+    workflows: ["Energy Market Data to Kafka"]
     types: [completed]
 
 permissions:

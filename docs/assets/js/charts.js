@@ -40,6 +40,8 @@ export class TimelineChart {
     this.drag = null;
     this.hover = null;
     this.bound = false;
+    this.frame = null;
+    this.valueDomainCache = { min: 0, max: 1 };
     this.bind();
     this.resize();
   }
@@ -73,6 +75,7 @@ export class TimelineChart {
 
   setData(data) {
     this.data = { ...this.data, ...data };
+    this.valueDomainCache = this.valueDomain();
     this.draw();
   }
 
@@ -97,20 +100,36 @@ export class TimelineChart {
 
   nearest(x, y) {
     const series = this.data.series || [];
+    const domain = this.data.domain;
+    if (!domain) return null;
+    // Only points within 30px horizontally can beat the distance threshold.
+    // Binary search keeps hover O(log n) instead of scanning 80k points on
+    // every pointer move.
+    const t0 = this.xToTime(x - 30);
+    const t1 = this.xToTime(x + 30);
     let best = null;
     let bestDistance = Infinity;
     for (const line of series) {
-      for (const point of line.points) {
+      const points = line.points;
+      let lo = 0;
+      let hi = points.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (points[mid].t < t0) lo = mid + 1;
+        else hi = mid;
+      }
+      for (let index = lo; index < points.length && points[index].t <= t1; index += 1) {
+        const point = points[index];
         const px = this.pointToX(point.t);
         const py = this.valueToY(point.v ?? point.p);
-        const distance = Math.hypot(px - x, py - y);
+        const distance = (px - x) ** 2 + (py - y) ** 2;
         if (distance < bestDistance) {
           bestDistance = distance;
           best = point;
         }
       }
     }
-    return bestDistance <= 26 ? best : null;
+    return bestDistance <= 26 * 26 ? best : null;
   }
 
   valueDomain() {
@@ -188,6 +207,16 @@ export class TimelineChart {
   }
 
   draw() {
+    // Coalesce pointer-move and playhead repaints into one frame. A drag used
+    // to schedule a full 80k-point redraw per event.
+    if (this.frame != null) return;
+    this.frame = requestAnimationFrame(() => {
+      this.frame = null;
+      this.paint();
+    });
+  }
+
+  paint() {
     if (!this.ctx) return;
     const { ctx, width, height } = this;
     const domain = this.data.domain;
@@ -210,7 +239,7 @@ export class TimelineChart {
       return;
     }
 
-    const valueDomain = this.valueDomain();
+    const valueDomain = this.valueDomainCache;
     this.data.valueDomain = valueDomain;
     const span = domain.t1 - domain.t0;
     const plotBottom = height - PAD.bottom;
@@ -274,26 +303,34 @@ export class TimelineChart {
       gradient.addColorStop(0, `${line.color}3d`);
       gradient.addColorStop(1, `${line.color}00`);
 
-      ctx.beginPath();
-      line.points.forEach((point, index) => {
-        const x = this.pointToX(point.t);
-        const y = this.valueToY(point.v ?? point.p);
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.lineTo(this.pointToX(line.points[line.points.length - 1].t), plotBottom);
-      ctx.lineTo(this.pointToX(line.points[0].t), plotBottom);
+      const points = line.points;
+      const last = points.length - 1;
+      // Draw at most ~2 points per pixel column; 80k points on a 900px chart
+      // cannot show more detail, but they can stall the frame.
+      const stride = Math.max(1, Math.ceil(points.length / Math.max(64, width * 2)));
+      const trace = () => {
+        ctx.beginPath();
+        for (let index = 0; index <= last; index += stride) {
+          const point = points[index];
+          const x = this.pointToX(point.t);
+          const y = this.valueToY(point.v ?? point.p);
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        if (last % stride !== 0) {
+          const point = points[last];
+          ctx.lineTo(this.pointToX(point.t), this.valueToY(point.v ?? point.p));
+        }
+      };
+
+      trace();
+      ctx.lineTo(this.pointToX(points[last].t), plotBottom);
+      ctx.lineTo(this.pointToX(points[0].t), plotBottom);
       ctx.closePath();
       ctx.fillStyle = gradient;
       ctx.fill();
 
-      ctx.beginPath();
-      line.points.forEach((point, index) => {
-        const x = this.pointToX(point.t);
-        const y = this.valueToY(point.v ?? point.p);
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
+      trace();
       ctx.strokeStyle = line.color;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = "round";

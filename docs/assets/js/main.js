@@ -27,9 +27,9 @@ import {
   fullLabel,
   relativeTime,
   rangeLabel,
-} from "./data.js?v=20261028-2";
-import { createDemoSnapshot } from "./demo.js?v=20261028-2";
-import { TimelineChart, DistributionChart } from "./charts.js?v=20261028-2";
+} from "./data.js?v=20261029-2";
+import { createDemoSnapshot } from "./demo.js?v=20261029-2";
+import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-2";
 
 const RANGES = {
   "6h": 6 * 3600 * 1000,
@@ -41,6 +41,8 @@ const RANGES = {
 const RANGE_KEYS = Object.keys(RANGES);
 const REFRESH_MS = 60 * 1000;
 const REPLAY_MS = 14000;
+
+const timings = {};
 
 const $ = (id) => document.getElementById(id);
 const app = $("app");
@@ -81,24 +83,29 @@ let selectedBar = null;
 let replayFrame = null;
 let replayClock = null;
 let lastPlayheadPaint = 0;
+let lastPlayheadStats = 0;
 let drawerScrim = null;
 
 /* ---------------- boot / setup ---------------- */
 
 async function boot() {
+  const started = performance.now();
+  timings.uiStart = started;
   loadPreferences();
   buildStaticUi();
   bindControls();
   initCharts();
   await initScene();
+  timings.sceneReady = performance.now();
   applyHash();
   syncFilterButtons();
 
-  const started = performance.now();
   await refresh({ initial: true });
+  timings.snapshotReady = performance.now();
   const elapsed = performance.now() - started;
   if (elapsed < 550) await new Promise((resolve) => setTimeout(resolve, 550 - elapsed));
   finishBoot();
+  timings.boot = performance.now() - started;
   setInterval(tick, 1000);
   updateStatus();
   updateCountdown();
@@ -147,7 +154,7 @@ function syncFilterButtons() {
 async function initScene() {
   const container = $("scene");
   try {
-    const module = await import("./scene.js?v=20261028-2");
+    const module = await import("./scene.js?v=20261029-2");
     scene = new module.PriceScene(container, {
       onHover: handleSceneHover,
       onSelect: handleSceneSelect,
@@ -230,12 +237,26 @@ async function refresh({ initial = false } = {}) {
   $("status").dataset.state = "loading";
 
   try {
+    const fetchStarted = performance.now();
     const snapshot = await loadSnapshot();
+    timings.fetchMs = Math.round(performance.now() - fetchStarted);
     const previousLatest = state.snapshot?.meta?.latest_timestamp_ms || 0;
+    const unchanged =
+      !initial &&
+      Boolean(state.snapshot) &&
+      previousLatest === (snapshot.meta?.latest_timestamp_ms || 0) &&
+      snapshot.points.length === state.points.length;
     state.snapshot = snapshot;
+    state.error = null;
+    if (unchanged) {
+      // The 60s poll usually returns the same snapshot. Re-rendering 80k bars
+      // for identical data freezes the page for seconds, so skip it.
+      state.demo = false;
+      updateStatus();
+          return;
+    }
     state.points = snapshot.points;
     state.demo = false;
-    state.error = null;
     hydrateSources(true);
     hideBanner();
 
@@ -249,7 +270,9 @@ async function refresh({ initial = false } = {}) {
     hideBanner();
     updateCountryOptions();
     updateZoneOptions();
+    const renderStarted = performance.now();
     updateView({ animate: true });
+    timings.renderMs = Math.round(performance.now() - renderStarted);
     $("boot").dataset.state = "ready";
   } catch (error) {
     console.warn("Snapshot load failed", error);
@@ -612,11 +635,16 @@ function updateTimeline(rows, displayRows) {
     .map(([id, points]) => ({
       id,
       color: laneColor(id, state.theme),
-      points: points.sort((a, b) => a.t - b.t),
+      // displayRows is already time-ordered; sorting each lane again is wasted work.
+      points,
     }));
 
-  const t0 = Math.min(...rows.map((point) => point.t));
-  const t1 = Math.max(...rows.map((point) => point.t));
+  let t0 = Infinity;
+  let t1 = -Infinity;
+  for (const point of rows) {
+    if (point.t < t0) t0 = point.t;
+    if (point.t > t1) t1 = point.t;
+  }
   const selected = state.selectedKey
     ? displayRows.find((point) => pointKey(point) === state.selectedKey) || null
     : null;
@@ -842,6 +870,10 @@ function paintPlayhead(force) {
   lastPlayheadPaint = now;
   scene?.setPlayhead(state.playhead);
   timelineChart?.setPlayhead(state.playhead);
+  // KPI and focus panels regroup every visible point, so refresh them at a
+  // readable cadence instead of on every animation frame.
+  if (!force && now - lastPlayheadStats < 240) return;
+  lastPlayheadStats = now;
   state.stats = summarize(applyPlayhead(state.rows, state.playhead));
   updateKpis();
   updateStatsGrid();
@@ -1400,6 +1432,7 @@ boot().catch((error) => {
 /* Support hook: inspect the live session from the console. Read-only by design. */
 window.__voltscope = {
   state,
+  timings,
   get scene() {
     return scene;
   },

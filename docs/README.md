@@ -4,7 +4,8 @@ Live site: https://mdsaifedu.eu.cc/Energy-realtime/
 (the account's Pages custom domain; the `github.io` project URL redirects here).
 
 This folder is the GitHub Pages site. It is plain HTML/CSS/JS: no build step,
-no npm install, no server. Three.js is pinned from jsDelivr.
+no npm install, no server. Three.js is vendored under
+`assets/vendor/three/` and served from the same origin.
 
 ## System diagrams
 
@@ -22,17 +23,17 @@ screenshot commands.
 ## How the data reaches the page
 
 ```
-ENTSO-E 48 zones + Elecz DE spot
+AEMO five-region NEM dispatch + ENTSO-E + Elecz
       │  producer_dual.py (GitHub Action, every 30 min)
       ▼
    Aiven Kafka  ──►  Databricks notebook (kafka_ingest.ipynb)
-                        └─► workspace.default.energy_prices_realtime
-                                  │
-                                  │  publish_dashboard.yml + Databricks SQL Statement API
-                                  ▼
-                        docs/data/energy.json  (committed snapshot)
-                                  │
-                                  ▼
+                         └─► workspace.default.energy_prices_realtime
+                                   │
+                                   │  publish_dashboard.yml + Databricks SQL Statement API
+                                   ▼
+                         docs/data/energy.json  (committed snapshot)
+                                   │
+                                   ▼
                         GitHub Pages ──► browser polls every 60 s
 ```
 
@@ -59,21 +60,24 @@ Open `index.html` through a server, not `file://`, because ES modules and
   "meta": {
     "table": "workspace.default.energy_prices_realtime",
     "row_count": 12,
-    "sources": ["elecz", "entsoe"],
-    "zones": ["DE", "DE_LU"],
+    "sources": ["aemo", "elecz", "entsoe"],
+    "zones": ["DE", "DE_LU", "NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
     "currency": "EUR/MWh",
-    "latest_timestamp": "2026-10-28T03:33:43Z",
-    "latest_timestamp_ms": 1793158423413
+    "latest_timestamp": "2026-10-28T16:00:00Z",
+    "latest_timestamp_ms": 1793203200000
   },
   "points": [
-    { "t": 1793158423413, "z": "DE", "p": 20.9779, "s": "elecz" }
+    { "t": 1793158423413, "z": "DE", "p": 20.9779, "s": "elecz" },
+    { "t": 1793203200000, "z": "NSW1", "p": 78.326, "s": "aemo" }
   ]
 }
 ```
 
 `t` is epoch milliseconds (UTC), `p` is the price, `z` is the bidding zone and
 `s` is the feed. The page flattens duplicate `(source, zone, timestamp)` tuples
-and sorts by time.
+and sorts by time. AEMO points use the five NEM region codes (`NSW1`, `QLD1`,
+`VIC1`, `SA1`, `TAS1`). Their source values are AUD/MWh and are converted to
+EUR/MWh before being written to the common price contract.
 
 ## Filters and interactions
 
@@ -104,11 +108,13 @@ Useful flags: `--wait-new-data 300` waits for a newer row before publishing,
 
 1. Add repository variable `DATABRICKS_WAREHOUSE_ID` (Settings → Secrets and
    variables → Actions → Variables).
-2. Keep secrets `DATABRICKS_HOST`, `DATABRICKS_TOKEN` (already used by the
-   producer workflow).
+2. Keep secrets `DATABRICKS_HOST` and `DATABRICKS_TOKEN`. AEMO NEMWeb and its
+   daily Frankfurter currency reference need no API credentials. Configure
+   `KAFKA_BOOTSTRAP`, `KAFKA_PASSWORD`, and `KAFKA_CA_PEM` for producer runs.
 3. Enable Pages: Settings → Pages → Source: **Deploy from a branch** →
    branch `main`, folder `/docs`.
-4. Run **Publish Dashboard Snapshot** once from the Actions tab.
+4. Run **Energy Market Data to Kafka**, then **Publish Dashboard Snapshot**
+   from the Actions tab to verify the configured ingestion and publishing path.
 
 If the export has not run yet, the page renders a deterministic demo snapshot
 and clearly labels it as demo data.

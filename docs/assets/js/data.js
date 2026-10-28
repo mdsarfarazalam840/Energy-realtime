@@ -3,6 +3,13 @@
 export const SOURCE_META = {
   elecz: { label: "Elecz", hint: "spot API", color: "#ffb24d", darkColor: "#ffb24d", lightColor: "#c97900" },
   entsoe: { label: "ENTSO-E", hint: "day-ahead", color: "#4cd7ff", darkColor: "#4cd7ff", lightColor: "#0a84b8" },
+  aemo: {
+    label: "AEMO",
+    hint: "5-minute NEM dispatch",
+    color: "#f28c45",
+    darkColor: "#f28c45",
+    lightColor: "#b84f12",
+  },
 };
 
 export const FALLBACK_META = { label: "Source", hint: "feed", color: "#9fb2cc" };
@@ -42,6 +49,7 @@ export const COUNTRY_NAMES = {
   UA: "Ukraine",
   IE: "Ireland",
   IT: "Italy",
+  AU: "Australia",
 };
 
 export function sourceMeta(id) {
@@ -57,7 +65,9 @@ export function sourceColor(id, theme = "dark") {
 
 /** ISO country code for a public zone code: `SE3` -> `SE`, `IT_NORD` -> `IT`. */
 export function countryOf(zone) {
-  const head = String(zone || "").split(/[_-]/)[0].toUpperCase();
+  const value = String(zone || "").toUpperCase();
+  if (["NSW1", "QLD1", "VIC1", "SA1", "TAS1"].includes(value)) return "AU";
+  const head = value.split(/[_-]/)[0];
   const code = head.replace(/\d+$/, "");
   return code || head || "??";
 }
@@ -83,7 +93,9 @@ export function laneParts(id) {
 
 export function laneLabel(id) {
   const { source, zone } = laneParts(id);
-  return source === "elecz" ? `Elecz ${zone}` : zone;
+  if (source === "elecz") return `Elecz ${zone}`;
+  if (source === "aemo") return `AEMO ${zone}`;
+  return zone;
 }
 
 function hueOf(value) {
@@ -121,6 +133,7 @@ function hslToHex(hue, saturation, lightness) {
 export function laneColor(id, theme = "dark") {
   const { source, zone } = laneParts(id);
   if (source === "elecz") return theme === "light" ? "#c97900" : "#ffb24d";
+  if (source === "aemo") return theme === "light" ? "#b84f12" : "#f28c45";
   const hue = hueOf(countryOf(zone));
   return theme === "light" ? hslToHex(hue, 72, 40) : hslToHex(hue, 82, 64);
 }
@@ -155,8 +168,11 @@ export async function loadSnapshot(url = "data/energy.json") {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);
   try {
-    const response = await fetch(`${url}?v=${Date.now()}`, {
-      cache: "no-store",
+    // Revalidate with ETag instead of minting a unique URL. Every open
+    // dashboard then costs one conditional request per minute (usually 304),
+    // not a full snapshot download from the origin.
+    const response = await fetch(url, {
+      cache: "no-cache",
       headers: { Accept: "application/json" },
       signal: controller.signal,
     });
@@ -232,7 +248,8 @@ export function indexPoints(points) {
 
 export function withValues(points, mode = "raw") {
   if (mode === "indexed") return indexPoints(points);
-  return points.map((point) => ({ ...point, v: point.p }));
+  // Raw mode needs no copy: every consumer already reads `v ?? p`.
+  return points;
 }
 
 export function valueDomain(points, baseline = "window") {
@@ -270,7 +287,9 @@ export function summarize(points) {
   }
 
   const lanes = [...groups.values()].map((group) => {
-    const rows = group.points.slice().sort((a, b) => a.t - b.t);
+    // Points arrive time-sorted (parseSnapshot sorts, every filter keeps order),
+    // so the per-lane sort that used to run here is redundant at 80k rows.
+    const rows = group.points;
     const values = rows.map((row) => row.v ?? row.p);
     const first = values[0];
     const last = values[values.length - 1];

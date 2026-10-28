@@ -8,3 +8,6 @@ scratch/**
 !scratch/README.md
 **/explorations/**
 **/!explorations/README.md
+
+opencode.json
+tests/
