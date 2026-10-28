@@ -6,7 +6,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { laneLabel, laneOf, pointKey } from "./data.js";
+import { laneLabel, laneOf, pointKey } from "./data.js?v=20261028-2";
 
 const STAGE_WIDTH = 30;
 const MAX_HEIGHT = 13;

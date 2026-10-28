@@ -27,9 +27,9 @@ import {
   fullLabel,
   relativeTime,
   rangeLabel,
-} from "./data.js";
-import { createDemoSnapshot } from "./demo.js";
-import { TimelineChart, DistributionChart } from "./charts.js";
+} from "./data.js?v=20261028-2";
+import { createDemoSnapshot } from "./demo.js?v=20261028-2";
+import { TimelineChart, DistributionChart } from "./charts.js?v=20261028-2";
 
 const RANGES = {
   "6h": 6 * 3600 * 1000,
@@ -147,7 +147,7 @@ function syncFilterButtons() {
 async function initScene() {
   const container = $("scene");
   try {
-    const module = await import("./scene.js");
+    const module = await import("./scene.js?v=20261028-2");
     scene = new module.PriceScene(container, {
       onHover: handleSceneHover,
       onSelect: handleSceneSelect,
