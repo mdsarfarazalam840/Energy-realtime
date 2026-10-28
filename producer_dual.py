@@ -216,20 +216,9 @@ def fetch_elecz_zone(zone: str) -> dict[str, Any] | None:
     if price is None:
         print(f"Elecz response format unexpected for {zone}: {data}")
         return None
-    price = float(price)
-    if not math.isfinite(price):
-        print(f"Elecz returned a non-finite price for {zone}; skipping.")
-        return None
 
-    # The Elecz contract is EUR/MWh. Other zones report local currency units
-    # (for example SEK ore/kWh), so reject them instead of publishing a price
-    # with the wrong unit. Set ELECZ_ALLOW_NON_EUR=1 only if you add conversion.
-    currency = str(data.get("currency") or "").upper()
-    if currency and currency != "EUR" and os.environ.get("ELECZ_ALLOW_NON_EUR") != "1":
-        print(
-            f"Elecz {zone} returned {currency} ({data.get('unit')}); "
-            "skipping to keep the EUR/MWh contract. Set ELECZ_ALLOW_NON_EUR=1 to override."
-        )
+    price_eur_mwh = elecz_price_to_eur_mwh(zone, float(price), data)
+    if price_eur_mwh is None:
         return None
 
     timestamp = data.get("timestamp") or datetime.now(timezone.utc).isoformat()
@@ -238,11 +227,50 @@ def fetch_elecz_zone(zone: str) -> dict[str, Any] | None:
         # Elecz keeps its own zone label (DE), which preserves the historical
         # contract while ENTSO-E publishes the bidding zone (DE_LU).
         "zone": cfg.elecz,
-        "price": float(price),
+        "price": price_eur_mwh,
         "source": "elecz",
         "country": cfg.country,
         "market": "spot",
     }
+
+
+# Elecz reports national units. Only EUR units are converted; a non-EUR zone
+# would need an FX rate before it can join the EUR/MWh contract.
+ELECZ_UNIT_FACTORS = {
+    "c/kwh": 10.0,  # 1 cent/kWh = 10 EUR/MWh
+    "ct/kwh": 10.0,
+    "cent/kwh": 10.0,
+    "eur/mwh": 1.0,
+    "€/mwh": 1.0,
+    "eur/kwh": 1000.0,
+    "€/kwh": 1000.0,
+}
+
+
+def elecz_price_to_eur_mwh(zone: str, price: float, data: dict[str, Any]) -> float | None:
+    """Convert an Elecz price to EUR/MWh, or None when the unit is unsafe."""
+    if not math.isfinite(price):
+        print(f"Elecz returned a non-finite price for {zone}; skipping.")
+        return None
+
+    currency = str(data.get("currency") or "").upper()
+    if currency and currency != "EUR":
+        # Non-EUR zones (SEK, DKK, NOK) need an FX rate. Set
+        # ELECZ_ALLOW_NON_EUR=1 only if you add conversion downstream.
+        if os.environ.get("ELECZ_ALLOW_NON_EUR") != "1":
+            print(
+                f"Elecz {zone} returned {currency} ({data.get('unit')}); "
+                "skipping to keep the EUR/MWh contract. Set ELECZ_ALLOW_NON_EUR=1 to override."
+            )
+            return None
+        return price
+
+    unit = str(data.get("unit") or "").strip().lower()
+    factor = ELECZ_UNIT_FACTORS.get(unit)
+    if factor is None:
+        print(f"Elecz {zone} returned unknown unit {data.get('unit')!r}; skipping.")
+        return None
+    return round(price * factor, 6)
 
 
 # --- 2. ENTSO-E Data Fetch ---------------------------------------------------

@@ -335,7 +335,7 @@ Aliases `DE`, `DE-LU`, `SE_1`…`SE_4`, `NO_1`…`NO_5`, and `DK_1`/`DK_2` resol
 
 Elecz messages keep Elecz zone labels (for example `DE` for `DE_LU`), so historical rows stay consistent with the original single-market contract.
 
-Elecz returns local currency for non-German zones (`SEK`, `DKK`, `NOK`). The producer skips those prices to keep the `EUR/MWh` contract. Only DE is enabled for Elecz by default.
+Elecz reports cents per kWh in EUR for DE, so the producer multiplies by 10 to publish EUR/MWh. Non-German Elecz zones report local currency (`SEK`, `DKK`, `NOK`); the producer skips those prices to keep the contract. Only DE is enabled for Elecz by default.
 
 ### Snapshot
 
@@ -897,6 +897,7 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - **The frontend depends on jsDelivr.** Three.js is pinned from a CDN via an import map. Offline or air-gapped deployments must vendor the module.
 - **The demo fallback is synthetic.** It is deterministic and clearly labelled, but it is not market data.
 - **Elecz is DE-only by default.** Other Elecz zones return local currency (`SEK`, `DKK`, `NOK`), so the producer skips them instead of publishing a mixed-unit price.
+- **Older Elecz rows predate the unit conversion.** Rows written before the c/kWh to EUR/MWh fix stay on the old scale in Delta for up to 30 days.
 - **The all-zones dashboard view shares one lane per source.** Points from different zones at the same timestamp overlap; pick a zone in the filter for a clean view. Per-zone lanes are on the roadmap.
 - **ENTSO-E publishes day-ahead prices in the afternoon.** The producer reads a 48-hour lookback so a run still finds the latest published series.
 - **Zone coverage is opt-in.** The registry ships 18 zones; `ENTSOE_ZONES` limits a run and new markets need one registry line.
