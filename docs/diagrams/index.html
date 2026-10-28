@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VoltScope — System diagrams</title>
+<meta name="description" content="Interactive architecture, data flow, and editorial pipeline diagrams for the VoltScope energy price platform.">
+<style>
+  :root {
+    --paper: #f7f4ee;
+    --paper-2: #fffdf8;
+    --ink: #22262e;
+    --muted: #62676f;
+    --soft: #9a9ea6;
+    --rule: #d9d4ca;
+    --accent: #b4451f;
+    --link: #2b6b8f;
+    --sans: "Geist", "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --mono: "Geist Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--sans);
+    background-color: var(--paper);
+    background-image: radial-gradient(rgba(34, 38, 46, 0.07) 0.7px, transparent 0.7px);
+    background-size: 16px 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { width: min(1320px, 100%); margin: 0 auto; padding: 56px 48px 48px; }
+  .eyebrow {
+    margin: 0 0 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(38px, 5vw, 62px);
+    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+  }
+  .standfirst { max-width: 660px; margin: 18px 0 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+  .rule { height: 1px; margin: 32px 0 28px; background: var(--rule); }
+  .grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; }
+  .card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .card--wide { grid-column: 1 / -1; }
+  .thumb { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-bottom: 1px solid var(--rule); background: #0a0e16; }
+  .card--wide .thumb { aspect-ratio: auto; height: auto; padding: 22px 0; background: var(--paper); }
+  .body { display: flex; flex: 1; flex-direction: column; gap: 8px; padding: 18px 20px 20px; }
+  .kicker { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--soft); }
+  h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .body p { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .open { margin-top: 6px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--link); }
+  .card:hover { border-color: var(--ink); }
+  .card:hover .open { color: var(--accent); }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    margin-top: 30px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--soft);
+  }
+  .meta a { color: var(--link); text-decoration: none; border-bottom: 1px solid rgba(43, 107, 143, 0.35); }
+  .meta a:hover { border-bottom-color: var(--link); }
+  footer { margin-top: 18px; font-size: 11px; line-height: 1.5; color: var(--soft); }
+  @media (max-width: 900px) {
+    .page { padding: 36px 22px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <p class="eyebrow">VoltScope · Diagrams</p>
+  <h1>How the data moves</h1>
+  <p class="standfirst">Three views of one system: runtime topology, pipeline lineage, and the editorial path from market signal to public dashboard. The first two are interactive and self-contained.</p>
+  <div class="rule"></div>
+
+  <div class="grid">
+    <a class="card card--wide" href="pipeline.html">
+      <img class="thumb" src="../assets/diagrams/pipeline-preview.png" alt="Editorial diagram of the VoltScope pipeline from market APIs to the public dashboard">
+      <div class="body">
+        <span class="kicker">Editorial · static HTML + SVG</span>
+        <h2>Market signal to public dashboard</h2>
+        <p>Seven stages, two focal nodes, and the credential boundary in one read. Follows the diagram-design editorial rules: 4px grid, hairline rules, no shadows.</p>
+        <span class="open">OPEN DIAGRAM →</span>
+      </div>
+    </a>
+
+    <a class="card" href="architecture.html">
+      <img class="thumb" src="../assets/diagrams/architecture-preview.png" alt="Interactive system architecture diagram">
+      <div class="body">
+        <span class="kicker">Archify · interactive</span>
+        <h2>System architecture</h2>
+        <p>Twelve runtime components with guided views for ingest, serving, and the trust boundary. Pan, zoom, search, focus, and export are built in.</p>
+        <span class="open">OPEN DIAGRAM →</span>
+      </div>
+    </a>
+
+    <a class="card" href="dataflow.html">
+      <img class="thumb" src="../assets/diagrams/dataflow-preview.png" alt="Interactive energy data flow diagram">
+      <div class="body">
+        <span class="kicker">Archify · interactive</span>
+        <h2>Energy data flow</h2>
+        <p>Five stages from market feeds to public serving, with lineage labels, transport contracts, and durability guarantees.</p>
+        <span class="open">OPEN DIAGRAM →</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="meta">
+    <span>BACK TO THE PRODUCT</span>
+    <a href="../index.html">VoltScope dashboard</a>
+    <a href="../README.md">Dashboard docs</a>
+    <a href="https://github.com/mdsarfarazalam840/Energy-realtime">Repository root</a>
+  </div>
+  <footer>Diagrams generated from the repository source. Interactive HTML files are self-contained; no build step and no external data request is required.</footer>
+</main>
+</body>
+</html>

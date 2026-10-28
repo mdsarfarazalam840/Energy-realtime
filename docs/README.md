@@ -6,6 +6,19 @@ Live site: https://mdsaifedu.eu.cc/Energy-realtime/
 This folder is the GitHub Pages site. It is plain HTML/CSS/JS: no build step,
 no npm install, no server. Three.js is pinned from jsDelivr.
 
+## System diagrams
+
+The same Pages site hosts the architecture and data-flow diagrams:
+
+- Gallery: <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/>
+- Architecture: <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html>
+- Data flow: <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html>
+- Editorial pipeline: <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/pipeline.html>
+
+The interactive diagrams are generated from `diagrams/specs/*.json` with
+Archify. See [`diagrams/README.md`](diagrams/README.md) for regeneration and
+screenshot commands.
+
 ## How the data reaches the page
 
 ```

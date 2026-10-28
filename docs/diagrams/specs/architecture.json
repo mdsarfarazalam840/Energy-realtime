@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "VoltScope System Architecture",
+    "output": "docs/diagrams/architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [1180, 640],
+    "views": [
+      {
+        "id": "ingest-path",
+        "label": "Ingest path",
+        "focus": ["entsoe", "elecz", "producer", "kafka", "databricks", "delta"],
+        "note": "Two market feeds become one Kafka topic and land in Delta Lake."
+      },
+      {
+        "id": "serving-path",
+        "label": "Serving path",
+        "focus": ["delta", "warehouse", "exporter", "snapshot", "pages", "browser"],
+        "note": "A token-scoped export turns the table into a static JSON snapshot."
+      },
+      {
+        "id": "trust-boundary",
+        "label": "Trust boundary",
+        "focus": ["secrets", "producer", "databricks", "exporter"],
+        "note": "Credentials stay in GitHub Actions secrets and the Databricks secret scope."
+      }
+    ]
+  },
+  "components": [
+    { "id": "entsoe", "type": "external", "label": "ENTSO-E", "sublabel": "DE_LU day-ahead", "pos": [40, 80], "size": [150, 64] },
+    { "id": "elecz", "type": "external", "label": "Elecz", "sublabel": "DE spot API", "pos": [40, 240], "size": [150, 64] },
+    { "id": "producer", "type": "backend", "label": "Dual Producer", "sublabel": "GitHub Actions · 30 min", "pos": [260, 160], "size": [160, 64], "tag": "python" },
+    { "id": "kafka", "type": "messagebus", "label": "Aiven Kafka", "sublabel": "energy-prices", "pos": [490, 160], "size": [150, 64], "tag": "SASL_SSL" },
+    { "id": "databricks", "type": "cloud", "label": "Databricks Job", "sublabel": "kafka_ingest.ipynb", "pos": [710, 160], "size": [160, 64], "tag": "availableNow" },
+    { "id": "delta", "type": "database", "label": "Delta Table", "sublabel": "energy_prices_realtime", "pos": [940, 160], "size": [180, 64], "tag": "Unity Catalog" },
+    { "id": "warehouse", "type": "cloud", "label": "SQL Warehouse", "sublabel": "Statement Execution API", "pos": [940, 340], "size": [180, 64] },
+    { "id": "exporter", "type": "backend", "label": "Snapshot Export", "sublabel": "export_dashboard_data.py", "pos": [710, 340], "size": [160, 64], "tag": "retry + fallback" },
+    { "id": "snapshot", "type": "database", "label": "energy.json", "sublabel": "docs/data · schema v1", "pos": [490, 340], "size": [150, 64] },
+    { "id": "pages", "type": "cloud", "label": "GitHub Pages", "sublabel": "static hosting", "pos": [260, 340], "size": [160, 64], "tag": "main · /docs" },
+    { "id": "browser", "type": "frontend", "label": "VoltScope", "sublabel": "Three.js dashboard", "pos": [40, 340], "size": [150, 64], "tag": "polls 60 s" },
+    { "id": "secrets", "type": "security", "label": "Secrets", "sublabel": "Actions + Databricks scope", "pos": [260, 24], "size": [170, 56], "tag": "never in browser" }
+  ],
+  "connections": [
+    { "id": "entsoe-to-producer", "from": "entsoe", "to": "producer", "label": "XML / API", "variant": "default" },
+    { "id": "elecz-to-producer", "from": "elecz", "to": "producer", "label": "JSON / API", "variant": "default" },
+    { "id": "producer-to-kafka", "from": "producer", "to": "kafka", "label": "produce", "variant": "emphasis" },
+    { "id": "kafka-to-databricks", "from": "kafka", "to": "databricks", "label": "readStream", "variant": "emphasis" },
+    { "id": "databricks-to-delta", "from": "databricks", "to": "delta", "label": "append", "variant": "emphasis" },
+    { "id": "delta-to-warehouse", "from": "delta", "to": "warehouse", "label": "SQL", "variant": "default", "fromSide": "bottom", "toSide": "top", "labelAt": [1030, 282] },
+    { "id": "warehouse-to-exporter", "from": "warehouse", "to": "exporter", "label": "statement", "variant": "default" },
+    { "id": "exporter-to-snapshot", "from": "exporter", "to": "snapshot", "label": "git commit", "variant": "emphasis" },
+    { "id": "snapshot-to-pages", "from": "snapshot", "to": "pages", "label": "branch build", "variant": "default" },
+    { "id": "pages-to-browser", "from": "pages", "to": "browser", "label": "HTTPS", "variant": "default" },
+    { "id": "secrets-to-producer", "from": "secrets", "to": "producer", "label": "KAFKA_PASSWORD", "variant": "security", "fromSide": "bottom", "toSide": "top", "labelDy": -6 },
+    { "id": "secrets-to-databricks", "from": "secrets", "to": "databricks", "label": "Aiven secret scope", "variant": "security", "fromSide": "right", "toSide": "top", "via": [[790, 52]], "labelDy": -14 }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Ingest", "items": ["GitHub Actions runs the dual producer every 30 minutes", "Aiven Kafka carries both feeds on one topic", "Databricks drains available offsets into Delta"] },
+    { "dot": "emerald", "title": "Serving", "items": ["The exporter queries through the SQL Statement API", "A compact schema-v1 snapshot is committed to main", "Pages serves static files; no token reaches the browser"] },
+    { "dot": "amber", "title": "Failure handling", "items": ["Exporter retries 429 and 5xx responses with backoff", "An empty window falls back to the newest rows", "Unchanged payloads skip the commit and Pages rebuild"] }
+  ]
+}
