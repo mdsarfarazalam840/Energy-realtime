@@ -97,5 +97,5 @@ jobs:
               echo "- Snapshot file missing."
             fi
             echo ""
-            echo "Live page: https://mdsarfarazalam840.github.io/Energy-realtime/"
+            echo "Live page: https://mdsaifedu.eu.cc/Energy-realtime/"
           } >> "$GITHUB_STEP_SUMMARY"

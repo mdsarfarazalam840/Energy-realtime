@@ -1,5 +1,8 @@
 # VoltScope dashboard
 
+Live site: https://mdsaifedu.eu.cc/Energy-realtime/
+(the account's Pages custom domain; the `github.io` project URL redirects here).
+
 This folder is the GitHub Pages site. It is plain HTML/CSS/JS: no build step,
 no npm install, no server. Three.js is pinned from jsDelivr.
 
