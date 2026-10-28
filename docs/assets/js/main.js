@@ -1114,6 +1114,24 @@ function bindControls() {
     updateView({ animate: true });
   });
 
+  // Clicking the field label only focuses a select; open the picker from the
+  // whole field so the control behaves like the rest of the dashboard.
+  for (const field of document.querySelectorAll(".field")) {
+    const select = field.querySelector("select");
+    if (!select) continue;
+    field.addEventListener("click", (event) => {
+      if (event.target === select) return;
+      select.focus();
+      if (typeof select.showPicker === "function") {
+        try {
+          select.showPicker();
+        } catch {
+          /* browsers without a picker for this control just keep the focus */
+        }
+      }
+    });
+  }
+
   $("source-list").addEventListener("click", (event) => {
     const button = event.target.closest("[data-source]");
     if (!button) return;

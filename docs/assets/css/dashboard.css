@@ -442,6 +442,13 @@ html[data-theme="light"] .icon-sun { display: block; }
   background-repeat: no-repeat;
 }
 .select:hover { border-color: var(--stroke-strong); }
+.select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+/* Native popups ignore most select styling; set the option colours explicitly
+   so dark themes do not show light text on a light system menu. */
+.select option {
+  background-color: var(--panel-solid);
+  color: var(--text);
+}
 
 .segmented {
   display: grid;
