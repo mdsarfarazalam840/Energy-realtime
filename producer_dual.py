@@ -41,15 +41,21 @@ class ZoneConfig:
 
 
 ZONE_REGISTRY: dict[str, ZoneConfig] = {
-    # Central Europe
+    # Central and western Europe
     "DE_LU": ZoneConfig("DE_LU", "DE", "day-ahead", "DE_LU", "DE"),
     "NL": ZoneConfig("NL", "NL", "day-ahead", "NL", "NL"),
     "BE": ZoneConfig("BE", "BE", "day-ahead", "BE", "BE"),
     "AT": ZoneConfig("AT", "AT", "day-ahead", "AT", "AT"),
     "FR": ZoneConfig("FR", "FR", "day-ahead", "FR", "FR"),
     "PL": ZoneConfig("PL", "PL", "day-ahead", "PL", "PL"),
+    "CH": ZoneConfig("CH", "CH", "day-ahead", "CH", None),
+    "CZ": ZoneConfig("CZ", "CZ", "day-ahead", "CZ", None),
+    "SK": ZoneConfig("SK", "SK", "day-ahead", "SK", None),
+    "HU": ZoneConfig("HU", "HU", "day-ahead", "HU", None),
+    "SI": ZoneConfig("SI", "SI", "day-ahead", "SI", None),
     # Iberia
     "ES": ZoneConfig("ES", "ES", "day-ahead", "ES", "ES"),
+    "PT": ZoneConfig("PT", "PT", "day-ahead", "PT", None),
     # Nordics: Sweden
     "SE1": ZoneConfig("SE1", "SE", "day-ahead", "SE_1", "SE1"),
     "SE2": ZoneConfig("SE2", "SE", "day-ahead", "SE_2", "SE2"),
@@ -61,9 +67,38 @@ ZONE_REGISTRY: dict[str, ZoneConfig] = {
     "NO3": ZoneConfig("NO3", "NO", "day-ahead", "NO_3", "NO3"),
     "NO4": ZoneConfig("NO4", "NO", "day-ahead", "NO_4", "NO4"),
     "NO5": ZoneConfig("NO5", "NO", "day-ahead", "NO_5", "NO5"),
-    # Nordics: Denmark
+    # Nordics: Denmark and Finland
     "DK1": ZoneConfig("DK1", "DK", "day-ahead", "DK_1", "DK1"),
     "DK2": ZoneConfig("DK2", "DK", "day-ahead", "DK_2", "DK2"),
+    "FI": ZoneConfig("FI", "FI", "day-ahead", "FI", None),
+    # Baltics
+    "EE": ZoneConfig("EE", "EE", "day-ahead", "EE", None),
+    "LV": ZoneConfig("LV", "LV", "day-ahead", "LV", None),
+    "LT": ZoneConfig("LT", "LT", "day-ahead", "LT", None),
+    # South-east Europe
+    "HR": ZoneConfig("HR", "HR", "day-ahead", "HR", None),
+    "RO": ZoneConfig("RO", "RO", "day-ahead", "RO", None),
+    "BG": ZoneConfig("BG", "BG", "day-ahead", "BG", None),
+    "GR": ZoneConfig("GR", "GR", "day-ahead", "GR", None),
+    "RS": ZoneConfig("RS", "RS", "day-ahead", "RS", None),
+    "BA": ZoneConfig("BA", "BA", "day-ahead", "BA", None),
+    "ME": ZoneConfig("ME", "ME", "day-ahead", "ME", None),
+    "MK": ZoneConfig("MK", "MK", "day-ahead", "MK", None),
+    "AL": ZoneConfig("AL", "AL", "day-ahead", "AL", None),
+    "XK": ZoneConfig("XK", "XK", "day-ahead", "XK", None),
+    # Eastern Europe
+    "MD": ZoneConfig("MD", "MD", "day-ahead", "MD", None),
+    "UA": ZoneConfig("UA", "UA", "day-ahead", "UA", None),
+    # Ireland
+    "IE_SEM": ZoneConfig("IE_SEM", "IE", "day-ahead", "IE_SEM", None),
+    # Italy: one market, seven price zones
+    "IT_NORD": ZoneConfig("IT_NORD", "IT", "day-ahead", "IT_NORD", None),
+    "IT_CNOR": ZoneConfig("IT_CNOR", "IT", "day-ahead", "IT_CNOR", None),
+    "IT_CSUD": ZoneConfig("IT_CSUD", "IT", "day-ahead", "IT_CSUD", None),
+    "IT_SUD": ZoneConfig("IT_SUD", "IT", "day-ahead", "IT_SUD", None),
+    "IT_SICI": ZoneConfig("IT_SICI", "IT", "day-ahead", "IT_SICI", None),
+    "IT_SARD": ZoneConfig("IT_SARD", "IT", "day-ahead", "IT_SARD", None),
+    "IT_CALA": ZoneConfig("IT_CALA", "IT", "day-ahead", "IT_CALA", None),
 }
 
 # Zone aliases accepted on the command line and in environment variables.
@@ -83,26 +118,7 @@ ZONE_ALIASES = {
     "DK_2": "DK2",
 }
 
-DEFAULT_ENTSOE_ZONES = (
-    "DE_LU",
-    "FR",
-    "NL",
-    "BE",
-    "AT",
-    "ES",
-    "PL",
-    "SE1",
-    "SE2",
-    "SE3",
-    "SE4",
-    "NO1",
-    "NO2",
-    "NO3",
-    "NO4",
-    "NO5",
-    "DK1",
-    "DK2",
-)
+DEFAULT_ENTSOE_ZONES = tuple(ZONE_REGISTRY)
 
 # Elecz is an undocumented spot endpoint that has only been verified for DE.
 # Add zones here only after confirming their response shape.

@@ -2,7 +2,7 @@
 
 **Live 3D energy price intelligence for Europe's day-ahead markets.**
 
-VoltScope turns two public electricity price feeds into a durable lakehouse table and a public, browser-safe 3D dashboard. ENTSO-E day-ahead prices cover 18 bidding zones across 10 countries; Elecz adds DE spot. Market data arrives through GitHub Actions and Kafka, lands in Delta Lake through Databricks, and reaches GitHub Pages as a compact static snapshot. No Databricks token ever reaches the browser.
+VoltScope turns two public electricity price feeds into a durable lakehouse table and a public, browser-safe 3D dashboard. ENTSO-E day-ahead prices cover 48 bidding zones across 34 countries; Elecz adds DE spot. Market data arrives through GitHub Actions and Kafka, lands in Delta Lake through Databricks, and reaches GitHub Pages as a compact static snapshot. No Databricks token ever reaches the browser.
 
 [![Live dashboard](https://img.shields.io/badge/dashboard-live-4cd7ff?style=flat-square)](https://mdsaifedu.eu.cc/Energy-realtime/)
 [![Publish Dashboard Snapshot](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/publish_dashboard.yml/badge.svg?branch=main)](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/publish_dashboard.yml)
@@ -47,7 +47,7 @@ VoltScope turns two public electricity price feeds into a durable lakehouse tabl
 
 Europe's day-ahead and spot electricity markets publish the same physical quantity through different APIs, at different cadences, with different schemas. VoltScope demonstrates a small, production-shaped path from those feeds to a public product:
 
-1. **Collect** Elecz DE spot prices and ENTSO-E day-ahead prices for 18 bidding zones across 10 countries.
+1. **Collect** Elecz DE spot prices and ENTSO-E day-ahead prices for 48 bidding zones across 34 countries.
 2. **Buffer** every feed on one Kafka topic with TLS and SCRAM authentication.
 3. **Land** parsed JSON in a Delta table through Databricks Structured Streaming.
 4. **Publish** a compact, deduplicated JSON snapshot through the Databricks SQL Statement API.
@@ -92,16 +92,16 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 
 ### Dashboard
 
-- **3D price columns** rendered as instanced meshes on a reflective grid, with two source lanes (Elecz and ENTSO-E).
+- **3D price columns** rendered as instanced meshes on a reflective grid, with one lane per market zone, coloured by country.
 - **Focus panel** pins a reading; hover gives the exact timestamp, zone, source, and price.
-- **Compare panel** summarizes each feed: latest value, min, max, mean, standard deviation, change.
+- **Compare panel** summarizes each zone: latest value, min, max, mean, standard deviation, change.
 - **Distribution histogram** shows the shape of the current window.
 - **Timeline brush** narrows the session; double-click clears it.
 - **Replay** animates the session point by point, with 1x, 2x, and 4x speeds.
 - **Camera presets** for overview, profile, and top views.
 - **Window vs zero baseline** so small moves stay visible without lying about the origin.
 - **Raw vs indexed mode** so feeds with different price levels can be compared by shape.
-- **Shareable URL hash** captures filters, zone, range, baseline, series mode, and selection.
+- **Shareable URL hash** captures filters, country, zone, range, baseline, series mode, and camera.
 - **Auto refresh** every 60 seconds; `L` toggles it.
 - **Theme toggle** with a persisted dark/light preference.
 - **Demo fallback** with a deterministic synthetic snapshot when no published data exists; always labelled as demo.
@@ -109,7 +109,7 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 
 ### Pipeline
 
-- **Multi-zone feeds** in one producer: ENTSO-E day-ahead for 18 bidding zones plus Elecz DE spot.
+- **Multi-zone feeds** in one producer: ENTSO-E day-ahead for 48 bidding zones across 34 countries plus Elecz DE spot.
 - **Zone registry**: one `ZoneConfig` line per market, with aliases such as `SE1` / `SE_1` and an `ENTSOE_ZONES` override.
 - **Per-zone isolation**: a failed fetch logs and skips that zone; the other zones still publish.
 - **Kafka security**: SASL_SSL with SCRAM-SHA-256 and a CA certificate.
@@ -132,7 +132,7 @@ The system has four boundaries: market data sources, GitHub Actions automation, 
 flowchart LR
   subgraph Sources["Market data"]
     direction TB
-    E["ENTSO-E<br/>18 day-ahead zones"]
+    E["ENTSO-E<br/>48 day-ahead zones"]
     Z["Elecz<br/>DE spot"]
   end
 
@@ -168,7 +168,7 @@ flowchart LR
 
 | Component | Source | Responsibility |
 |---|---|---|
-| Dual producer | `producer_dual.py` | Fetch ENTSO-E day-ahead for 18 zones and Elecz DE spot, normalize to one JSON contract, produce to Kafka |
+| Dual producer | `producer_dual.py` | Fetch ENTSO-E day-ahead for 48 zones and Elecz DE spot, normalize to one JSON contract, produce to Kafka |
 | Kafka topic | Aiven Kafka | Durable buffer for every zone; topic `energy-prices` |
 | Databricks job | `src/kafka_ingest.ipynb`, `resources/energy_job.yml` | Read Kafka with Structured Streaming, parse JSON, append to Delta |
 | Delta table | `workspace.default.energy_prices_realtime` | Append-only price history in Unity Catalog |
@@ -206,7 +206,7 @@ sequenceDiagram
   participant PGS as GitHub Pages
   participant UI as Browser
 
-  SRC->>GH: ENTSO-E 18 zones + Elecz DE spot
+  SRC->>GH: ENTSO-E 48 zones + Elecz DE spot
   GH->>K: produce JSON on energy-prices
   GH->>DBX: POST /api/2.1/jobs/run-now
   DBX->>K: readStream with startingOffsets=latest
@@ -227,7 +227,7 @@ sequenceDiagram
 
 | Stage | Input | Output | Guarantee |
 |---|---|---|---|
-| Market feeds | Elecz spot API, ENTSO-E Transparency API (18 zones) | One JSON price reading per zone | Best-effort fetch per zone; a failed zone is logged and skipped |
+| Market feeds | Elecz spot API, ENTSO-E Transparency API (48 zones) | One JSON price reading per zone | Best-effort fetch per zone; a failed zone is logged and skipped |
 | Producer | Normalized messages | Kafka topic `energy-prices` | One message per zone; all zones share one schema |
 | Transport | Kafka topic | Consumer offsets | SASL_SSL, SCRAM-SHA-256, CA-verified TLS |
 | Ingest | Kafka JSON values | Delta rows | `availableNow` drains available offsets, then stops |
@@ -308,17 +308,23 @@ The notebook schema reads `timestamp`, `zone`, `price`, and `source` only. The e
 
 ### Supported zones
 
-`producer_dual.py` keeps one `ZoneConfig` line per market in `ZONE_REGISTRY`. The default run covers 18 ENTSO-E bidding zones across 10 countries.
+`producer_dual.py` keeps one `ZoneConfig` line per market in `ZONE_REGISTRY`. The default run covers 48 ENTSO-E bidding zones across 34 countries, with Italy split into seven price zones.
 
 | Zone | Country | ENTSO-E code | Elecz | Market |
 |---|---|---|---|---|
 | `DE_LU` | DE | `DE_LU` | `DE` | day-ahead |
-| `FR` | FR | `FR` | `FR` | day-ahead |
 | `NL` | NL | `NL` | `NL` | day-ahead |
 | `BE` | BE | `BE` | `BE` | day-ahead |
 | `AT` | AT | `AT` | `AT` | day-ahead |
-| `ES` | ES | `ES` | `ES` | day-ahead |
+| `FR` | FR | `FR` | `FR` | day-ahead |
 | `PL` | PL | `PL` | `PL` | day-ahead |
+| `CH` | CH | `CH` | - | day-ahead |
+| `CZ` | CZ | `CZ` | - | day-ahead |
+| `SK` | SK | `SK` | - | day-ahead |
+| `HU` | HU | `HU` | - | day-ahead |
+| `SI` | SI | `SI` | - | day-ahead |
+| `ES` | ES | `ES` | `ES` | day-ahead |
+| `PT` | PT | `PT` | - | day-ahead |
 | `SE1` | SE | `SE_1` | `SE1` | day-ahead |
 | `SE2` | SE | `SE_2` | `SE2` | day-ahead |
 | `SE3` | SE | `SE_3` | `SE3` | day-ahead |
@@ -330,6 +336,30 @@ The notebook schema reads `timestamp`, `zone`, `price`, and `source` only. The e
 | `NO5` | NO | `NO_5` | `NO5` | day-ahead |
 | `DK1` | DK | `DK_1` | `DK1` | day-ahead |
 | `DK2` | DK | `DK_2` | `DK2` | day-ahead |
+| `FI` | FI | `FI` | - | day-ahead |
+| `EE` | EE | `EE` | - | day-ahead |
+| `LV` | LV | `LV` | - | day-ahead |
+| `LT` | LT | `LT` | - | day-ahead |
+| `HR` | HR | `HR` | - | day-ahead |
+| `RO` | RO | `RO` | - | day-ahead |
+| `BG` | BG | `BG` | - | day-ahead |
+| `GR` | GR | `GR` | - | day-ahead |
+| `RS` | RS | `RS` | - | day-ahead |
+| `BA` | BA | `BA` | - | day-ahead |
+| `ME` | ME | `ME` | - | day-ahead |
+| `MK` | MK | `MK` | - | day-ahead |
+| `AL` | AL | `AL` | - | day-ahead |
+| `XK` | XK | `XK` | - | day-ahead |
+| `MD` | MD | `MD` | - | day-ahead |
+| `UA` | UA | `UA` | - | day-ahead |
+| `IE_SEM` | IE | `IE_SEM` | - | day-ahead |
+| `IT_NORD` | IT | `IT_NORD` | - | day-ahead |
+| `IT_CNOR` | IT | `IT_CNOR` | - | day-ahead |
+| `IT_CSUD` | IT | `IT_CSUD` | - | day-ahead |
+| `IT_SUD` | IT | `IT_SUD` | - | day-ahead |
+| `IT_SICI` | IT | `IT_SICI` | - | day-ahead |
+| `IT_SARD` | IT | `IT_SARD` | - | day-ahead |
+| `IT_CALA` | IT | `IT_CALA` | - | day-ahead |
 
 Aliases `DE`, `DE-LU`, `SE_1`…`SE_4`, `NO_1`…`NO_5`, and `DK_1`/`DK_2` resolve to the public codes. To add a market, add one `ZoneConfig` entry and, if needed, an alias. `--list-zones` prints the current registry.
 
@@ -352,7 +382,7 @@ Elecz reports cents per kWh in EUR for DE, so the producer multiplies by 10 to p
     "window_days": 30,
     "row_count": 12,
     "raw_row_count": 12,
-    "max_rows": 20000,
+    "max_rows": 80000,
     "truncated": false,
     "fallback": false,
     "sources": ["elecz", "entsoe"],
@@ -402,7 +432,7 @@ SELECT unix_millis(CAST(timestamp AS TIMESTAMP)) AS t_ms,
 FROM `workspace`.`default`.`energy_prices_realtime`
 WHERE CAST(timestamp AS TIMESTAMP) >= current_timestamp() - INTERVAL 30 DAYS
 ORDER BY t_ms ASC
-LIMIT 20000;
+LIMIT 80000;
 ```
 
 If the window returns no rows, it falls back to the newest rows in the table. The output is written to a temporary file and atomically replaced, so a partial JSON file never reaches Pages.
@@ -413,7 +443,7 @@ If the window returns no rows, it falls back to the newest rows in the table. Th
 
 | Layer | Technology | Role |
 |---|---|---|
-| Market data | [Elecz](https://elecz.com/), [ENTSO-E Transparency](https://transparency.entsoe.eu/) | DE spot and day-ahead prices for 18 ENTSO-E zones |
+| Market data | [Elecz](https://elecz.com/), [ENTSO-E Transparency](https://transparency.entsoe.eu/) | DE spot and day-ahead prices for 48 ENTSO-E zones |
 | Scheduling | GitHub Actions | Cron producer and snapshot publisher |
 | Transport | [Aiven Kafka](https://aiven.io/kafka) | Durable topic `energy-prices`, SASL_SSL, SCRAM-SHA-256 |
 | Processing | [Databricks](https://www.databricks.com/), Apache Spark Structured Streaming | Parse JSON and append to Delta |
@@ -571,7 +601,7 @@ Useful flags:
 | `--out` | `docs/data/energy.json` | Output path |
 | `--table` | `workspace.default.energy_prices_realtime` | Fully qualified table |
 | `--window-days` | `30` | History window |
-| `--max-rows` | `20000` | Hard row cap |
+| `--max-rows` | `80000` | Hard row cap |
 | `--wait-new-data` | `0` | Seconds to wait for a row newer than the published snapshot |
 | `--max-wait` | `240` | Maximum time for a SQL statement |
 | `--dry-run` | off | Build and validate the snapshot without writing |
@@ -633,7 +663,7 @@ Set these under **Settings → Secrets and variables → Actions → Variables**
 |---|---|---|
 | `DATABRICKS_WAREHOUSE_ID` | none, required | SQL warehouse used by the exporter |
 | `ENERGY_TABLE` | `workspace.default.energy_prices_realtime` | Table queried by the exporter |
-| `ENTSOE_ZONES` | 18-zone default | Comma-separated ENTSO-E zones; `all` uses the whole registry |
+| `ENTSOE_ZONES` | 48-zone default | Comma-separated ENTSO-E zones; `all` uses the whole registry |
 | `ELECZ_ZONES` | `DE` | Comma-separated Elecz zones, or `all` |
 | `ENTSOE_LOOKBACK_HOURS` | `48` | Hours of day-ahead history to read |
 
@@ -642,7 +672,7 @@ Set these under **Settings → Secrets and variables → Actions → Variables**
 | Variable | Default | Purpose |
 |---|---|---|
 | `ENTSOE_API_KEY` | none, required for ENTSO-E | Transparency API key; Elecz still runs without it |
-| `ENTSOE_ZONES` | 18-zone default | Zones to fetch, comma-separated; `all` uses the whole registry |
+| `ENTSOE_ZONES` | 48-zone default | Zones to fetch, comma-separated; `all` uses the whole registry |
 | `ELECZ_ZONES` | `DE` | Elecz zones to fetch; non-EUR prices are skipped |
 | `ENTSOE_LOOKBACK_HOURS` | `48` | Hours of day-ahead history read per zone |
 | `KAFKA_BOOTSTRAP` | none, required | Kafka bootstrap servers |
@@ -675,7 +705,7 @@ Set these under **Settings → Secrets and variables → Actions → Variables**
 | `DATABRICKS_WAREHOUSE_ID` | none, required | SQL warehouse id |
 | `ENERGY_TABLE` | `workspace.default.energy_prices_realtime` | Fully qualified table |
 | `ENERGY_WINDOW_DAYS` | `30` | History window |
-| `ENERGY_MAX_ROWS` | `20000` | Row cap |
+| `ENERGY_MAX_ROWS` | `80000` | Row cap |
 | `ENERGY_WAIT_NEW_DATA` | `0` | Freshness wait in seconds |
 | `ENERGY_MAX_WAIT` | `240` | SQL statement timeout in seconds |
 | `DASHBOARD_OUT` | `docs/data/energy.json` | Output path |
@@ -712,10 +742,11 @@ The dashboard is a single static page. All state lives in the browser and, when 
 | Control | Options | Notes |
 |---|---|---|
 | Sources | Elecz, ENTSO-E | At least one source stays enabled |
-| Zone | All zones, plus every zone in the snapshot (`DE_LU`, `FR`, `SE3`, …) | Populated from the snapshot |
+| Country | All countries, plus every country in the snapshot | Populated from zone prefixes |
+| Zone | All zones in the selected country, plus every zone in the snapshot (`DE_LU`, `FR`, `SE3`, ...) | Populated from the snapshot |
 | Window | 6h, 24h, 7d, 30d, All | Anchored on the newest raw row |
 | Price baseline | Window, Zero | Window starts at the session low; Zero keeps a truthful origin |
-| Series mode | Raw, Indexed | Indexed rebases each source to 100 at its first visible reading |
+| Series mode | Raw, Indexed | Indexed rebases each zone to 100 at its first visible reading |
 
 ### Theme and persistence
 
@@ -769,7 +800,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 - **GitHub Actions**: free minutes depend on the repository plan; the producer runs for a few minutes every 30 minutes.
 - **GitHub Pages**: static hosting is free for public repositories, subject to GitHub's published limits.
 - **Aiven Kafka** and **Databricks** are external services and bill according to their own plans. The Databricks Free Edition has compute and volume limits.
-- The exporter caps history at **30 days** and **20,000 rows** by default.
+- The exporter caps history at **30 days** and **80,000 rows** by default.
 - The publish workflow has an **18-minute** timeout.
 - The dashboard polls every **60 seconds**; it does not query Databricks directly.
 
@@ -891,16 +922,16 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 
 - **`startingOffsets=latest` can skip data.** If the Databricks job is down while the producer writes, those offsets are not replayed. Use `earliest` or a stored offset policy if exact-once ingest matters.
 - **Delta writes are append-only.** There is no `MERGE` deduplication in the table; duplicates are removed only when the snapshot is built.
-- **The public history is capped.** The exporter defaults to 30 days and 20,000 rows. Older rows remain in Delta but are not published.
+- **The public history is capped.** The exporter defaults to 30 days and 80,000 rows. Older rows remain in Delta but are not published.
 - **The dashboard is not a real-time feed.** It polls a static JSON file every 60 seconds. It is near-real-time, not streaming to the browser.
 - **The template tests are not pipeline tests.** `sample_taxis_test.py` exercises Databricks Connect, not the energy contract.
 - **The frontend depends on jsDelivr.** Three.js is pinned from a CDN via an import map. Offline or air-gapped deployments must vendor the module.
 - **The demo fallback is synthetic.** It is deterministic and clearly labelled, but it is not market data.
 - **Elecz is DE-only by default.** Other Elecz zones return local currency (`SEK`, `DKK`, `NOK`), so the producer skips them instead of publishing a mixed-unit price.
 - **Older Elecz rows predate the unit conversion.** Rows written before the c/kWh to EUR/MWh fix stay on the old scale in Delta for up to 30 days.
-- **The all-zones dashboard view shares one lane per source.** Points from different zones at the same timestamp overlap; pick a zone in the filter for a clean view. Per-zone lanes are on the roadmap.
+- **The all-zones view is dense.** Each zone gets its own lane; lane labels are collision-culled as the camera moves. Pick a country or zone for a clean view.
 - **ENTSO-E publishes day-ahead prices in the afternoon.** The producer reads a 48-hour lookback so a run still finds the latest published series.
-- **Zone coverage is opt-in.** The registry ships 18 zones; `ENTSOE_ZONES` limits a run and new markets need one registry line.
+- **Zone coverage is opt-in.** The registry ships 48 zones across 34 countries; `ENTSOE_ZONES` limits a run and new markets need one registry line.
 - **There is no alerting.** A failed workflow or stale snapshot is visible in Actions and the dashboard, but it does not page anyone.
 - **Upstream APIs can change.** Elecz is an undocumented spot endpoint; a response change requires a producer update.
 - **The bundle targets are account-specific.** `databricks.yml` contains a workspace host, owner, and root path. Change them before deploying elsewhere.
@@ -913,9 +944,9 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - [ ] Add data-quality expectations in the Databricks pipeline.
 - [ ] Replace append-only ingest with `MERGE` and a watermark for idempotent rows.
 - [ ] Add freshness alerting to GitHub Issues or a webhook.
-- [x] Add multi-zone support: 18 ENTSO-E zones across 10 countries.
-- [ ] Add per-zone lanes and colours to the 3D scene and timeline.
-- [ ] Add more ENTSO-E zones and non-DE Elecz zones with EUR conversion.
+- [x] Add multi-zone support: 48 ENTSO-E zones across 34 countries.
+- [x] Add per-zone lanes, country colours, and a country filter to the scene and timeline.
+- [ ] Add non-DE Elecz zones with EUR conversion.
 - [ ] Add forecast vs actual overlays and negative-price callouts.
 - [ ] Vendor Three.js for offline and air-gapped use.
 - [ ] Add Terraform or Pulumi for Kafka, volumes, and warehouse resources.

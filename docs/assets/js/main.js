@@ -4,6 +4,14 @@ import {
   loadSnapshot,
   sourceIds,
   zoneIds,
+  countryIds,
+  laneIds,
+  laneLabel,
+  laneColor,
+  laneOf,
+  pointKey,
+  countryOf,
+  countryLabel,
   latestTime,
   filterPoints,
   applyPlayhead,
@@ -41,6 +49,7 @@ const state = {
   snapshot: null,
   points: [],
   sources: new Set(),
+  country: "all",
   zone: "all",
   range: "7d",
   baseline: "window",
@@ -190,10 +199,11 @@ function initCharts() {
         clearSelection();
         return;
       }
-      const bar = scene?.byKey?.get(`${point.s}|${point.t}`);
+      const key = pointKey(point);
+      const bar = scene?.byKey?.get(key);
       if (bar) selectBar(bar);
       else {
-        state.selectedKey = `${point.s}|${point.t}`;
+        state.selectedKey = key;
         scene?.setSelected(state.selectedKey);
         updateFocus();
       }
@@ -237,6 +247,7 @@ async function refresh({ initial = false } = {}) {
     stopReplay();
     $("banner").dataset.persistent = "0";
     hideBanner();
+    updateCountryOptions();
     updateZoneOptions();
     updateView({ animate: true });
     $("boot").dataset.state = "ready";
@@ -249,6 +260,7 @@ async function refresh({ initial = false } = {}) {
       state.demo = true;
       state.error = error;
       hydrateSources(true);
+      updateCountryOptions();
       updateZoneOptions();
       updateView({ animate: true });
       showBanner(
@@ -275,7 +287,11 @@ function parseDemo() {
   /* parseSnapshot is applied inside loadSnapshot; normalise demo the same way. */
   const raw = createDemoSnapshot();
   const points = raw.points
-    .map((point) => ({ t: Number(point.t), p: Number(point.p), z: String(point.z), s: String(point.s) }))
+    .map((point) => {
+      const s = String(point.s);
+      const z = String(point.z);
+      return { t: Number(point.t), p: Number(point.p), z, s, l: `${s}|${z}` };
+    })
     .filter((point) => Number.isFinite(point.t) && Number.isFinite(point.p))
     .sort((a, b) => a.t - b.t);
   return { ...raw, points, generated: Date.now(), meta: raw.meta, demo: true };
@@ -304,6 +320,7 @@ function viewRows() {
   const rangeMs = RANGES[state.range] || 0;
   let rows = filterPoints(state.points, {
     sources: state.sources,
+    country: state.country,
     zone: state.zone,
     rangeMs,
     anchor: currentAnchor(),
@@ -315,9 +332,32 @@ function viewRows() {
   return rows;
 }
 
+function updateCountryOptions() {
+  const select = $("country-select");
+  const countries = countryIds(state.points);
+  const previous = state.country;
+  select.innerHTML = "";
+  const all = document.createElement("option");
+  all.value = "all";
+  all.textContent = `All countries (${countries.length})`;
+  select.appendChild(all);
+  for (const code of countries) {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = `${countryLabel(code)} (${code})`;
+    select.appendChild(option);
+  }
+  if (previous !== "all" && countries.includes(previous)) select.value = previous;
+  else state.country = "all";
+}
+
+function zonesForCountry(points, country) {
+  return zoneIds(points).filter((zone) => country === "all" || countryOf(zone) === country);
+}
+
 function updateZoneOptions() {
   const select = $("zone-select");
-  const zones = zoneIds(state.points);
+  const zones = zonesForCountry(state.points, state.country);
   const previous = state.zone;
   select.innerHTML = "";
   const all = document.createElement("option");
@@ -327,7 +367,7 @@ function updateZoneOptions() {
   for (const zone of zones) {
     const option = document.createElement("option");
     option.value = zone;
-    option.textContent = zone;
+    option.textContent = `${zone} - ${countryLabel(countryOf(zone))}`;
     select.appendChild(option);
   }
   if (previous !== "all" && zones.includes(previous)) select.value = previous;
@@ -341,7 +381,7 @@ function updateView({ animate = true } = {}) {
   state.rows = rows;
 
   if (state.selectedKey) {
-    const exists = rows.some((point) => `${point.s}|${point.t}` === state.selectedKey);
+    const exists = rows.some((point) => pointKey(point) === state.selectedKey);
     if (!exists) {
       state.selectedKey = null;
       selectedBar = null;
@@ -355,9 +395,9 @@ function updateView({ animate = true } = {}) {
   state.displayRows = displayRows;
   const domain = valueDomain(displayRows, state.baseline);
 
-  const lanes = sourceIds(rows);
+  const lanes = laneIds(rows);
   const colors = {};
-  for (const id of lanes) colors[id] = sourceColor(id, state.theme);
+  for (const id of lanes) colors[id] = laneColor(id, state.theme);
 
   if (sceneReady && scene) {
     scene.setModel(
@@ -398,39 +438,40 @@ function updateKpis() {
     return;
   }
 
-  const latestBySource = new Map();
-  for (const point of state.rows) {
-    const current = latestBySource.get(point.s);
-    if (!current || point.t > current.t) latestBySource.set(point.s, point);
-  }
-
+  const ranked = stats.lanes.slice().sort((a, b) => b.last - a.last);
   const cards = [];
-  for (const source of stats.sources.slice(0, 2)) {
-    const meta = sourceMeta(source.id);
-    const zone = latestBySource.get(source.id)?.z || "";
-    const delta = source.lastChange;
-    const deltaPct = source.lastChangePct;
+
+  const laneCard = (lane, heading) => {
+    const delta = lane.lastChange;
+    const deltaPct = lane.lastChangePct;
     const deltaClass = delta == null ? "flat" : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
-    cards.push(`
+    return `
       <article class="kpi">
-        <div class="kpi-label">${esc(meta.label)}${zone ? ` · ${esc(zone)}` : ""}</div>
-        <div class="kpi-value">${formatPrice(source.last)}<span>EUR/MWh</span></div>
+        <div class="kpi-label">${esc(heading)} - ${esc(lane.label)}</div>
+        <div class="kpi-value">${formatPrice(lane.last)}<span>EUR/MWh</span></div>
         <div class="kpi-foot"><span class="${deltaClass}">${
           delta == null ? "first reading" : `${formatSigned(delta)} (${formatSigned(deltaPct, 1, "%")})`
-        }</span> · ${timeLabel(source.lastTime)} UTC</div>
-      </article>`);
+        }</span> - ${timeLabel(lane.lastTime)} UTC</div>
+      </article>`;
+  };
+
+  if (ranked.length === 1) {
+    cards.push(laneCard(ranked[0], "Latest price"));
+  } else {
+    cards.push(laneCard(ranked[0], "Highest"), laneCard(ranked[ranked.length - 1], "Lowest"));
   }
 
+  const feedCount = new Set(stats.lanes.map((lane) => lane.source)).size;
   cards.push(`
     <article class="kpi">
       <div class="kpi-label">Range</div>
-      <div class="kpi-value">${formatPrice(stats.min)}<span>→ ${formatPrice(stats.max)}</span></div>
+      <div class="kpi-value">${formatPrice(stats.min)}<span>- ${formatPrice(stats.max)}</span></div>
       <div class="kpi-foot">spread ${formatPrice(stats.spread)} EUR/MWh</div>
     </article>
     <article class="kpi">
       <div class="kpi-label">Coverage</div>
-      <div class="kpi-value">${stats.count}<span>readings</span></div>
-      <div class="kpi-foot">${stats.sources.length} feed${stats.sources.length === 1 ? "" : "s"} · ${rangeLabel(stats.lastTime - stats.firstTime)} window</div>
+      <div class="kpi-value">${stats.lanes.length}<span>zone${stats.lanes.length === 1 ? "" : "s"}</span></div>
+      <div class="kpi-foot">${stats.count} readings - ${feedCount} feed${feedCount === 1 ? "" : "s"} - ${rangeLabel(stats.lastTime - stats.firstTime)}</div>
     </article>`);
 
   container.style.setProperty("--kpi-count", String(cards.length));
@@ -470,37 +511,32 @@ function renderSourceList() {
     container.innerHTML = `<p class="focus-empty">No feeds in this snapshot.</p>`;
     return;
   }
+
+  const zonesBySource = new Map();
   const latestBySource = new Map();
   for (const point of state.points) {
+    if (!zonesBySource.has(point.s)) zonesBySource.set(point.s, new Set());
+    zonesBySource.get(point.s).add(point.z);
     const current = latestBySource.get(point.s);
     if (!current || point.t > current.t) latestBySource.set(point.s, point);
-  }
-  const prevBySource = new Map();
-  for (const point of state.points) {
-    const latest = latestBySource.get(point.s);
-    if (!latest || point.t >= latest.t) continue;
-    const current = prevBySource.get(point.s);
-    if (!current || point.t > current.t) prevBySource.set(point.s, point);
   }
 
   container.innerHTML = ids
     .map((id) => {
       const meta = sourceMeta(id);
       const latest = latestBySource.get(id);
-      const previous = prevBySource.get(id);
-      const delta = latest && previous && previous.p !== 0 ? ((latest.p - previous.p) / Math.abs(previous.p)) * 100 : null;
-      const deltaClass = delta == null ? "flat" : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+      const zoneCount = zonesBySource.get(id)?.size || 0;
       const active = state.sources.has(id);
       return `
         <button type="button" class="source-row" data-source="${esc(id)}" aria-pressed="${active}" title="${active ? "Hide" : "Show"} ${esc(meta.label)}">
           <span class="source-swatch" style="--swatch:${sourceColor(id, state.theme)}"></span>
           <span class="source-name">
             <b>${esc(meta.label)}</b>
-            <small>${esc(latest ? latest.z : meta.hint)} · ${esc(meta.hint)}</small>
+            <small>${zoneCount} zone${zoneCount === 1 ? "" : "s"} - ${esc(meta.hint)}</small>
           </span>
           <span class="source-figs">
-            <span class="source-price">${latest ? formatPrice(latest.p) : "—"}</span>
-            <span class="source-delta ${deltaClass}">${delta == null ? "—" : formatSigned(delta, 1, "%")}</span>
+            <span class="source-price">${latest ? timeLabel(latest.t) : "-"}</span>
+            <span class="source-delta">${latest ? "UTC" : ""}</span>
           </span>
         </button>`;
     })
@@ -510,7 +546,8 @@ function renderSourceList() {
 function updateSourceList() {
   const summary = $("source-summary");
   const active = [...state.sources];
-  summary.textContent = `${active.length}/${sourceIds(state.points).length} feeds · ${state.rows.length} pts`;
+  const lanes = laneIds(state.rows);
+  summary.textContent = `${active.length}/${sourceIds(state.points).length} feeds - ${lanes.length} zones - ${state.rows.length} pts`;
   const visible = new Set(state.rows.map((row) => row.s));
   for (const button of $("source-list").querySelectorAll("[data-source]")) {
     const id = button.dataset.source;
@@ -524,32 +561,36 @@ function updateSourceList() {
 function updateCompare(lanes) {
   const container = $("compare-list");
   const stats = state.stats;
-  if (!stats || !stats.sources.length) {
-    container.innerHTML = `<p class="focus-empty">No feeds to compare.</p>`;
-    $("compare-note").textContent = "—";
+  if (!stats || !stats.lanes.length) {
+    container.innerHTML = `<p class="focus-empty">No zones to compare.</p>`;
+    $("compare-note").textContent = "-";
     return;
   }
 
-  const sourceStats = stats.sources.filter((source) => lanes.includes(source.id) || !lanes.length);
-  const maxAverage = Math.max(...sourceStats.map((source) => Math.abs(source.mean)), 1);
-  container.innerHTML = sourceStats
-    .map((source) => {
-      const meta = sourceMeta(source.id);
-      const color = sourceColor(source.id, state.theme);
-      const width = Math.max(2, (Math.abs(source.mean) / maxAverage) * 100);
+  const visible = stats.lanes
+    .filter((lane) => lanes.includes(lane.id) || !lanes.length)
+    .sort((a, b) => b.mean - a.mean);
+  const limit = 14;
+  const shown = visible.slice(0, limit);
+  const maxAverage = Math.max(...shown.map((lane) => Math.abs(lane.mean)), 1);
+  container.innerHTML = shown
+    .map((lane) => {
+      const color = laneColor(lane.id, state.theme);
+      const width = Math.max(2, (Math.abs(lane.mean) / maxAverage) * 100);
       return `
-        <div class="compare-row" style="--swatch:${color}">
+        <div class="compare-row" style="--swatch:${color}" title="${esc(laneLabel(lane.id))} - ${esc(countryLabel(lane.country))}">
           <div class="compare-top">
             <i class="compare-swatch"></i>
-            <span class="compare-name">${esc(meta.label)}</span>
-            <span class="compare-avg">${formatPrice(source.mean)}</span>
+            <span class="compare-name">${esc(lane.label)}</span>
+            <span class="compare-avg">${formatPrice(lane.mean)}</span>
           </div>
           <div class="compare-track"><i style="width:${width}%"></i></div>
-          <div class="compare-range"><span>min ${formatPrice(source.min)}</span><span>max ${formatPrice(source.max)}</span></div>
+          <div class="compare-range"><span>min ${formatPrice(lane.min)}</span><span>max ${formatPrice(lane.max)}</span></div>
         </div>`;
     })
     .join("");
-  $("compare-note").textContent = `${sourceStats.length} feed${sourceStats.length === 1 ? "" : "s"} · avg`;
+  const suffix = visible.length > shown.length ? ` (top ${shown.length})` : "";
+  $("compare-note").textContent = `${visible.length} zone${visible.length === 1 ? "" : "s"}${suffix} - avg`;
 }
 
 function updateTimeline(rows, displayRows) {
@@ -562,21 +603,22 @@ function updateTimeline(rows, displayRows) {
 
   const grouped = new Map();
   for (const point of displayRows) {
-    if (!grouped.has(point.s)) grouped.set(point.s, []);
-    grouped.get(point.s).push(point);
+    const lane = point.l || laneOf(point);
+    if (!grouped.has(lane)) grouped.set(lane, []);
+    grouped.get(lane).push(point);
   }
   const series = [...grouped.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([id, points]) => ({
       id,
-      color: sourceColor(id, state.theme),
+      color: laneColor(id, state.theme),
       points: points.sort((a, b) => a.t - b.t),
     }));
 
   const t0 = Math.min(...rows.map((point) => point.t));
   const t1 = Math.max(...rows.map((point) => point.t));
   const selected = state.selectedKey
-    ? displayRows.find((point) => `${point.s}|${point.t}` === state.selectedKey) || null
+    ? displayRows.find((point) => pointKey(point) === state.selectedKey) || null
     : null;
 
   timelineChart.setData({
@@ -587,25 +629,26 @@ function updateTimeline(rows, displayRows) {
     brush: state.customRange,
     theme: state.theme,
   });
-  $("timeline-meta").textContent = `${rows.length} readings · ${rangeLabel(t1 - t0)} · ${
+  $("timeline-meta").textContent = `${rows.length} readings - ${grouped.size} zones - ${rangeLabel(t1 - t0)} - ${
     state.seriesMode === "indexed" ? "indexed" : "EUR/MWh"
-  } · UTC`;
+  } - UTC`;
 }
 
 function updateDistribution(rows) {
   if (!distributionChart) return;
   const grouped = new Map();
   for (const point of rows) {
-    if (!grouped.has(point.s)) grouped.set(point.s, []);
-    grouped.get(point.s).push(point);
+    const lane = point.l || laneOf(point);
+    if (!grouped.has(lane)) grouped.set(lane, []);
+    grouped.get(lane).push(point);
   }
   const series = [...grouped.entries()].map(([id, points]) => ({
     id,
-    color: sourceColor(id, state.theme),
+    color: laneColor(id, state.theme),
     points,
   }));
   distributionChart.setData({ series, bins: 18 });
-  $("dist-meta").textContent = rows.length ? `${rows.length} pts` : "—";
+  $("dist-meta").textContent = rows.length ? `${rows.length} pts - ${grouped.size} zones` : "-";
 }
 
 function updateScale(domain) {
@@ -678,7 +721,10 @@ function updateFocus() {
   note.textContent = "pinned";
 
   const point = bar.point;
-  const rows = state.rows.filter((row) => row.s === point.s).sort((a, b) => a.t - b.t);
+  const lane = point.l || laneOf(point);
+  const rows = state.rows
+    .filter((row) => (row.l || laneOf(row)) === lane)
+    .sort((a, b) => a.t - b.t);
   const index = rows.findIndex((row) => row.t === point.t);
   const previous = index > 0 ? rows[index - 1] : null;
   const delta = previous ? point.p - previous.p : null;
@@ -710,7 +756,7 @@ function updateFocus() {
 }
 
 function displayBarFromState(key) {
-  const point = state.displayRows.find((row) => `${row.s}|${row.t}` === key);
+  const point = state.displayRows.find((row) => pointKey(row) === key);
   if (!point) return null;
   return { key, point };
 }
@@ -1050,8 +1096,19 @@ function bindControls() {
     updateView({ animate: false });
   });
 
+  $("country-select").addEventListener("change", (event) => {
+    state.country = event.target.value;
+    state.zone = "all";
+    state.selectedKey = null;
+    state.playhead = null;
+    stopReplay();
+    updateZoneOptions();
+    updateView({ animate: true });
+  });
+
   $("zone-select").addEventListener("change", (event) => {
     state.zone = event.target.value;
+    state.selectedKey = null;
     state.playhead = null;
     stopReplay();
     updateView({ animate: true });
@@ -1118,6 +1175,7 @@ function bindControls() {
 
   window.addEventListener("hashchange", () => {
     applyHash();
+    updateCountryOptions();
     updateZoneOptions();
     syncFilterButtons();
     updateView({ animate: false });
@@ -1132,6 +1190,7 @@ function bindControls() {
 
 function resetFilters() {
   state.sources = new Set(sourceIds(state.points));
+  state.country = "all";
   state.zone = "all";
   state.range = "7d";
   state.baseline = "window";
@@ -1140,7 +1199,8 @@ function resetFilters() {
   state.playhead = null;
   state.selectedKey = null;
   stopReplay();
-  $("zone-select").value = "all";
+  updateCountryOptions();
+  updateZoneOptions();
   for (const button of $("range-group").querySelectorAll("[data-range]")) {
     button.setAttribute("aria-pressed", String(button.dataset.range === state.range));
   }
@@ -1263,6 +1323,7 @@ function onKeyDown(event) {
 function writeHash() {
   const params = new URLSearchParams();
   params.set("feeds", [...state.sources].sort().join(","));
+  params.set("country", state.country);
   params.set("zone", state.zone);
   params.set("range", state.range);
   params.set("baseline", state.baseline);
@@ -1282,6 +1343,8 @@ function applyHash() {
     const ids = feeds.split(",").filter(Boolean);
     if (ids.length) state.sources = new Set(ids);
   }
+  const country = params.get("country");
+  if (country) state.country = country;
   const zone = params.get("zone");
   if (zone) state.zone = zone;
   const range = params.get("range");

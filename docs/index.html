@@ -67,6 +67,10 @@
           <button class="link-btn" id="btn-reset" type="button">Reset</button>
         </div>
         <label class="field">
+          <span class="field-label">Country</span>
+          <select id="country-select" class="select"></select>
+        </label>
+        <label class="field">
           <span class="field-label">Zone</span>
           <select id="zone-select" class="select"></select>
         </label>
@@ -219,10 +223,10 @@
         <div>
           <h3>Read the scene</h3>
           <ul>
-            <li><b>Height</b> is price. Lanes are sources.</li>
+            <li><b>Height</b> is price. Lanes are zones, coloured by country.</li>
             <li><b>Baseline Window</b> starts at the session low so small moves stay visible.</li>
             <li><b>Baseline Zero</b> keeps a truthful zero axis, including negative prices.</li>
-            <li><b>Indexed</b> rebases each source to 100 at the first reading, so shapes compare.</li>
+            <li><b>Indexed</b> rebases each zone to 100 at the first reading, so shapes compare.</li>
           </ul>
         </div>
         <div>

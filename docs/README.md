@@ -22,7 +22,7 @@ screenshot commands.
 ## How the data reaches the page
 
 ```
-ENTSO-E 18 zones + Elecz DE spot
+ENTSO-E 48 zones + Elecz DE spot
       │  producer_dual.py (GitHub Action, every 30 min)
       ▼
    Aiven Kafka  ──►  Databricks notebook (kafka_ingest.ipynb)
@@ -84,7 +84,7 @@ and sorts by time.
 - `F` focuses a pinned column, `R` refreshes, `L` toggles auto refresh.
 - Window baseline trims the vertical axis to the session range; Zero baseline
   keeps a truthful origin, including negative prices.
-- Indexed mode rebases each feed to 100 so different price levels compare.
+- Indexed mode rebases each zone to 100 so different price levels compare.
 
 Filter state lives in the URL hash, so **Share** copies a reproducible session.
 
@@ -98,7 +98,7 @@ python scripts/export_dashboard_data.py --window-days 30 --out docs/data/energy.
 ```
 
 Useful flags: `--wait-new-data 300` waits for a newer row before publishing,
-`--dry-run` validates without writing, `--max-rows 20000` caps payload size.
+`--dry-run` validates without writing, `--max-rows 80000` caps payload size.
 
 ## Setup checklist
 

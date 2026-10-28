@@ -921,7 +921,15 @@ html[data-theme="light"] .banner { background: rgba(255, 240, 214, .92); color: 
 }
 .focus-actions button:hover { background: var(--chip-hover); color: var(--text); }
 
-.compare-list { display: flex; flex-direction: column; gap: 10px; }
+.compare-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 330px;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
 .compare-row { display: flex; flex-direction: column; gap: 4px; }
 .compare-top { display: flex; align-items: baseline; gap: 7px; }
 .compare-swatch { width: 7px; height: 7px; border-radius: 2px; background: var(--swatch); box-shadow: 0 0 8px var(--swatch); }

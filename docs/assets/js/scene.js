@@ -6,6 +6,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { laneLabel, laneOf, pointKey } from "./data.js";
 
 const STAGE_WIDTH = 30;
 const MAX_HEIGHT = 13;
@@ -151,7 +152,7 @@ export class PriceScene {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.075;
     this.controls.minDistance = 9;
-    this.controls.maxDistance = 95;
+    this.controls.maxDistance = 170;
     this.controls.maxPolarAngle = Math.PI * 0.485;
     this.controls.target.set(0, 3.4, 0);
     this.controls.autoRotate = false;
@@ -370,6 +371,7 @@ export class PriceScene {
     const points = model.points || [];
     if (!points.length) {
       this.layoutState = null;
+      this.laneSpan = 0;
       for (const label of this.labels) label.element.remove();
       this.labels = [];
       for (const label of this.timeLabels) label.element.remove();
@@ -379,14 +381,18 @@ export class PriceScene {
       return;
     }
 
-    const lanes = model.lanes?.length ? model.lanes : [...new Set(points.map((point) => point.s))];
+    const lanes = model.lanes?.length
+      ? model.lanes
+      : [...new Set(points.map((point) => point.l || laneOf(point)))];
     const laneIndex = new Map(lanes.map((lane, index) => [lane, index]));
+    this.laneGap = lanes.length <= 2 ? LANE_GAP : Math.max(0.62, Math.min(LANE_GAP, 34 / (lanes.length - 1)));
     const layout = this.layout(points, lanes);
     this.layoutState = layout;
+    const laneSpan = layout.laneSpan;
+    this.laneSpan = laneSpan;
     this.syncLaneLabels(lanes, model.colors || {});
     this.syncTimeLabels(layout, lanes);
 
-    const laneSpan = (lanes.length - 1) * LANE_GAP;
     const frameZ = laneSpan / 2 + 1.5;
     const framePoints = [
       new THREE.Vector3(-STAGE_WIDTH / 2 - 1.1, 0.02, -frameZ),
@@ -452,7 +458,7 @@ export class PriceScene {
 
     for (let index = 0; index < count; index += 1) {
       const point = points[index];
-      const lane = laneIndex.get(point.s) ?? 0;
+      const lane = laneIndex.get(point.l || laneOf(point)) ?? 0;
       const value = point.v ?? point.p;
       const x = layout.x(point.t);
       const z = layout.z(lane);
@@ -469,14 +475,14 @@ export class PriceScene {
       }
       height = Math.max(0.05, Math.min(height, MAX_HEIGHT * 1.04));
 
-      const baseColor = new THREE.Color(model.colors?.[point.s] || "#9fb2cc");
+      const baseColor = new THREE.Color(model.colors?.[point.l || laneOf(point)] || "#9fb2cc");
       const norm = Math.max(0, Math.min(1, (value - layout.domainMin) / Math.max(1e-9, layout.domainMax - layout.domainMin)));
       const lift = this.theme === "light" ? 0.02 + norm * 0.2 : 0.06 + norm * 0.34;
       const color = baseColor.clone().lerp(white, lift);
       const active = this.playhead == null || point.t <= this.playhead;
       const shownColor = active ? color : color.clone().multiplyScalar(0.2);
 
-      const key = `${point.s}|${point.t}`;
+      const key = pointKey(point);
       const bar = {
         key,
         index,
@@ -579,18 +585,20 @@ export class PriceScene {
     const base = this.model?.baseline === "zero" ? 0 : domainMin;
     const span = Math.max(1e-9, (this.model?.baseline === "zero" ? domainMax : domainMax - domainMin));
     const timeSpan = Math.max(1, tMax - tMin);
-    const laneSpan = (lanes.length - 1) * LANE_GAP;
+    const gap = this.laneGap || LANE_GAP;
+    const laneSpan = (lanes.length - 1) * gap;
 
     return {
       tMin,
       tMax,
       timeSpan,
+      laneSpan,
       domainMin,
       domainMax,
       base,
       range: span,
       x: (t) => -STAGE_WIDTH / 2 + ((t - tMin) / timeSpan) * STAGE_WIDTH,
-      z: (lane) => -laneSpan / 2 + lane * LANE_GAP,
+      z: (lane) => -laneSpan / 2 + lane * gap,
       timeRatio: (t) => (t - tMin) / timeSpan,
       barWidth: (lane) => {
         const count = laneCounts.get(lanes[lane]) || 1;
@@ -742,8 +750,10 @@ export class PriceScene {
     const widthFactor = portrait ? 0.58 : 0.62;
     const widthDistance = (STAGE_WIDTH * widthFactor) / Math.tan(hFov / 2);
     const heightDistance = (MAX_HEIGHT * 0.85) / Math.tan(vFov / 2);
-    const maxDistance = portrait ? 80 : 90;
-    return Math.min(maxDistance, Math.max(22, Math.max(widthDistance, heightDistance)));
+    const laneSpan = this.laneSpan || LANE_GAP;
+    const depthDistance = ((laneSpan / 2 + 3) / Math.tan(vFov / 2)) * 1.35;
+    const maxDistance = portrait ? 130 : 150;
+    return Math.min(maxDistance, Math.max(22, Math.max(widthDistance, heightDistance, depthDistance)));
   }
 
   setCamera(name, animate = true) {
@@ -888,14 +898,26 @@ export class PriceScene {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
     const vector = new THREE.Vector3();
+    const placed = [];
     for (const label of this.labels) {
       vector.set(-STAGE_WIDTH / 2 - 2.6, 0.95, label.z);
       vector.project(this.camera);
-      const visible = vector.z < 1 && vector.z > -1;
+      const onScreen = vector.z < 1 && vector.z > -1;
       const x = Math.min(Math.max((vector.x * 0.5 + 0.5) * width, 54), Math.max(54, width - 54));
       const y = (-vector.y * 0.5 + 0.5) * height;
       label.element.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-      label.element.classList.toggle("is-visible", visible);
+      placed.push({ label, y, onScreen });
+    }
+    placed.sort((a, b) => a.y - b.y);
+    let lastY = -Infinity;
+    let count = 0;
+    for (const item of placed) {
+      const clear = item.onScreen && item.y - lastY >= 14 && count < 28;
+      item.label.element.classList.toggle("is-visible", clear);
+      if (clear) {
+        lastY = item.y;
+        count += 1;
+      }
     }
     for (const label of this.timeLabels) {
       vector.set(label.x, 0.06, label.z);
@@ -913,17 +935,18 @@ export class PriceScene {
     for (const label of this.labels) label.element.remove();
     this.labels = [];
     if (!this.layoutState) return;
+    const gap = this.laneGap || LANE_GAP;
     lanes.forEach((lane, index) => {
       const element = document.createElement("div");
       element.className = "lane-label";
       element.style.setProperty("--dot", colors[lane] || "#9fb2cc");
       const dot = document.createElement("i");
       const text = document.createElement("span");
-      text.textContent = lane;
+      text.textContent = laneLabel(lane);
       element.append(dot, text);
       this.container.appendChild(element);
-      const laneSpan = (lanes.length - 1) * LANE_GAP;
-      this.labels.push({ element, z: -laneSpan / 2 + index * LANE_GAP });
+      const laneSpan = (lanes.length - 1) * gap;
+      this.labels.push({ element, z: -laneSpan / 2 + index * gap });
     });
   }
 
@@ -932,7 +955,7 @@ export class PriceScene {
     this.timeLabels = [];
     const span = layout.tMax - layout.tMin;
     if (span < 60000) return;
-    const laneSpan = (lanes.length - 1) * LANE_GAP;
+    const laneSpan = layout.laneSpan ?? (lanes.length - 1) * (this.laneGap || LANE_GAP);
     const z = laneSpan / 2 + 2.2;
     const ticks = 5;
     for (let i = 0; i < ticks; i += 1) {

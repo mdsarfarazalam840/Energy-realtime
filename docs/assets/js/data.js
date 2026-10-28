@@ -7,6 +7,43 @@ export const SOURCE_META = {
 
 export const FALLBACK_META = { label: "Source", hint: "feed", color: "#9fb2cc" };
 
+export const COUNTRY_NAMES = {
+  DE: "Germany",
+  NL: "Netherlands",
+  BE: "Belgium",
+  AT: "Austria",
+  FR: "France",
+  PL: "Poland",
+  CH: "Switzerland",
+  CZ: "Czechia",
+  SK: "Slovakia",
+  HU: "Hungary",
+  SI: "Slovenia",
+  ES: "Spain",
+  PT: "Portugal",
+  SE: "Sweden",
+  NO: "Norway",
+  DK: "Denmark",
+  FI: "Finland",
+  EE: "Estonia",
+  LV: "Latvia",
+  LT: "Lithuania",
+  HR: "Croatia",
+  RO: "Romania",
+  BG: "Bulgaria",
+  GR: "Greece",
+  RS: "Serbia",
+  BA: "Bosnia and Herzegovina",
+  ME: "Montenegro",
+  MK: "North Macedonia",
+  AL: "Albania",
+  XK: "Kosovo",
+  MD: "Moldova",
+  UA: "Ukraine",
+  IE: "Ireland",
+  IT: "Italy",
+};
+
 export function sourceMeta(id) {
   return SOURCE_META[id] || { ...FALLBACK_META, label: id || "Unknown" };
 }
@@ -14,6 +51,78 @@ export function sourceMeta(id) {
 export function sourceColor(id, theme = "dark") {
   const meta = sourceMeta(id);
   return theme === "light" ? meta.lightColor : meta.darkColor;
+}
+
+/* ---------------- zones and lanes ---------------- */
+
+/** ISO country code for a public zone code: `SE3` -> `SE`, `IT_NORD` -> `IT`. */
+export function countryOf(zone) {
+  const head = String(zone || "").split(/[_-]/)[0].toUpperCase();
+  const code = head.replace(/\d+$/, "");
+  return code || head || "??";
+}
+
+export function countryLabel(code) {
+  return COUNTRY_NAMES[code] || code || "Unknown";
+}
+
+export function laneOf(point) {
+  return `${point.s}|${point.z}`;
+}
+
+/** Stable selection key for one reading. Zones never contain `|`. */
+export function pointKey(point) {
+  return `${point.s}|${point.z}|${point.t}`;
+}
+
+export function laneParts(id) {
+  const cut = String(id).indexOf("|");
+  if (cut < 0) return { source: String(id), zone: "" };
+  return { source: id.slice(0, cut), zone: id.slice(cut + 1) };
+}
+
+export function laneLabel(id) {
+  const { source, zone } = laneParts(id);
+  return source === "elecz" ? `Elecz ${zone}` : zone;
+}
+
+function hueOf(value) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash % 360;
+}
+
+/** HSL to `#rrggbb`; charts append a hex alpha suffix to these colours. */
+function hslToHex(hue, saturation, lightness) {
+  const s = saturation / 100;
+  const l = lightness / 100;
+  const chroma = (1 - Math.abs(2 * l - 1)) * s;
+  const sector = ((hue % 360) + 360) % 360 / 60;
+  const x = chroma * (1 - Math.abs((sector % 2) - 1));
+  const match = l - chroma / 2;
+  let rgb;
+  if (sector < 1) rgb = [chroma, x, 0];
+  else if (sector < 2) rgb = [x, chroma, 0];
+  else if (sector < 3) rgb = [0, chroma, x];
+  else if (sector < 4) rgb = [0, x, chroma];
+  else if (sector < 5) rgb = [x, 0, chroma];
+  else rgb = [chroma, 0, x];
+  return `#${rgb
+    .map((channel) => Math.round((channel + match) * 255).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+/**
+ * Colour per zone, grouped by country. Zones in one country share a hue so the
+ * country filter reads as a family; Elecz keeps its own warm accent.
+ */
+export function laneColor(id, theme = "dark") {
+  const { source, zone } = laneParts(id);
+  if (source === "elecz") return theme === "light" ? "#c97900" : "#ffb24d";
+  const hue = hueOf(countryOf(zone));
+  return theme === "light" ? hslToHex(hue, 72, 40) : hslToHex(hue, 82, 64);
 }
 
 export function parseSnapshot(raw) {
@@ -26,10 +135,11 @@ export function parseSnapshot(raw) {
     if (!Number.isFinite(t) || !Number.isFinite(p)) continue;
     const s = String(row.s || "unknown");
     const z = String(row.z || "unknown");
+    const l = `${s}|${z}`;
     const key = `${s}|${t}|${z}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    points.push({ t, p, z, s });
+    points.push({ t, p, z, s, l });
   }
   points.sort((a, b) => a.t - b.t || a.s.localeCompare(b.s));
   return {
@@ -65,6 +175,19 @@ export function zoneIds(points) {
   return [...new Set(points.map((p) => p.z))].sort();
 }
 
+export function countryIds(points) {
+  return [...new Set(points.map((p) => countryOf(p.z)))].sort();
+}
+
+/** Lanes are one market each: source + zone. */
+export function laneIds(points) {
+  return [...new Set(points.map((point) => point.l || laneOf(point)))].sort((a, b) => {
+    const left = laneParts(a);
+    const right = laneParts(b);
+    return left.zone.localeCompare(right.zone) || left.source.localeCompare(right.source);
+  });
+}
+
 export function latestTime(points) {
   let max = 0;
   for (const point of points) if (point.t > max) max = point.t;
@@ -72,14 +195,15 @@ export function latestTime(points) {
 }
 
 /**
- * Filter by source, zone, and a window anchored on the newest raw row so stale
- * exports still render their own history instead of collapsing to nothing.
+ * Filter by source, country, zone, and a window anchored on the newest raw row
+ * so stale exports still render their own history instead of collapsing.
  */
-export function filterPoints(points, { sources, zone, rangeMs, anchor }) {
+export function filterPoints(points, { sources, country, zone, rangeMs, anchor }) {
   const cutoff = rangeMs ? anchor - rangeMs : -Infinity;
   const rows = [];
   for (const point of points) {
     if (!sources.has(point.s)) continue;
+    if (country && country !== "all" && countryOf(point.z) !== country) continue;
     if (zone !== "all" && point.z !== zone) continue;
     if (point.t < cutoff) continue;
     rows.push(point);
@@ -92,14 +216,15 @@ export function applyPlayhead(points, playhead) {
   return points.filter((point) => point.t <= playhead);
 }
 
-/** Rebase each source to 100 at its first visible reading. */
+/** Rebase each lane (source + zone) to 100 at its first visible reading. */
 export function indexPoints(points) {
-  const firstBySource = new Map();
+  const firstByLane = new Map();
   for (const point of points) {
-    if (!firstBySource.has(point.s)) firstBySource.set(point.s, point.p);
+    const lane = point.l || laneOf(point);
+    if (!firstByLane.has(lane)) firstByLane.set(lane, point.p);
   }
   return points.map((point) => {
-    const base = firstBySource.get(point.s);
+    const base = firstByLane.get(point.l || laneOf(point));
     const value = base ? (point.p / base) * 100 : point.p;
     return { ...point, v: value };
   });
@@ -134,15 +259,17 @@ export function valueDomain(points, baseline = "window") {
 export function summarize(points) {
   const groups = new Map();
   for (const point of points) {
-    let group = groups.get(point.s);
+    const lane = point.l || laneOf(point);
+    let group = groups.get(lane);
     if (!group) {
-      group = { id: point.s, points: [] };
-      groups.set(point.s, group);
+      const { source, zone } = laneParts(lane);
+      group = { id: lane, source, zone, country: countryOf(zone), points: [] };
+      groups.set(lane, group);
     }
     group.points.push(point);
   }
 
-  const sources = [...groups.values()].map((group) => {
+  const lanes = [...groups.values()].map((group) => {
     const rows = group.points.slice().sort((a, b) => a.t - b.t);
     const values = rows.map((row) => row.v ?? row.p);
     const first = values[0];
@@ -162,6 +289,10 @@ export function summarize(points) {
     const previous = values.length > 1 ? values[values.length - 2] : null;
     return {
       id: group.id,
+      source: group.source,
+      zone: group.zone,
+      country: group.country,
+      label: laneLabel(group.id),
       count: values.length,
       first,
       last,
@@ -178,7 +309,7 @@ export function summarize(points) {
       rawLast: rows[rows.length - 1].p,
     };
   });
-  sources.sort((a, b) => a.id.localeCompare(b.id));
+  lanes.sort((a, b) => a.zone.localeCompare(b.zone) || a.source.localeCompare(b.source));
 
   let min = Infinity;
   let max = -Infinity;
@@ -203,13 +334,15 @@ export function summarize(points) {
 
   let previous = null;
   if (latest) {
+    const lane = latest.l || laneOf(latest);
     for (const point of points) {
-      if (point.s === latest.s && point.t < latest.t && (!previous || point.t > previous.t)) previous = point;
+      const pointLane = point.l || laneOf(point);
+      if (pointLane === lane && point.t < latest.t && (!previous || point.t > previous.t)) previous = point;
     }
   }
 
   return {
-    sources,
+    lanes,
     count,
     min: count ? min : 0,
     max: count ? max : 0,

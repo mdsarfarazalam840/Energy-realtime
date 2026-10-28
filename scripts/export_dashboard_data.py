@@ -19,7 +19,7 @@ Required environment variables:
 Optional environment variables:
     ENERGY_TABLE              Fully qualified table name
     ENERGY_WINDOW_DAYS        History window, default 30
-    ENERGY_MAX_ROWS           Hard row cap, default 20000
+    ENERGY_MAX_ROWS           Hard row cap, default 80000
     DASHBOARD_OUT             Output path, default docs/data/energy.json
 """
 
@@ -285,7 +285,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--out", default=env("DASHBOARD_OUT", str(DEFAULT_OUT)))
     parser.add_argument("--table", default=env("ENERGY_TABLE", DEFAULT_TABLE))
     parser.add_argument("--window-days", type=int, default=int(env("ENERGY_WINDOW_DAYS", "30")))
-    parser.add_argument("--max-rows", type=int, default=int(env("ENERGY_MAX_ROWS", "20000")))
+    parser.add_argument("--max-rows", type=int, default=int(env("ENERGY_MAX_ROWS", "80000")))
     parser.add_argument("--host", default=env("DATABRICKS_HOST"))
     parser.add_argument("--token", default=env("DATABRICKS_TOKEN"))
     parser.add_argument("--warehouse-id", default=env("DATABRICKS_WAREHOUSE_ID"))
