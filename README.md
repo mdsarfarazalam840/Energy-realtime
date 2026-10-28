@@ -610,7 +610,15 @@ python producer_dual.py --dry-run --zone NSW1,QLD1,VIC1,SA1,TAS1
 
 `--dry-run` fetches the live AEMO report and prints normalized messages without Kafka credentials. `--zone` accepts comma-separated AEMO codes such as `NSW1,SA1`; `--aemo-regions all` selects the five NEM regions. AEMO data needs no key; ENTSO-E zones are skipped if `ENTSOE_API_KEY` is absent, while Elecz remains independently enabled.
 
-**AEMO smoke-test result:** the public NEMWeb current dispatch ZIP was retrieved and parsed successfully, producing one normalized message for each of NSW1, QLD1, VIC1, SA1, and TAS1. This local dry run does not publish to Kafka. Full Kafka → Databricks → GitHub Pages verification still requires the configured Kafka and Databricks credentials/services; do not treat this source test as proof that the hosted end-to-end pipeline is live. After configuring those services, dispatch **Energy Market Data to Kafka**, then confirm the resulting dashboard snapshot includes `aemo` in `meta.sources` and Australian region codes in `meta.zones`.
+**End-to-end verification (2026-10-28):** the complete hosted path was exercised with the manual workflow dispatches, not just a local dry run.
+
+1. **Public data → producer:** NEMWeb current dispatch ZIP fetched and parsed into five normalized messages (NSW1, QLD1, VIC1, SA1, TAS1) using the Frankfurter AUD/EUR rate.
+2. **Producer → Kafka:** **Energy Market Data to Kafka** produced 52 messages (5 AEMO + ENTSO-E + Elecz) to `energy-prices`.
+3. **Kafka → Databricks:** job run `785866158938412` finished `SUCCESS`, and `workspace.default.energy_prices_realtime` holds `source = 'aemo'` rows for all five regions.
+4. **Databricks → snapshot:** **Publish Dashboard Snapshot** exported 225 rows with `meta.sources = [aemo, elecz, entsoe]` and all five NEM zones, and committed `docs/data/energy.json`.
+5. **Snapshot → UI:** the live site returned `mode: live`, status chip `Live snapshot`, five AEMO lanes, and the Australia country filter in a headless browser session with no page errors.
+
+AEMO needs no API key; ENTSO-E remains the only optional key.
 
 `producer_dual.py` uses `ssl.ca.location = "aiven_ca.pem"` by default; set `KAFKA_CA_LOCATION` to override. The Kafka username defaults to the non-secret `avnadmin`; set `KAFKA_USERNAME` to change it. The password comes from `KAFKA_PASSWORD`.
 
