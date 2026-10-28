@@ -60,16 +60,39 @@ jobs:
         id: commit
         run: |
           set -euo pipefail
-          git config user.name "voltscope-bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/data/energy.json
-          if git diff --cached --quiet; then
+          # generated_at and query timings move every run. Compare only the payload
+          # so an unchanged table does not create a commit and a Pages rebuild.
+          changed=$(python - <<'PY'
+          import json, subprocess
+
+          VOLATILE = {"query_ms", "publish_ms", "window_days", "max_rows", "truncated"}
+
+          def normalize(doc):
+              doc = dict(doc)
+              doc.pop("generated_at", None)
+              meta = {k: v for k, v in (doc.get("meta") or {}).items() if k not in VOLATILE}
+              doc["meta"] = meta
+              return doc
+
+          try:
+              old = json.loads(subprocess.check_output(["git", "show", "HEAD:docs/data/energy.json"]))
+          except Exception:
+              old = None
+          new = json.load(open("docs/data/energy.json", encoding="utf-8"))
+          print("true" if old is None or normalize(old) != normalize(new) else "false")
+          PY
+          )
+          if [ "$changed" != "true" ]; then
+            git checkout -- docs/data/energy.json 2>/dev/null || true
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Snapshot is unchanged."
             exit 0
           fi
+          git add docs/data/energy.json
           rows=$(python -c "import json;print(json.load(open('docs/data/energy.json'))['meta']['row_count'])")
           latest=$(python -c "import json;print(json.load(open('docs/data/energy.json'))['meta']['latest_timestamp'])")
+          git config user.name "voltscope-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(data): publish dashboard snapshot (${rows} rows, ${latest}) [skip ci]"
           git push origin HEAD:main
           echo "changed=true" >> "$GITHUB_OUTPUT"
