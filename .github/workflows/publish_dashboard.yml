@@ -1,0 +1,101 @@
+name: Publish Dashboard Snapshot
+
+# Static GitHub Pages cannot hold a Databricks token, so this job pulls the
+# latest Delta rows through the SQL Statement API and commits a compact JSON
+# snapshot. The 3D site then polls that file from the browser.
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Dual Energy Data to Kafka"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-dashboard
+  cancel-in-progress: false
+
+jobs:
+  export:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DATABRICKS_WAREHOUSE_ID: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
+      ENERGY_TABLE: ${{ vars.ENERGY_TABLE || 'workspace.default.energy_prices_realtime' }}
+      ENERGY_WAIT_NEW_DATA: ${{ github.event_name == 'workflow_run' && '420' || '0' }}
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install exporter dependency
+        run: pip install "requests==2.32.3"
+
+      - name: Verify configuration
+        run: |
+          set -euo pipefail
+          test -n "$DATABRICKS_HOST" || { echo "::error::Missing DATABRICKS_HOST secret"; exit 1; }
+          test -n "$DATABRICKS_TOKEN" || { echo "::error::Missing DATABRICKS_TOKEN secret"; exit 1; }
+          test -n "$DATABRICKS_WAREHOUSE_ID" || { echo "::error::Set repository variable DATABRICKS_WAREHOUSE_ID"; exit 1; }
+
+      - name: Export snapshot from Databricks
+        run: python scripts/export_dashboard_data.py --wait-new-data "$ENERGY_WAIT_NEW_DATA"
+
+      - name: Commit snapshot when it changed
+        id: commit
+        run: |
+          set -euo pipefail
+          git config user.name "voltscope-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data/energy.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Snapshot is unchanged."
+            exit 0
+          fi
+          rows=$(python -c "import json;print(json.load(open('docs/data/energy.json'))['meta']['row_count'])")
+          latest=$(python -c "import json;print(json.load(open('docs/data/energy.json'))['meta']['latest_timestamp'])")
+          git commit -m "chore(data): publish dashboard snapshot (${rows} rows, ${latest}) [skip ci]"
+          git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "rows=${rows}" >> "$GITHUB_OUTPUT"
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## VoltScope snapshot"
+            echo ""
+            if [ -f docs/data/energy.json ]; then
+              table=$(jq -r '.meta.table' docs/data/energy.json)
+              rows=$(jq -r '.meta.row_count' docs/data/energy.json)
+              sources=$(jq -r '.meta.sources | join(", ")' docs/data/energy.json)
+              latest=$(jq -r '.meta.latest_timestamp' docs/data/energy.json)
+              published=$(jq -r '.generated_at' docs/data/energy.json)
+              query=$(jq -r '.meta.query_ms' docs/data/energy.json)
+              echo "- Table: \`${table}\`"
+              echo "- Rows: **${rows}** across ${sources}"
+              echo "- Latest reading: \`${latest}\`"
+              echo "- Published: \`${published}\`"
+              echo "- Query: ${query} ms"
+            else
+              echo "- Snapshot file missing."
+            fi
+            echo ""
+            echo "Live page: https://mdsarfarazalam840.github.io/Energy-realtime/"
+          } >> "$GITHUB_STEP_SUMMARY"
