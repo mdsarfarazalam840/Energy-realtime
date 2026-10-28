@@ -23,6 +23,11 @@ jobs:
           KAFKA_BOOTSTRAP: ${{ secrets.KAFKA_BOOTSTRAP }}
           KAFKA_PASSWORD: ${{ secrets.KAFKA_PASSWORD }}
           ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
+          # Optional overrides. Leave the repository variables unset to use the
+          # built-in 18-zone list and Elecz DE spot.
+          ENTSOE_ZONES: ${{ vars.ENTSOE_ZONES }}
+          ELECZ_ZONES: ${{ vars.ELECZ_ZONES }}
+          ENTSOE_LOOKBACK_HOURS: ${{ vars.ENTSOE_LOOKBACK_HOURS }}
           # KAFKA_CA_PEM: ${{ secrets.KAFKA_CA_PEM }}  # Can leave commented out temporarily
           
       - name: Trigger Databricks Job

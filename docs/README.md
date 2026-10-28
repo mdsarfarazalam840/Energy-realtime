@@ -22,7 +22,7 @@ screenshot commands.
 ## How the data reaches the page
 
 ```
-ENTSO-E + Elecz
+ENTSO-E 18 zones + Elecz DE spot
       │  producer_dual.py (GitHub Action, every 30 min)
       ▼
    Aiven Kafka  ──►  Databricks notebook (kafka_ingest.ipynb)
@@ -72,8 +72,8 @@ Open `index.html` through a server, not `file://`, because ES modules and
 ```
 
 `t` is epoch milliseconds (UTC), `p` is the price, `z` is the bidding zone and
-`s` is the feed. The page flattens duplicate `(source, timestamp)` pairs and
-sorts by time.
+`s` is the feed. The page flattens duplicate `(source, zone, timestamp)` tuples
+and sorts by time.
 
 ## Filters and interactions
 

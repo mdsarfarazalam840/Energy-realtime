@@ -211,8 +211,8 @@ def build_max_sql(table: str) -> str:
 
 
 def normalize_points(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Cast rows to compact points, drop junk, and dedupe by source + timestamp."""
-    by_key: dict[tuple[str, int], dict[str, Any]] = {}
+    """Cast rows to compact points, drop junk, and dedupe by source + zone + timestamp."""
+    by_key: dict[tuple[str, str, int], dict[str, Any]] = {}
     for row in rows:
         try:
             ms = int(row["t_ms"])
@@ -223,9 +223,9 @@ def normalize_points(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             continue
         source = str(row.get("source") or "unknown").strip() or "unknown"
         zone = str(row.get("zone") or "unknown").strip() or "unknown"
-        by_key[(source, ms)] = {"t": ms, "z": zone, "p": round(price, 4), "s": source}
+        by_key[(source, zone, ms)] = {"t": ms, "z": zone, "p": round(price, 4), "s": source}
 
-    points = sorted(by_key.values(), key=lambda point: (point["t"], point["s"]))
+    points = sorted(by_key.values(), key=lambda point: (point["t"], point["s"], point["z"]))
     return points
 
 

@@ -1,8 +1,8 @@
 # VoltScope
 
-**Live 3D energy price intelligence for the German market.**
+**Live 3D energy price intelligence for Europe's day-ahead markets.**
 
-VoltScope turns two public electricity price feeds into a durable lakehouse table and a public, browser-safe 3D dashboard. Market data arrives through GitHub Actions and Kafka, lands in Delta Lake through Databricks, and reaches GitHub Pages as a compact static snapshot. No Databricks token ever reaches the browser.
+VoltScope turns two public electricity price feeds into a durable lakehouse table and a public, browser-safe 3D dashboard. ENTSO-E day-ahead prices cover 18 bidding zones across 10 countries; Elecz adds DE spot. Market data arrives through GitHub Actions and Kafka, lands in Delta Lake through Databricks, and reaches GitHub Pages as a compact static snapshot. No Databricks token ever reaches the browser.
 
 [![Live dashboard](https://img.shields.io/badge/dashboard-live-4cd7ff?style=flat-square)](https://mdsaifedu.eu.cc/Energy-realtime/)
 [![Publish Dashboard Snapshot](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/publish_dashboard.yml/badge.svg?branch=main)](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/publish_dashboard.yml)
@@ -47,8 +47,8 @@ VoltScope turns two public electricity price feeds into a durable lakehouse tabl
 
 Europe's day-ahead and spot electricity markets publish the same physical quantity through different APIs, at different cadences, with different schemas. VoltScope demonstrates a small, production-shaped path from those feeds to a public product:
 
-1. **Collect** DE spot prices from Elecz and DE_LU day-ahead prices from ENTSO-E.
-2. **Buffer** both feeds on one Kafka topic with TLS and SCRAM authentication.
+1. **Collect** Elecz DE spot prices and ENTSO-E day-ahead prices for 18 bidding zones across 10 countries.
+2. **Buffer** every feed on one Kafka topic with TLS and SCRAM authentication.
 3. **Land** parsed JSON in a Delta table through Databricks Structured Streaming.
 4. **Publish** a compact, deduplicated JSON snapshot through the Databricks SQL Statement API.
 5. **Render** a static Three.js dashboard on GitHub Pages, with no server and no credentials in the browser.
@@ -60,6 +60,7 @@ The repository started from the Databricks **default-python** Declarative Automa
 ### What this project demonstrates
 
 - A serverless ingestion path with no long-running cluster to babysit.
+- A zone registry that adds a market with one configuration line.
 - A static frontend that can be public without leaking warehouse credentials.
 - A snapshot contract that is versioned, validated, and safe to cache.
 - A dashboard that tells the truth when data is stale or missing.
@@ -108,13 +109,15 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 
 ### Pipeline
 
-- **Dual feeds** in one producer: ENTSO-E day-ahead and Elecz spot.
+- **Multi-zone feeds** in one producer: ENTSO-E day-ahead for 18 bidding zones plus Elecz DE spot.
+- **Zone registry**: one `ZoneConfig` line per market, with aliases such as `SE1` / `SE_1` and an `ENTSOE_ZONES` override.
+- **Per-zone isolation**: a failed fetch logs and skips that zone; the other zones still publish.
 - **Kafka security**: SASL_SSL with SCRAM-SHA-256 and a CA certificate.
 - **Databricks secret scope** for the Kafka password; no password in the notebook.
 - **Structured Streaming** with `availableNow`, so the job drains available offsets and stops.
 - **Delta Lake** append-only history in Unity Catalog.
 - **SQL Statement API** export with polling, retries, and chunk handling.
-- **Snapshot guardrails**: identifier validation, finite-price checks, deduplication by `(source, timestamp)`, fallback to newest rows, atomic file replacement.
+- **Snapshot guardrails**: identifier validation, finite-price checks, deduplication by `(source, zone, timestamp)`, fallback to newest rows, atomic file replacement.
 - **No-op publication**: the workflow compares the normalized payload and skips the commit when nothing changed.
 - **Freshness wait**: after a producer run, the exporter waits up to 420 seconds for a row newer than the published snapshot.
 - **Job summary**: every publish run writes a human-readable GitHub Actions summary.
@@ -129,7 +132,7 @@ The system has four boundaries: market data sources, GitHub Actions automation, 
 flowchart LR
   subgraph Sources["Market data"]
     direction TB
-    E["ENTSO-E<br/>DE_LU day-ahead"]
+    E["ENTSO-E<br/>18 day-ahead zones"]
     Z["Elecz<br/>DE spot"]
   end
 
@@ -165,8 +168,8 @@ flowchart LR
 
 | Component | Source | Responsibility |
 |---|---|---|
-| Dual producer | `producer_dual.py` | Fetch Elecz and ENTSO-E, normalize to one JSON contract, produce to Kafka |
-| Kafka topic | Aiven Kafka | Durable buffer for both feeds; topic `energy-prices` |
+| Dual producer | `producer_dual.py` | Fetch ENTSO-E day-ahead for 18 zones and Elecz DE spot, normalize to one JSON contract, produce to Kafka |
+| Kafka topic | Aiven Kafka | Durable buffer for every zone; topic `energy-prices` |
 | Databricks job | `src/kafka_ingest.ipynb`, `resources/energy_job.yml` | Read Kafka with Structured Streaming, parse JSON, append to Delta |
 | Delta table | `workspace.default.energy_prices_realtime` | Append-only price history in Unity Catalog |
 | Checkpoint volume | `/Volumes/workspace/default/energy_realtime/checkpoints` | Streaming checkpoint state |
@@ -203,7 +206,7 @@ sequenceDiagram
   participant PGS as GitHub Pages
   participant UI as Browser
 
-  SRC->>GH: ENTSO-E + Elecz prices
+  SRC->>GH: ENTSO-E 18 zones + Elecz DE spot
   GH->>K: produce JSON on energy-prices
   GH->>DBX: POST /api/2.1/jobs/run-now
   DBX->>K: readStream with startingOffsets=latest
@@ -224,8 +227,8 @@ sequenceDiagram
 
 | Stage | Input | Output | Guarantee |
 |---|---|---|---|
-| Market feeds | Elecz spot API, ENTSO-E Transparency API | Two JSON price readings | Best-effort fetch; failures are logged and skipped |
-| Producer | Normalized messages | Kafka topic `energy-prices` | One message per reading; both sources share one schema |
+| Market feeds | Elecz spot API, ENTSO-E Transparency API (18 zones) | One JSON price reading per zone | Best-effort fetch per zone; a failed zone is logged and skipped |
+| Producer | Normalized messages | Kafka topic `energy-prices` | One message per zone; all zones share one schema |
 | Transport | Kafka topic | Consumer offsets | SASL_SSL, SCRAM-SHA-256, CA-verified TLS |
 | Ingest | Kafka JSON values | Delta rows | `availableNow` drains available offsets, then stops |
 | Storage | Append operations | `energy_prices_realtime` | Append-only history; checkpointed stream |
@@ -237,7 +240,7 @@ sequenceDiagram
 
 | Workflow | Trigger | Cadence | Purpose |
 |---|---|---|---|
-| **Dual Energy Data to Kafka** | `schedule` + `workflow_dispatch` | `*/30 * * * *` | Fetch both feeds, produce to Kafka, trigger the Databricks job |
+| **Dual Energy Data to Kafka** | `schedule` + `workflow_dispatch` | `*/30 * * * *` | Fetch all configured zones, produce to Kafka, trigger the Databricks job |
 | **Publish Dashboard Snapshot** | `schedule` + `workflow_dispatch` + `workflow_run` | `7,37 * * * *` | Export a fresh snapshot, commit only when the payload changed |
 
 The publish workflow waits up to 420 seconds for a row newer than the published snapshot when it is triggered by the producer workflow. If no fresh row arrives, it publishes the latest available snapshot and logs a warning. It also warns when the newest row is more than 120 minutes old.
@@ -264,23 +267,29 @@ flowchart TD
 
 ### Kafka message
 
-Both feeds produce the same four fields. ENTSO-E timestamps come from the latest index in the returned series; Elecz timestamps come from the time of fetch.
+Every zone produces one message with the same core fields. ENTSO-E messages carry the extra `country`, `market`, and `entsoe_code` fields for future enrichment. Timestamps come from the latest index of the returned series for ENTSO-E and from the provider timestamp for Elecz, with a fetch-time fallback.
 
 ```json
 {
-  "timestamp": "2026-10-28T03:33:43.413000+00:00",
-  "zone": "DE",
-  "price": 20.9779,
-  "source": "elecz"
+  "timestamp": "2026-10-28T11:00:00+00:00",
+  "zone": "FR",
+  "price": 62.41,
+  "source": "entsoe",
+  "country": "FR",
+  "market": "day-ahead",
+  "entsoe_code": "FR"
 }
 ```
 
 | Field | Type | Example | Notes |
 |---|---|---|---|
-| `timestamp` | string | `2026-10-28T03:33:43.413000+00:00` | ISO-8601, UTC where available |
-| `zone` | string | `DE` / `DE_LU` | Bidding zone |
-| `price` | double | `20.9779` | EUR/MWh |
+| `timestamp` | string | `2026-10-28T11:00:00+00:00` | ISO-8601, UTC |
+| `zone` | string | `FR` / `SE3` / `DE_LU` | Public bidding-zone code; Elecz uses its own label (`DE`) |
+| `price` | double | `62.41` | EUR/MWh |
 | `source` | string | `elecz` / `entsoe` | Feed identifier |
+| `country` | string | `FR` | ISO country code; `DE` for `DE_LU` |
+| `market` | string | `day-ahead` / `spot` | Market label |
+| `entsoe_code` | string | `FR` / `SE_3` | entsoe-py Area code; ENTSO-E messages only |
 
 ### Delta table
 
@@ -293,7 +302,40 @@ Both feeds produce the same four fields. ENTSO-E timestamps come from the latest
 | `price` | `double` | EUR/MWh |
 | `source` | `string` | `elecz` or `entsoe` |
 
-The stream writes with `outputMode("append")`, `trigger(availableNow=True)`, and a checkpoint in the Unity Catalog volume. There is no `MERGE` dedupe in the Delta write; the exporter deduplicates the snapshot by `(source, timestamp)`.
+The stream writes with `outputMode("append")`, `trigger(availableNow=True)`, and a checkpoint in the Unity Catalog volume. There is no `MERGE` dedupe in the Delta write; the exporter deduplicates the snapshot by `(source, zone, timestamp)`.
+
+The notebook schema reads `timestamp`, `zone`, `price`, and `source` only. The extra `country`, `market`, and `entsoe_code` fields stay in Kafka for future enrichment and are ignored by the stream, so the Delta table needs no migration.
+
+### Supported zones
+
+`producer_dual.py` keeps one `ZoneConfig` line per market in `ZONE_REGISTRY`. The default run covers 18 ENTSO-E bidding zones across 10 countries.
+
+| Zone | Country | ENTSO-E code | Elecz | Market |
+|---|---|---|---|---|
+| `DE_LU` | DE | `DE_LU` | `DE` | day-ahead |
+| `FR` | FR | `FR` | `FR` | day-ahead |
+| `NL` | NL | `NL` | `NL` | day-ahead |
+| `BE` | BE | `BE` | `BE` | day-ahead |
+| `AT` | AT | `AT` | `AT` | day-ahead |
+| `ES` | ES | `ES` | `ES` | day-ahead |
+| `PL` | PL | `PL` | `PL` | day-ahead |
+| `SE1` | SE | `SE_1` | `SE1` | day-ahead |
+| `SE2` | SE | `SE_2` | `SE2` | day-ahead |
+| `SE3` | SE | `SE_3` | `SE3` | day-ahead |
+| `SE4` | SE | `SE_4` | `SE4` | day-ahead |
+| `NO1` | NO | `NO_1` | `NO1` | day-ahead |
+| `NO2` | NO | `NO_2` | `NO2` | day-ahead |
+| `NO3` | NO | `NO_3` | `NO3` | day-ahead |
+| `NO4` | NO | `NO_4` | `NO4` | day-ahead |
+| `NO5` | NO | `NO_5` | `NO5` | day-ahead |
+| `DK1` | DK | `DK_1` | `DK1` | day-ahead |
+| `DK2` | DK | `DK_2` | `DK2` | day-ahead |
+
+Aliases `DE`, `DE-LU`, `SE_1`…`SE_4`, `NO_1`…`NO_5`, and `DK_1`/`DK_2` resolve to the public codes. To add a market, add one `ZoneConfig` entry and, if needed, an alias. `--list-zones` prints the current registry.
+
+Elecz messages keep Elecz zone labels (for example `DE` for `DE_LU`), so historical rows stay consistent with the original single-market contract.
+
+Elecz returns local currency for non-German zones (`SEK`, `DKK`, `NOK`). The producer skips those prices to keep the `EUR/MWh` contract. Only DE is enabled for Elecz by default.
 
 ### Snapshot
 
@@ -314,7 +356,7 @@ The stream writes with `outputMode("append")`, `trigger(availableNow=True)`, and
     "truncated": false,
     "fallback": false,
     "sources": ["elecz", "entsoe"],
-    "zones": ["DE", "DE_LU"],
+    "zones": ["AT", "BE", "DE", "DE_LU", "DK1", "DK2", "ES", "FR", "NL", "NO1", "NO2", "NO3", "NO4", "NO5", "PL", "SE1", "SE2", "SE3", "SE4"],
     "currency": "EUR/MWh",
     "first_timestamp": "2026-10-27T05:15:00Z",
     "first_timestamp_ms": 1793078100000,
@@ -371,7 +413,7 @@ If the window returns no rows, it falls back to the newest rows in the table. Th
 
 | Layer | Technology | Role |
 |---|---|---|
-| Market data | [Elecz](https://elecz.com/), [ENTSO-E Transparency](https://transparency.entsoe.eu/) | DE spot and DE_LU day-ahead prices |
+| Market data | [Elecz](https://elecz.com/), [ENTSO-E Transparency](https://transparency.entsoe.eu/) | DE spot and day-ahead prices for 18 ENTSO-E zones |
 | Scheduling | GitHub Actions | Cron producer and snapshot publisher |
 | Transport | [Aiven Kafka](https://aiven.io/kafka) | Durable topic `energy-prices`, SASL_SSL, SCRAM-SHA-256 |
 | Processing | [Databricks](https://www.databricks.com/), Apache Spark Structured Streaming | Parse JSON and append to Delta |
@@ -430,7 +472,7 @@ Energy-realtime/
 │   ├── conftest.py                    # Databricks Connect fixtures
 │   └── sample_taxis_test.py           # template sample test
 ├── fixtures/
-├── producer_dual.py                   # Elecz + ENTSO-E producer
+├── producer_dual.py                   # multi-zone Elecz + ENTSO-E producer
 ├── databricks.yml                     # bundle, targets, variables
 ├── pyproject.toml                     # Python package and dev tools
 ├── LICENSE
@@ -479,6 +521,11 @@ pip install requests confluent-kafka entsoe-py pandas
 export KAFKA_BOOTSTRAP="kafka-host:port"
 export KAFKA_PASSWORD="..."
 export ENTSOE_API_KEY="..."
+
+# Optional: restrict the run to specific zones.
+export ENTSOE_ZONES="DE_LU,FR,NL,BE,AT,ES,PL,SE1,NO1,DK1"
+export ELECZ_ZONES="DE"
+
 python producer_dual.py
 ```
 
@@ -488,10 +535,20 @@ On PowerShell:
 $env:KAFKA_BOOTSTRAP = "kafka-host:port"
 $env:KAFKA_PASSWORD = "..."
 $env:ENTSOE_API_KEY = "..."
+$env:ENTSOE_ZONES = "DE_LU,FR,NL,BE,AT,ES,PL,SE1,NO1,DK1"
 python producer_dual.py
 ```
 
-`producer_dual.py` uses `ssl.ca.location = "aiven_ca.pem"`. Keep that file beside the script or update the path. The Kafka username is the non-secret `avnadmin`; the password comes from `KAFKA_PASSWORD`. If `ENTSOE_API_KEY` is missing, the ENTSO-E branch logs a skip and continues; Elecz still runs.
+Inspect the registry and test a fetch without Kafka:
+
+```bash
+python producer_dual.py --list-zones
+python producer_dual.py --dry-run --zone de,fr,se_1
+```
+
+`--dry-run` prints the resolved zones and the JSON message per zone, and does not need Kafka credentials. `--zone` accepts aliases such as `de`, `se_1`, and `dk_2`. `--lookback-hours` controls how much day-ahead history the producer reads (default 48). If `ENTSOE_API_KEY` is missing, the ENTSO-E zones log a skip and continue; Elecz still runs.
+
+`producer_dual.py` uses `ssl.ca.location = "aiven_ca.pem"` by default; set `KAFKA_CA_LOCATION` to override. The Kafka username defaults to the non-secret `avnadmin`; set `KAFKA_USERNAME` to change it. The password comes from `KAFKA_PASSWORD`.
 
 ### Run the exporter locally
 
@@ -576,6 +633,23 @@ Set these under **Settings → Secrets and variables → Actions → Variables**
 |---|---|---|
 | `DATABRICKS_WAREHOUSE_ID` | none, required | SQL warehouse used by the exporter |
 | `ENERGY_TABLE` | `workspace.default.energy_prices_realtime` | Table queried by the exporter |
+| `ENTSOE_ZONES` | 18-zone default | Comma-separated ENTSO-E zones; `all` uses the whole registry |
+| `ELECZ_ZONES` | `DE` | Comma-separated Elecz zones, or `all` |
+| `ENTSOE_LOOKBACK_HOURS` | `48` | Hours of day-ahead history to read |
+
+### Producer environment
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ENTSOE_API_KEY` | none, required for ENTSO-E | Transparency API key; Elecz still runs without it |
+| `ENTSOE_ZONES` | 18-zone default | Zones to fetch, comma-separated; `all` uses the whole registry |
+| `ELECZ_ZONES` | `DE` | Elecz zones to fetch; non-EUR prices are skipped |
+| `ENTSOE_LOOKBACK_HOURS` | `48` | Hours of day-ahead history read per zone |
+| `KAFKA_BOOTSTRAP` | none, required | Kafka bootstrap servers |
+| `KAFKA_PASSWORD` | none, required | SCRAM password |
+| `KAFKA_USERNAME` | `avnadmin` | SCRAM username |
+| `KAFKA_CA_LOCATION` | `aiven_ca.pem` | CA bundle path |
+| `ELECZ_ALLOW_NON_EUR` | `0` | Set `1` only if you add currency conversion |
 
 ### Databricks configuration
 
@@ -638,7 +712,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 | Control | Options | Notes |
 |---|---|---|
 | Sources | Elecz, ENTSO-E | At least one source stays enabled |
-| Zone | All zones, `DE`, `DE_LU` | Populated from the snapshot |
+| Zone | All zones, plus every zone in the snapshot (`DE_LU`, `FR`, `SE3`, …) | Populated from the snapshot |
 | Window | 6h, 24h, 7d, 30d, All | Anchored on the newest raw row |
 | Price baseline | Window, Zero | Window starts at the session low; Zero keeps a truthful origin |
 | Series mode | Raw, Indexed | Indexed rebases each source to 100 at its first visible reading |
@@ -667,6 +741,8 @@ The dashboard is a single static page. All state lives in the browser and, when 
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Producer logs `ENTSOE_API_KEY not set, skipping` | Missing secret or local env var | Add `ENTSOE_API_KEY`; Elecz can still publish |
+| Producer logs `Unknown zone` | Zone code not in `ZONE_REGISTRY` | Use a code from `--list-zones` or add one `ZoneConfig` line |
+| Producer logs `skipping to keep the EUR/MWh contract` | Elecz returned a non-EUR zone | Expected for non-DE Elecz zones; leave it disabled or add conversion |
 | Producer logs `Elecz response format unexpected` | Upstream response changed | Inspect the response and update the field mapping |
 | Kafka send error / TLS failure | CA file missing or password wrong | Recreate `aiven_ca.pem`; verify `KAFKA_PASSWORD` |
 | Databricks job fails immediately | Secret scope or volume missing | Create `kafka-scope` and the Unity Catalog volumes |
@@ -738,6 +814,12 @@ ruff check .
 ### Manual smoke tests
 
 ```bash
+# List the zone registry
+python producer_dual.py --list-zones
+
+# Fetch prices for two zones without producing to Kafka
+python producer_dual.py --dry-run --zone de,fr
+
 # Validate the exporter without writing
 python scripts/export_dashboard_data.py --dry-run
 
@@ -814,6 +896,10 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - **The template tests are not pipeline tests.** `sample_taxis_test.py` exercises Databricks Connect, not the energy contract.
 - **The frontend depends on jsDelivr.** Three.js is pinned from a CDN via an import map. Offline or air-gapped deployments must vendor the module.
 - **The demo fallback is synthetic.** It is deterministic and clearly labelled, but it is not market data.
+- **Elecz is DE-only by default.** Other Elecz zones return local currency (`SEK`, `DKK`, `NOK`), so the producer skips them instead of publishing a mixed-unit price.
+- **The all-zones dashboard view shares one lane per source.** Points from different zones at the same timestamp overlap; pick a zone in the filter for a clean view. Per-zone lanes are on the roadmap.
+- **ENTSO-E publishes day-ahead prices in the afternoon.** The producer reads a 48-hour lookback so a run still finds the latest published series.
+- **Zone coverage is opt-in.** The registry ships 18 zones; `ENTSOE_ZONES` limits a run and new markets need one registry line.
 - **There is no alerting.** A failed workflow or stale snapshot is visible in Actions and the dashboard, but it does not page anyone.
 - **Upstream APIs can change.** Elecz is an undocumented spot endpoint; a response change requires a producer update.
 - **The bundle targets are account-specific.** `databricks.yml` contains a workspace host, owner, and root path. Change them before deploying elsewhere.
@@ -826,7 +912,9 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - [ ] Add data-quality expectations in the Databricks pipeline.
 - [ ] Replace append-only ingest with `MERGE` and a watermark for idempotent rows.
 - [ ] Add freshness alerting to GitHub Issues or a webhook.
-- [ ] Add multi-zone support beyond `DE` and `DE_LU`.
+- [x] Add multi-zone support: 18 ENTSO-E zones across 10 countries.
+- [ ] Add per-zone lanes and colours to the 3D scene and timeline.
+- [ ] Add more ENTSO-E zones and non-DE Elecz zones with EUR conversion.
 - [ ] Add forecast vs actual overlays and negative-price callouts.
 - [ ] Vendor Three.js for offline and air-gapped use.
 - [ ] Add Terraform or Pulumi for Kafka, volumes, and warehouse resources.
