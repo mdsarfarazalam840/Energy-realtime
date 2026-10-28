@@ -357,7 +357,7 @@ def run(zones_elecz: list[str], zones_entsoe: list[str], lookback_hours: int, dr
             emit(fetch_elecz_zone(zone))
         except Exception as exc:
             failures += 1
-            print(f"Elecz fetch failed for {zone}: {exc}")
+            print(f"Elecz fetch failed for {zone}: {exc or type(exc).__name__}")
 
     api_key = os.environ.get("ENTSOE_API_KEY")
     if not api_key:
@@ -371,7 +371,7 @@ def run(zones_elecz: list[str], zones_entsoe: list[str], lookback_hours: int, dr
                 emit(fetch_entsoe_zone(client, zone, lookback_hours))
             except Exception as exc:
                 failures += 1
-                print(f"ENTSO-E fetch failed for {zone}: {exc}")
+                print(f"ENTSO-E fetch failed for {zone}: {exc or type(exc).__name__}")
 
     if producer is not None:
         producer.flush()
