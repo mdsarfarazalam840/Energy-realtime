@@ -321,7 +321,7 @@ def run(zones_elecz: list[str], zones_entsoe: list[str], zones_aemo: list[str], 
             failures += 1
             print(f"Elecz fetch failed for {zone}: {exc}")
 
-    api_key = os.environ.get("ENTSOE_API_KEY")
+    api_key = env_str("ENTSOE_API_KEY")
     if zones_entsoe and api_key:
         from entsoe import EntsoePandasClient
 
@@ -364,15 +364,32 @@ def list_zones() -> None:
         print(f"{zone:<8} {config.country:<8} {config.market:<24} {config.entsoe or '-':<8} {config.elecz or '-':<6} {'yes' if config.aemo else '-':<6}")
 
 
+def env_str(name: str) -> str | None:
+    """GitHub Actions exposes unset repository variables as an empty string."""
+    value = os.environ.get(name)
+    return value if value and value.strip() else None
+
+
+def env_int(name: str, default: int) -> int:
+    raw = env_str(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        print(f"warning: {name}={raw!r} is not an integer; using {default}")
+        return default
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Fetch public electricity prices and optionally produce them to Kafka")
     parser.add_argument("--list-zones", action="store_true", help="Print supported regions and exit")
     parser.add_argument("--dry-run", action="store_true", help="Fetch and print without Kafka credentials")
     parser.add_argument("--zone", help="Comma-separated zones for all feeds, e.g. NSW1,SA1 or DE_LU")
-    parser.add_argument("--aemo-regions", default=os.environ.get("AEMO_REGIONS"), help="AEMO regions, comma-separated or all")
-    parser.add_argument("--entsoe-zones", default=os.environ.get("ENTSOE_ZONES"), help="ENTSO-E zones, comma-separated or all")
-    parser.add_argument("--elecz-zones", default=os.environ.get("ELECZ_ZONES"), help="Elecz zones, comma-separated or all")
-    parser.add_argument("--lookback-hours", type=int, default=int(os.environ.get("ENTSOE_LOOKBACK_HOURS", "48")))
+    parser.add_argument("--aemo-regions", default=env_str("AEMO_REGIONS"), help="AEMO regions, comma-separated or all")
+    parser.add_argument("--entsoe-zones", default=env_str("ENTSOE_ZONES"), help="ENTSO-E zones, comma-separated or all")
+    parser.add_argument("--elecz-zones", default=env_str("ELECZ_ZONES"), help="Elecz zones, comma-separated or all")
+    parser.add_argument("--lookback-hours", type=int, default=env_int("ENTSOE_LOOKBACK_HOURS", 48))
     return parser.parse_args(argv)
 
 
