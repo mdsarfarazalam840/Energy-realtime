@@ -1,0 +1,469 @@
+{
+  "label": "80k",
+  "snapshot": "tests\\load\\data\\energy-80k.json",
+  "snapshot_bytes": 4436796,
+  "started_at": "2026-10-28T11:26:36Z",
+  "desktop": {
+    "viewport": "desktop",
+    "boot_ms": 7514,
+    "points": 79968,
+    "lanes": 49,
+    "idle_fps": 3.6,
+    "replay_fps": 1.3,
+    "software_webgl": true,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "cdn_slowest_ms": 1653,
+    "resources": [
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "ms": 1653,
+        "bytes": 261365,
+        "start": 437
+      },
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/postprocessing/RenderPass.js",
+        "ms": 1620,
+        "bytes": 937,
+        "start": 438
+      },
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/postprocessing/EffectComposer.js",
+        "ms": 1619,
+        "bytes": 1527,
+        "start": 437
+      },
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/OrbitControls.js",
+        "ms": 1616,
+        "bytes": 7534,
+        "start": 437
+      },
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/postprocessing/UnrealBloomPass.js",
+        "ms": 1607,
+        "bytes": 3276,
+        "start": 448
+      },
+      {
+        "name": "http://127.0.0.1:60083/data/energy.json?v=1793186803053",
+        "ms": 62,
+        "bytes": 878149,
+        "start": 2834
+      }
+    ],
+    "hover_ms": {
+      "median": 42.9,
+      "max": 120.6
+    },
+    "dom_nodes": 679,
+    "heap_mb": 0.0,
+    "console": [
+      "warning: Snapshot load failed AbortError: The user aborted a request."
+    ]
+  },
+  "mobile": {
+    "viewport": "mobile",
+    "boot_ms": 2949,
+    "points": 79968,
+    "lanes": 49,
+    "idle_fps": 4.8,
+    "replay_fps": 0.7,
+    "software_webgl": true,
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "cdn_slowest_ms": 287,
+    "resources": [
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "ms": 287,
+        "bytes": 261365,
+        "start": 468
+      },
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/postprocessing/EffectComposer.js",
+        "ms": 239,
+        "bytes": 1527,
+        "start": 469
+      },
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/postprocessing/RenderPass.js",
+        "ms": 238,
+        "bytes": 937,
+        "start": 469
+      },
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/OrbitControls.js",
+        "ms": 237,
+        "bytes": 7534,
+        "start": 468
+      },
+      {
+        "name": "http://127.0.0.1:60083/data/energy.json?v=1793187094657",
+        "ms": 213,
+        "bytes": 878149,
+        "start": 1465
+      },
+      {
+        "name": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/postprocessing/UnrealBloomPass.js",
+        "ms": 170,
+        "bytes": 3276,
+        "start": 469
+      }
+    ],
+    "hover_ms": {
+      "median": 100.5,
+      "max": 307.8
+    },
+    "dom_nodes": 679,
+    "heap_mb": 0.0,
+    "console": [
+      "warning: Snapshot load failed AbortError: The user aborted a request."
+    ]
+  },
+  "soak": {
+    "cycles": 3,
+    "heap_before_mb": 0.0,
+    "heap_after_mb": 0.0,
+    "growth_pct": 0,
+    "refresh_ms": [
+      4557,
+      16266,
+      36634
+    ],
+    "console": []
+  },
+  "failure_modes": {
+    "missing_snapshot": {
+      "banner": "Demo data is on screen. The Databricks export has not published a snapshot yet. Run the publish workflow to replace this with live rows.",
+      "demo": true
+    },
+    "corrupt_json": {
+      "demo": true,
+      "console": [
+        "warning: Snapshot load failed SyntaxError: Expected property name or '}' in JSON at position 2 (line 1 column 3)"
+      ]
+    },
+    "cdn_blocked": {
+      "banner": "3D scene unavailable (WebGL or CDN blocked). Timeline and insights still work.",
+      "timeline": "18669 readings - 49 zones - 7d - EUR/MWh - UTC"
+    }
+  },
+  "checks": [
+    {
+      "name": "desktop: snapshot parsed",
+      "ok": true,
+      "detail": "79968 points"
+    },
+    {
+      "name": "desktop: boot under 8s",
+      "ok": true,
+      "detail": "7514 ms"
+    },
+    {
+      "name": "desktop: no page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "desktop: no failed requests",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "desktop: no console errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "desktop: range 24h under 600ms",
+      "ok": true,
+      "detail": "136 ms"
+    },
+    {
+      "name": "desktop: range 30d under 600ms",
+      "ok": false,
+      "detail": "1902 ms"
+    },
+    {
+      "name": "desktop: range all under 600ms",
+      "ok": false,
+      "detail": "3498 ms"
+    },
+    {
+      "name": "desktop: range 6h under 600ms",
+      "ok": true,
+      "detail": "87 ms"
+    },
+    {
+      "name": "desktop: range 7d under 600ms",
+      "ok": true,
+      "detail": "418 ms"
+    },
+    {
+      "name": "desktop: toggle [data-baseline=\"zero\"] under 600ms",
+      "ok": false,
+      "detail": "809 ms"
+    },
+    {
+      "name": "desktop: toggle [data-series=\"indexed\"] under 600ms",
+      "ok": true,
+      "detail": "449 ms"
+    },
+    {
+      "name": "desktop: toggle [data-baseline=\"window\"] under 600ms",
+      "ok": true,
+      "detail": "360 ms"
+    },
+    {
+      "name": "desktop: toggle [data-series=\"raw\"] under 600ms",
+      "ok": true,
+      "detail": "463 ms"
+    },
+    {
+      "name": "desktop: timeline hover median < 50ms",
+      "ok": true,
+      "detail": "42.9 ms"
+    },
+    {
+      "name": "desktop: timeline hover max < 150ms",
+      "ok": true,
+      "detail": "120.6 ms"
+    },
+    {
+      "name": "desktop: replay advanced",
+      "ok": true,
+      "detail": "False"
+    },
+    {
+      "name": "desktop: theme toggles",
+      "ok": true,
+      "detail": "light -> dark"
+    },
+    {
+      "name": "desktop: help dialog opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "desktop: camera shortcut writes hash",
+      "ok": true,
+      "detail": "#feeds=elecz%2Centsoe&country=all&zone=all&range=7d&baseline=window&series=raw&c"
+    },
+    {
+      "name": "desktop: share gives feedback",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "desktop: has skip link",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "desktop: canvas charts labelled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: snapshot parsed",
+      "ok": true,
+      "detail": "79968 points"
+    },
+    {
+      "name": "mobile: boot under 8s",
+      "ok": true,
+      "detail": "2949 ms"
+    },
+    {
+      "name": "mobile: no page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: no failed requests",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: no console errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: range 24h under 600ms",
+      "ok": false,
+      "detail": "724 ms"
+    },
+    {
+      "name": "mobile: range 30d under 600ms",
+      "ok": false,
+      "detail": "12576 ms"
+    },
+    {
+      "name": "mobile: range all under 600ms",
+      "ok": false,
+      "detail": "10650 ms"
+    },
+    {
+      "name": "mobile: range 6h under 600ms",
+      "ok": false,
+      "detail": "1478 ms"
+    },
+    {
+      "name": "mobile: range 7d under 600ms",
+      "ok": false,
+      "detail": "1322 ms"
+    },
+    {
+      "name": "mobile: toggle [data-baseline=\"zero\"] under 600ms",
+      "ok": false,
+      "detail": "3505 ms"
+    },
+    {
+      "name": "mobile: toggle [data-series=\"indexed\"] under 600ms",
+      "ok": false,
+      "detail": "1719 ms"
+    },
+    {
+      "name": "mobile: toggle [data-baseline=\"window\"] under 600ms",
+      "ok": true,
+      "detail": "455 ms"
+    },
+    {
+      "name": "mobile: toggle [data-series=\"raw\"] under 600ms",
+      "ok": false,
+      "detail": "2533 ms"
+    },
+    {
+      "name": "mobile: timeline hover median < 50ms",
+      "ok": false,
+      "detail": "100.5 ms"
+    },
+    {
+      "name": "mobile: timeline hover max < 150ms",
+      "ok": false,
+      "detail": "307.8 ms"
+    },
+    {
+      "name": "mobile: replay advanced",
+      "ok": true,
+      "detail": "True"
+    },
+    {
+      "name": "mobile: theme toggles",
+      "ok": true,
+      "detail": "light -> dark"
+    },
+    {
+      "name": "mobile: help dialog opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: camera shortcut writes hash",
+      "ok": true,
+      "detail": "#feeds=elecz%2Centsoe&country=all&zone=all&range=7d&baseline=window&series=raw&c"
+    },
+    {
+      "name": "mobile: share gives feedback",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: insights drawer opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: filters drawer opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: has skip link",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile: canvas charts labelled",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "soak: refresh stays under 5s",
+      "ok": false,
+      "detail": "max 36634 ms"
+    },
+    {
+      "name": "soak: heap growth under 60%",
+      "ok": true,
+      "detail": "0.0 -> 0.0 MB (0%)"
+    },
+    {
+      "name": "soak: no page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "fallback: demo snapshot used",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "fallback: banner explains demo",
+      "ok": true,
+      "detail": "Demo data is on screen. The Databricks export has not published a snapshot yet. "
+    },
+    {
+      "name": "fallback: status chip says demo",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "corrupt: demo fallback",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "corrupt: no uncaught page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cdn blocked: boot still completes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cdn blocked: banner warns",
+      "ok": true,
+      "detail": "3D scene unavailable (WebGL or CDN blocked). Timeline and insights still work."
+    },
+    {
+      "name": "cdn blocked: timeline still renders data",
+      "ok": true,
+      "detail": "18669 readings - 49 zones - 7d - EUR/MWh - UTC"
+    },
+    {
+      "name": "on-disk corrupt JSON: demo fallback",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "findings": [
+    "desktop: range 30d under 600ms: 1902 ms",
+    "desktop: range all under 600ms: 3498 ms",
+    "desktop: toggle [data-baseline=\"zero\"] under 600ms: 809 ms",
+    "mobile: range 24h under 600ms: 724 ms",
+    "mobile: range 30d under 600ms: 12576 ms",
+    "mobile: range all under 600ms: 10650 ms",
+    "mobile: range 6h under 600ms: 1478 ms",
+    "mobile: range 7d under 600ms: 1322 ms",
+    "mobile: toggle [data-baseline=\"zero\"] under 600ms: 3505 ms",
+    "mobile: toggle [data-series=\"indexed\"] under 600ms: 1719 ms",
+    "mobile: toggle [data-series=\"raw\"] under 600ms: 2533 ms",
+    "mobile: timeline hover median < 50ms: 100.5 ms",
+    "mobile: timeline hover max < 150ms: 307.8 ms",
+    "soak: refresh stays under 5s: max 36634 ms"
+  ],
+  "passed": false
+}

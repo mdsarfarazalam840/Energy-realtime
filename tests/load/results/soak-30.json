@@ -1,0 +1,69 @@
+{
+  "label": "soak-30",
+  "snapshot": "tests\\load\\data\\energy-80k.json",
+  "snapshot_bytes": 4436796,
+  "started_at": "2026-10-28T12:07:24Z",
+  "soak": {
+    "cycles": 30,
+    "heap_before_mb": 15.4,
+    "heap_after_mb": 21.1,
+    "growth_pct": 37.0,
+    "refresh_ms": [
+      840,
+      734,
+      1057,
+      1065,
+      588,
+      368,
+      944,
+      505,
+      734,
+      836,
+      691,
+      983,
+      967,
+      1266,
+      1133,
+      1054,
+      913,
+      659,
+      1216,
+      1260,
+      1194,
+      1170,
+      1465,
+      1311,
+      1171,
+      880,
+      1417,
+      1475,
+      967,
+      1145
+    ],
+    "console": []
+  },
+  "checks": [
+    {
+      "name": "soak: refresh stays under 5s",
+      "ok": true,
+      "detail": "max 1475 ms"
+    },
+    {
+      "name": "soak: heap growth under 60%",
+      "ok": true,
+      "detail": "15.4 -> 21.1 MB (37%)"
+    },
+    {
+      "name": "soak: no page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "on-disk corrupt JSON: demo fallback",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "findings": [],
+  "passed": true
+}

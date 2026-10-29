@@ -1,0 +1,36 @@
+{
+  "scenario": "revalidate",
+  "users": 1000,
+  "duration_s": 44.59,
+  "requests": 21679,
+  "rps": 486.2,
+  "error_rate_pct": 0,
+  "latency_ms": {
+    "p50": 174.7,
+    "p95": 298.2,
+    "p99": 346,
+    "mean": 176.3
+  },
+  "status": {
+    "200": 18549,
+    "304": 3130
+  },
+  "not_modified": 3130,
+  "snapshot_valid": 2,
+  "snapshot_invalid": 0,
+  "throughput_mbps": 63.33,
+  "page_views": 1091,
+  "polls": 3132,
+  "bytes_per_page_view_kb": 321.9,
+  "bytes_per_poll_kb": 0.6,
+  "egress_1000_users_month_gb": 24.5,
+  "egress_1000_daily_users_month_gb": 11.7,
+  "sample_errors": [],
+  "thresholds": {
+    "error_rate_lt_1pct": true,
+    "p95_lt_500ms": true,
+    "p99_lt_1500ms": true,
+    "no_invalid_snapshots": true
+  },
+  "passed": true
+}

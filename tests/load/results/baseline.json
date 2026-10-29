@@ -1,0 +1,28 @@
+{
+  "scenario": "cdn",
+  "users": 200,
+  "duration_s": 27.13,
+  "requests": 2558,
+  "rps": 94.3,
+  "error_rate": 0.0,
+  "latency_ms": {
+    "p50": 846.9,
+    "p95": 4200.2,
+    "p99": 6704.2,
+    "mean": 1302.8
+  },
+  "status": {
+    "200": 2558
+  },
+  "throughput_mbps": 1.7,
+  "snapshot_valid": 731,
+  "snapshot_invalid": 0,
+  "sample_errors": [],
+  "thresholds": {
+    "error_rate_lt_1pct": true,
+    "p95_lt_500ms": false,
+    "p99_lt_1500ms": false,
+    "no_invalid_snapshots": true
+  },
+  "passed": false
+}

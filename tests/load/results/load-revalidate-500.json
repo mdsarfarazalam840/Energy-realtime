@@ -1,0 +1,32 @@
+{
+  "scenario": "revalidate",
+  "users": 500,
+  "duration_s": 26.69,
+  "requests": 14813,
+  "rps": 554.9,
+  "error_rate_pct": 0,
+  "latency_ms": {
+    "p50": 143.3,
+    "p95": 251.6,
+    "p99": 304.8,
+    "mean": 142.7
+  },
+  "status": {
+    "200": 12717,
+    "304": 2096
+  },
+  "not_modified": 2096,
+  "snapshot_valid": 1,
+  "snapshot_invalid": 0,
+  "throughput_mbps": 343.15,
+  "bytes_per_user_hour_mb": 308.83,
+  "egress_1000_users_month_gb": 222359.7,
+  "sample_errors": [],
+  "thresholds": {
+    "error_rate_lt_1pct": true,
+    "p95_lt_500ms": true,
+    "p99_lt_1500ms": true,
+    "no_invalid_snapshots": true
+  },
+  "passed": true
+}

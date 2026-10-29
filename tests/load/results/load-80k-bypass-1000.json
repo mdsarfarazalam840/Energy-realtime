@@ -1,0 +1,35 @@
+{
+  "scenario": "bypass",
+  "users": 1000,
+  "duration_s": 48.37,
+  "requests": 5011,
+  "rps": 103.6,
+  "error_rate_pct": 0,
+  "latency_ms": {
+    "p50": 355.3,
+    "p95": 598.7,
+    "p99": 692.3,
+    "mean": 353.2
+  },
+  "status": {
+    "200": 5011
+  },
+  "not_modified": 0,
+  "snapshot_valid": 0,
+  "snapshot_invalid": 0,
+  "throughput_mbps": 121.39,
+  "page_views": 251,
+  "polls": 744,
+  "bytes_per_page_view_kb": 321.9,
+  "bytes_per_poll_kb": 877.8,
+  "egress_1000_users_month_gb": 37923.4,
+  "egress_1000_daily_users_month_gb": 3169.9,
+  "sample_errors": [],
+  "thresholds": {
+    "error_rate_lt_1pct": true,
+    "p95_lt_500ms": false,
+    "p99_lt_1500ms": true,
+    "no_invalid_snapshots": true
+  },
+  "passed": false
+}
