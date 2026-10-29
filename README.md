@@ -256,7 +256,7 @@ sequenceDiagram
 
 The live lane is additive. It only refreshes the feeds that actually change inside a five-minute window, so ENTSO-E's day-ahead quota is not spent by the fast loop. The 30-minute workflow remains the full-feed path.
 
-GitHub's scheduler is best effort: a five-minute cron can start late under load. For tighter cadence, deploy the optional relay in `workers/live/`; its cron dispatches `live_feed.yml` and serves the newest rows with a 20-second cache.
+GitHub's scheduler is best effort: a five-minute cron can start late under load. The relay in `workers/live/` is deployed at `https://voltscope-live.md-sarfarazalam840.workers.dev`; it serves shared presence today and can dispatch `live_feed.yml` plus serve the newest rows with a 20-second cache once its Databricks secrets are set.
 
 
 The publish workflow waits up to 420 seconds for a row newer than the published snapshot when it is triggered by the producer workflow. If no fresh row arrives, it publishes the latest available snapshot and logs a warning. It also warns when the newest row is more than 120 minutes old.
