@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "enabled": true,
+  "relay_url": "",
+  "poll_ms": 12000
+}

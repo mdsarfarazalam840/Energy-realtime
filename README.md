@@ -104,6 +104,9 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 - **Raw vs indexed mode** so feeds with different price levels can be compared by shape.
 - **Shareable URL hash** captures filters, country, zone, date range, baseline, series mode, and camera.
 - **Auto refresh** every 60 seconds; `L` toggles it.
+- **Live now presence**: a real count of people viewing the dashboard, pushed over a WebSocket by the optional relay. Without a relay the card says the count is this tab only.
+- **Realtime live lane**: a five-minute GitHub Action publishes the newest Databricks rows to `docs/data/live.json`; the scene merges them into the current view without reloading history. With the optional relay the same data arrives in about 15 seconds.
+- **Live freshness labels**: the live card shows transport (`realtime` or `5-min lane`), newest push, and the age of the newest Databricks reading.
 - **Theme toggle** with a persisted dark/light preference.
 - **Demo fallback** with a deterministic synthetic snapshot when no published data exists; always labelled as demo.
 - **Accessibility**: skip link, ARIA labels, keyboard shortcuts, reduced-motion handling, and a boot timeout that does not trap the page.
@@ -247,8 +250,14 @@ sequenceDiagram
 
 | Workflow | Trigger | Cadence | Purpose |
 |---|---|---|---|
-| **Energy Market Data to Kafka** | `schedule` + `workflow_dispatch` | `*/30 * * * *` | Fetch configured regions/zones, produce to Kafka, trigger the Databricks job |
-| **Publish Dashboard Snapshot** | `schedule` + `workflow_dispatch` + `workflow_run` | `7,37 * * * *` | Export a fresh snapshot, commit only when the payload changed |
+| **Live Databricks Feed** | `schedule` + `workflow_dispatch` (also dispatchable by the relay) | `*/5 * * * *` | Produce AEMO dispatch and Elecz spot, trigger ingest, wait for the run, publish `docs/data/live.json` |
+| **Energy Market Data to Kafka** | `schedule` + `workflow_dispatch` | `*/30 * * * *` | Fetch the full feed (ENTSO-E day-ahead included), produce to Kafka, trigger the Databricks job |
+| **Publish Dashboard Snapshot** | `schedule` + `workflow_dispatch` + `workflow_run` | `7,37 * * * *` | Export a fresh 30-day snapshot, commit only when the payload changed |
+
+The live lane is additive. It only refreshes the feeds that actually change inside a five-minute window, so ENTSO-E's day-ahead quota is not spent by the fast loop. The 30-minute workflow remains the full-feed path.
+
+GitHub's scheduler is best effort: a five-minute cron can start late under load. For tighter cadence, deploy the optional relay in `workers/live/`; its cron dispatches `live_feed.yml` and serves the newest rows with a 20-second cache.
+
 
 The publish workflow waits up to 420 seconds for a row newer than the published snapshot when it is triggered by the producer workflow. If no fresh row arrives, it publishes the latest available snapshot and logs a warning. It also warns when the newest row is more than 120 minutes old.
 
@@ -267,6 +276,40 @@ flowchart TD
   H -- no --> I["Skip commit and Pages rebuild"]
   H -- yes --> J["Atomic write + commit<br/>[skip ci]"]
 ```
+
+### Realtime layer
+
+Two independent paths add freshness on top of the static snapshot:
+
+```mermaid
+flowchart LR
+  L["live_feed.yml<br/>every 5 min"] --> K["Kafka fast markets"]
+  L --> J["Databricks run-now"]
+  J --> T[("Delta table")]
+  T --> E["export_live_data.py"]
+  E --> F[("docs/data/live.json")]
+  R["Optional Worker<br/>workers/live"] --> T
+  F --> U["Dashboard merge"]
+  R --> U
+  W["WebSocket /ws"] --> P["Live now presence"]
+  P --> U
+```
+
+| Piece | Transport | Freshness | Requires |
+|---|---|---|---|
+| Live GitHub lane | `docs/data/live.json` polled every 12 s | One workflow run (target 5 min, GitHub best effort) plus Pages publication | Existing Actions secrets only |
+| Relay live data | `GET /api/live` every 15 s | 20-second KV cache over the SQL Statement API | Cloudflare Worker + Databricks token as a Worker secret |
+| Relay presence | WebSocket `/ws`, HTTP fallback `/api/presence` | Immediate on join/leave, 30-second heartbeat | Cloudflare Worker |
+| Local presence fallback | none | This tab only, clearly labelled | Nothing |
+
+The dashboard never reloads history for a live point. It keeps the published
+shards as `shardPoints`, merges the newest slice by `(source, zone, timestamp)`,
+and repaints. When the next snapshot catches up, the duplicate live copies fall
+away. Live rows are hidden when a custom date range does not include today.
+
+`docs/data/live.json` is small (~100–2000 points) and only committed when its
+payload changes. It is not a replacement for `index.json`; it is a low-latency
+tail for the current session.
 
 ---
 
@@ -497,13 +540,18 @@ If the window returns no rows, it falls back to the newest rows in the table. Th
 Energy-realtime/
 ├── .github/
 │   └── workflows/
-│       ├── dual_to_kafka.yml          # 30-minute producer + Databricks trigger
+│       ├── dual_to_kafka.yml          # 30-minute full producer + Databricks trigger
+│       ├── live_feed.yml              # 5-minute live producer + ingest + live.json
+│       ├── dashboard-quality.yml      # static dashboard load and UI tests
 │       └── publish_dashboard.yml      # snapshot export + guarded commit
 ├── docs/                              # GitHub Pages root
 │   ├── index.html                     # dashboard shell
 │   ├── .nojekyll                      # serve files as-is
 │   ├── data/
-│   │   └── energy.json                # published snapshot
+│   │   ├── energy.json                # published 30-day snapshot
+│   │   ├── index.json + days/         # UTC-day shards (schema 2)
+│   │   ├── live.json                  # five-minute realtime tail
+│   │   └── live-config.json           # relay URL and live poll interval
 │   ├── assets/
 │   │   ├── css/dashboard.css
 │   │   ├── js/
@@ -511,6 +559,7 @@ Energy-realtime/
 │   │   │   ├── scene.js               # Three.js stage and interaction
 │   │   │   ├── charts.js              # timeline and distribution canvases
 │   │   │   ├── data.js                # snapshot parsing and statistics
+│   │   │   ├── live.js                # presence + live feed transports
 │   │   │   └── demo.js                # deterministic fallback snapshot
 │   │   └── diagrams/                  # preview images used by the README
 │   ├── diagrams/
@@ -523,7 +572,8 @@ Energy-realtime/
 ├── resources/
 │   └── energy_job.yml                 # Databricks job resource
 ├── scripts/
-│   └── export_dashboard_data.py       # SQL API exporter
+│   ├── export_dashboard_data.py       # SQL API exporter
+│   └── export_live_data.py            # five-minute live tail exporter
 ├── src/
 │   ├── kafka_ingest.ipynb             # Structured Streaming notebook
 │   └── energy_realtime/
@@ -535,6 +585,11 @@ Energy-realtime/
 │   └── sample_taxis_test.py           # template sample test
 ├── fixtures/
 ├── producer_dual.py                   # AEMO NEM + ENTSO-E + Elecz producer
+├── workers/
+│   └── live/                          # optional realtime relay (Cloudflare Worker)
+│       ├── src/index.js               # presence Durable Object + Databricks proxy
+│       ├── wrangler.toml
+│       └── README.md
 ├── databricks.yml                     # bundle, targets, variables
 ├── pyproject.toml                     # Python package and dev tools
 ├── LICENSE
@@ -713,6 +768,41 @@ Set these under **Settings → Secrets and variables → Actions → Variables**
 | `ELECZ_ZONES` | `DE_LU` | Comma-separated Elecz zones, or `all` |
 | `ENTSOE_LOOKBACK_HOURS` | `48` | Hours of day-ahead history to read |
 
+### Realtime layer configuration
+
+The static live lane needs no extra configuration. It reuses `DATABRICKS_HOST`,
+`DATABRICKS_TOKEN`, `DATABRICKS_WAREHOUSE_ID`, and the Kafka secrets.
+
+Optional variables for the fast lane:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `DATABRICKS_JOB_ID` | `913950436608512` | Job triggered by the live lane |
+| `LIVE_WINDOW_MINUTES` | `360` | Minutes of recent readings in `live.json` |
+| `LIVE_MAX_ROWS` | `2000` | Row cap for `live.json` |
+| `LIVE_OUT` | `docs/data/live.json` | Live payload path |
+
+Optional relay (see [`workers/live/README.md`](workers/live/README.md)):
+
+```bash
+cd workers/live
+wrangler kv namespace create LIVE_CACHE
+wrangler secret put DATABRICKS_HOST
+wrangler secret put DATABRICKS_TOKEN
+wrangler secret put DATABRICKS_WAREHOUSE_ID
+wrangler deploy
+```
+
+Then set the deployed URL in `docs/data/live-config.json`:
+
+```json
+{ "schema_version": 1, "enabled": true, "relay_url": "https://voltscope-live.<account>.workers.dev", "poll_ms": 15000 }
+```
+
+Without a relay URL, the card shows `1 here` and labels it as this tab only.
+With one, presence is shared across every open dashboard and the live data path
+drops to a 20-second cache instead of the five-minute workflow cadence.
+
 ### Producer environment
 
 | Variable | Default | Purpose |
@@ -756,6 +846,9 @@ Set these under **Settings → Secrets and variables → Actions → Variables**
 | `ENERGY_WAIT_NEW_DATA` | `0` | Freshness wait in seconds |
 | `ENERGY_MAX_WAIT` | `240` | SQL statement timeout in seconds |
 | `DASHBOARD_OUT` | `docs/data/energy.json` | Output path |
+| `LIVE_OUT` | `docs/data/live.json` | Live tail output path |
+| `LIVE_WINDOW_MINUTES` | `360` | Live tail window |
+| `LIVE_MAX_ROWS` | `2000` | Live tail row cap |
 
 ---
 
@@ -780,6 +873,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 | `F` | Focus the selected column |
 | `R` | Refresh the snapshot |
 | `L` | Toggle auto refresh |
+| Live card | People viewing now (relay), peak, and the last live push |
 | `Esc` | Clear selection |
 | `?` | Open help |
 | Share button | Copy a URL that reproduces the current view |
@@ -800,6 +894,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 - Theme and auto-refresh preference are stored in `localStorage` under `voltscope.theme` and `voltscope.live`.
 - Filter state is encoded in the URL hash so a shared link is reproducible.
 - The page polls `data/energy.json` every 60 seconds with a cache-busting query parameter.
+- The live lane polls `data/live.json` every 12 seconds and merges only new points; with the relay it polls `/api/live` every 15 seconds and presence is pushed over a WebSocket.
 - The boot overlay hides only after the scene and snapshot are ready, with a 15-second failure timeout.
 
 ---
@@ -830,6 +925,9 @@ The dashboard is a single static page. All state lives in the browser and, when 
 | Exporter logs `table returned no usable price rows` | Empty table or all rows invalid | Run the producer and Databricks job; inspect the table |
 | Snapshot unchanged | Payload identical after normalization | Expected; the workflow skips the commit |
 | Dashboard shows demo data | Snapshot missing, empty, or invalid JSON | Run the exporter; validate the JSON |
+| Live card says `1 here` | No relay URL in `docs/data/live-config.json` | Expected without the Worker; deploy `workers/live` for shared presence |
+| Live card says `warming` | `live_feed.yml` has not published `live.json` yet | Run **Live Databricks Feed** manually once |
+| Live card data is minutes old | GitHub cron drift or a slow Databricks run | Check the live workflow; deploy the relay for a 20-second path |
 | Dashboard is stale | Pages build pending or browser cache | Wait for Pages, hard reload, check the workflow |
 | Pages 404 | Pages source not `main` / `docs` | Fix **Settings → Pages** |
 
@@ -845,6 +943,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 ### Cost and limits
 
 - **GitHub Actions**: free minutes depend on the repository plan; the producer runs for a few minutes every 30 minutes.
+- **Live lane**: the five-minute workflow adds one producer run, one Databricks job, and one small commit per changed interval. On a public repository the runner minutes are free, but Databricks compute is not.
 - **GitHub Pages**: static hosting is free for public repositories, subject to GitHub's published limits.
 - **Aiven Kafka** and **Databricks** are external services and bill according to their own plans. The Databricks Free Edition has compute and volume limits.
 - The exporter caps history at **30 days** and **80,000 rows** by default.
@@ -901,6 +1000,9 @@ python producer_dual.py --dry-run --zone NSW1,SA1
 
 # Validate the exporter without writing
 python scripts/export_dashboard_data.py --dry-run
+
+# Validate the live tail exporter without writing
+python scripts/export_live_data.py --dry-run
 
 # Validate the snapshot shape
 python -c "import json; d=json.load(open('docs/data/energy.json')); assert d['schema_version']==1; assert d['points']; print(len(d['points']), 'points')"
@@ -993,7 +1095,9 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - **`startingOffsets=latest` can skip data.** If the Databricks job is down while the producer writes, those offsets are not replayed. Use `earliest` or a stored offset policy if exact-once ingest matters.
 - **Delta writes are append-only.** There is no `MERGE` deduplication in the table; duplicates are removed only when the snapshot is built.
 - **The public history is capped.** The exporter defaults to 30 days and 80,000 rows. Older rows remain in Delta but are not published.
-- **The dashboard is not a real-time feed.** It polls a static JSON file every 60 seconds. It is near-real-time, not streaming to the browser.
+- **Realtime is layered, not absolute.** The static path polls a committed `live.json`; freshness depends on a five-minute GitHub cron that can drift. The optional relay adds a 20-second cache and true WebSocket presence, but it is extra infrastructure that must be deployed and funded.
+- **Presence needs the relay.** GitHub Pages cannot count visitors. Without `workers/live`, the card counts this tab only and says so. Do not read that number as an audience metric.
+- **The live lane runs the Databricks job every five minutes.** That increases warehouse and job cost versus the 30-minute path. Lower the cron or disable `live_feed.yml` if the budget is tight; the site falls back to the 60-second snapshot.
 - **The template tests are not pipeline tests.** `sample_taxis_test.py` exercises Databricks Connect, not the energy contract.
 - **Three.js is vendored, not upgraded automatically.** `docs/assets/vendor/three/` pins r169. Refresh those files together with any addon import when you upgrade.
 - **The demo fallback is synthetic.** It is deterministic and clearly labelled, but it is not market data.

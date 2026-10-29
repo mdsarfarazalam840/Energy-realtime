@@ -1,0 +1,52 @@
+# VoltScope live relay: realtime presence plus a read-only Databricks proxy.
+#
+# Deploy:
+#   wrangler kv namespace create LIVE_CACHE
+#   copy the returned id into [[kv_namespaces]] below
+#   wrangler secret put DATABRICKS_HOST
+#   wrangler secret put DATABRICKS_TOKEN
+#   wrangler secret put DATABRICKS_WAREHOUSE_ID
+#   wrangler deploy
+#
+# Optional GitHub dispatch (lets the Worker keep the 5-minute lane moving):
+#   wrangler secret put GITHUB_DISPATCH_TOKEN   # fine-grained PAT, Actions: write
+#   set DISPATCH_ENABLED = "1" below
+#
+# Then set the deployed URL in docs/data/live-config.json:
+#   { "enabled": true, "relay_url": "https://voltscope-live.<account>.workers.dev" }
+
+name = "voltscope-live"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+workers_dev = true
+
+[durable_objects]
+bindings = [{ name = "PRESENCE", class_name = "PresenceRoom" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PresenceRoom"]
+
+# The relay still works without KV (a per-isolate memory cache), but KV keeps
+# the cache shared across isolates and holds the dispatch throttle.
+[[kv_namespaces]]
+binding = "LIVE_CACHE"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+# Public read-only market data. Narrow this to the Pages origin if you prefer.
+ALLOWED_ORIGIN = "*"
+ENERGY_TABLE = "workspace.default.energy_prices_realtime"
+LIVE_WINDOW_HOURS = "6"
+LIVE_LIMIT = "2000"
+LIVE_TTL_SECONDS = "20"
+DISPATCH_ENABLED = "0"
+GITHUB_REPO = "mdsarfarazalam840/Energy-realtime"
+GITHUB_WORKFLOW = "live_feed.yml"
+GITHUB_REF = "main"
+
+[observability]
+enabled = true

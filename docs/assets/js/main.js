@@ -34,9 +34,10 @@ import {
   fullLabel,
   relativeTime,
   rangeLabel,
-} from "./data.js?v=20261029-4";
-import { createDemoSnapshot } from "./demo.js?v=20261029-4";
-import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-4";
+} from "./data.js?v=20261029-5";
+import { createDemoSnapshot } from "./demo.js?v=20261029-5";
+import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-5";
+import { loadLiveConfig, createLiveFeed, createPresence } from "./live.js?v=20261029-5";
 
 const RANGES = {
   "6h": 6 * 3600 * 1000,
@@ -93,6 +94,17 @@ const state = {
   customDates: false,
   loadingDates: false,
   datasetSignature: "",
+  /* Realtime layer. `shardPoints` is the published history; `livePoints` is the
+     newest slice from the relay or the live lane. `points` is their union. */
+  shardPoints: [],
+  livePoints: [],
+  liveMeta: null,
+  liveState: { transport: "off", state: "connecting", rows: 0, synced: 0 },
+  liveConfig: null,
+  presence: { online: 0, peak: 0, mode: "off", ts: 0 },
+  liveFeed: null,
+  presenceFeed: null,
+  liveSignature: "",
 };
 
 let scene = null;
@@ -124,6 +136,7 @@ async function boot() {
 
   await refresh({ initial: true });
   timings.snapshotReady = performance.now();
+  initLive();
   const elapsed = performance.now() - started;
   if (elapsed < 550) await new Promise((resolve) => setTimeout(resolve, 550 - elapsed));
   finishBoot();
@@ -306,6 +319,7 @@ async function refresh({ initial = false } = {}) {
       const demo = parseDemo();
       state.snapshot = demo;
       state.points = demo.points;
+      state.shardPoints = demo.points;
       state.demo = true;
       state.mode = "demo";
       state.error = error;
@@ -342,8 +356,166 @@ async function refresh({ initial = false } = {}) {
   }
 }
 
-/** Resolve the picker window against the days the manifest actually has. */
-function resolveDateWindow(index = state.index) {
+/* ---------------- live layer ---------------- */
+
+const LIVE_WINDOW_MS = 12 * 3600 * 1000;
+const MAX_LIVE_POINTS = 4000;
+
+async function initLive() {
+  const config = await loadLiveConfig();
+  state.liveConfig = config;
+  state.presenceFeed = createPresence(config, {
+    onUpdate: (presence) => {
+      state.presence = presence;
+      updateLiveUi();
+    },
+  });
+  if (config.enabled) {
+    state.liveFeed = createLiveFeed(config, {
+      onPoints: (points, document) => {
+        state.liveMeta = document?.meta || null;
+        mergeLivePoints(points);
+      },
+      onStatus: (status) => {
+        state.liveState = { ...state.liveState, ...status };
+        updateLiveUi();
+      },
+    });
+  }
+  updateLiveUi();
+}
+
+/**
+ * Add newest readings on top of the published shards.
+ *
+ * The published history never contains these rows yet (the snapshot lags by up
+ * to 30 minutes), so the union is a plain key merge. When the next snapshot
+ * catches up, the same keys arrive from the shards and the live copies fall
+ * away in `recomputePoints`.
+ */
+function mergeLivePoints(rows) {
+  if (state.demo || !Array.isArray(rows) || !rows.length) return;
+  const cutoff = Date.now() - LIVE_WINDOW_MS;
+  const byKey = new Map();
+  for (const point of state.livePoints) byKey.set(pointKey(point), point);
+
+  for (const row of rows) {
+    const t = Number(row.t);
+    const p = Number(row.p);
+    if (!Number.isFinite(t) || !Number.isFinite(p) || t < cutoff) continue;
+    const s = String(row.s || "unknown");
+    const z = String(row.z || "unknown");
+    const point = { t, p, z, s, l: `${s}|${z}` };
+    byKey.set(pointKey(point), point);
+  }
+
+  const merged = [...byKey.values()].sort((a, b) => a.t - b.t);
+  state.livePoints = merged.length > MAX_LIVE_POINTS ? merged.slice(-MAX_LIVE_POINTS) : merged;
+  if (!recomputePoints()) {
+    updateLiveUi();
+    return;
+  }
+  updateView({ animate: false });
+  updateLiveUi();
+}
+
+/** Live rows only apply to the current view when today is inside it. */
+function liveVisible() {
+  if (state.demo || !state.livePoints.length) return false;
+  if (!state.customDates) return true;
+  const today = new Date().toISOString().slice(0, 10);
+  return Boolean(state.dateFrom && state.dateTo && state.dateFrom <= today && state.dateTo >= today);
+}
+
+/** Rebuild `state.points` as shard history plus visible live rows. */
+function recomputePoints() {
+  const base = state.shardPoints || [];
+  let extra = [];
+  if (liveVisible()) {
+    const seen = new Set(base.map((point) => pointKey(point)));
+    extra = state.livePoints.filter((point) => !seen.has(pointKey(point)));
+  }
+  const signature = `${base.length}|${extra.length}|${extra.length ? extra[extra.length - 1].t : 0}`;
+  state.points = extra.length ? [...base, ...extra].sort((a, b) => a.t - b.t) : base;
+  if (signature === state.liveSignature) return false;
+  state.liveSignature = signature;
+  return true;
+}
+
+function liveLatest() {
+  return state.livePoints.length ? state.livePoints[state.livePoints.length - 1].t : 0;
+}
+
+/** Compact age for the small live card: `now`, `42s`, `7m`, `3h`. */
+function liveAge(ms) {
+  if (!ms) return "—";
+  const seconds = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (seconds < 5) return "now";
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  return `${Math.round(minutes / 60)}h`;
+}
+
+function updateLiveUi() {
+  const chip = $("live-chip");
+  if (!chip) return;
+
+  const presence = state.presence || {};
+  const live = state.liveState || {};
+  const mode = presence.mode || "off";
+  const online = Number(presence.online) || 0;
+  const feedActive = ["live", "waiting", "retrying"].includes(live.state);
+  const relay = mode === "relay";
+
+  chip.hidden = !(relay || mode === "local" || feedActive);
+  chip.dataset.mode = relay ? "relay" : feedActive && mode !== "local" ? live.state : mode;
+
+  let chipText = "live feed";
+  if (relay) chipText = `${online} live`;
+  else if (mode === "local") chipText = "1 here";
+  else if (live.state === "waiting") chipText = "warming";
+  $("live-chip-text").textContent = chipText;
+  chip.title = relay
+    ? `${online} ${online === 1 ? "person" : "people"} viewing now — realtime relay`
+    : mode === "local"
+      ? "Presence relay not configured — this count is this tab only"
+      : "Live Databricks feed";
+
+  const transportLabel =
+    live.transport === "relay" && live.state === "live"
+      ? "realtime"
+      : live.state === "waiting"
+        ? "warming"
+        : live.state === "retrying" || live.state === "error"
+          ? "retrying"
+          : live.transport === "static" && live.state === "live"
+            ? "5-min lane"
+            : live.state === "off"
+              ? "offline"
+              : "connecting";
+  $("live-transport").textContent = transportLabel;
+
+  $("live-online").textContent = relay ? String(online) : mode === "local" ? "1" : "—";
+  $("live-peak").textContent = relay ? String(Number(presence.peak) || online) : "—";
+  $("live-sync").textContent = live.synced ? liveAge(live.synced) : "—";
+
+  const notes = [];
+  if (live.state === "live") {
+    notes.push(`${Number(live.rows) || 0} newest readings from Databricks - ${relativeTime(live.generated)}.`);
+  } else if (live.state === "waiting") {
+    notes.push("Waiting for the first live publication from GitHub Actions.");
+  } else if (live.state === "retrying" || live.state === "error") {
+    notes.push("Live feed retrying; published snapshots still refresh every 60 seconds.");
+  } else if (live.state === "off") {
+    notes.push("Live lane is off. Enable it in data/live-config.json.");
+  }
+  if (relay) notes.push("Presence is realtime across all open dashboards.");
+  else if (mode === "local") notes.push('Presence relay not configured, so "viewing" counts this tab only.');
+  $("live-meta").textContent = notes.join(" ");
+}
+
+/** Resolve the picker window against the days the manifest actually has. */function resolveDateWindow(index = state.index) {
   if (!index?.days?.length) return;
   const last = index.days[index.days.length - 1].date;
   if (state.customDates) {
@@ -410,7 +582,9 @@ async function loadWindow({ initial = false, animate = true } = {}) {
     const signature = datasetSignature(index, loadedKeys);
     const unchanged = !initial && Boolean(state.snapshot) && signature === state.datasetSignature;
 
-    state.points = points;
+    state.shardPoints = points;
+    state.liveSignature = "";
+    recomputePoints();
     state.loadedDays = loadedKeys;
     state.datasetSignature = signature;
     state.snapshot = {
@@ -418,7 +592,7 @@ async function loadWindow({ initial = false, animate = true } = {}) {
       generated_at: index.generated_at,
       mode: index.mode,
       days: index.days,
-      points,
+      points: state.points,
     };
     state.snapshot.demo = state.demo;
 
@@ -510,7 +684,7 @@ function updateDateNote(message = null) {
   }
   const totalDays = index.days.length;
   const loaded = state.loadedDays.length || 0;
-  const rows = state.points.length;
+  const rows = state.shardPoints.length || state.points.length;
   const totalRows = index.meta?.row_count ?? rows;
   note.dataset.state = "ready";
   note.textContent = `${loaded}/${totalDays} day${totalDays === 1 ? "" : "s"} loaded · ${rows.toLocaleString(
@@ -1324,10 +1498,11 @@ function updateStatus() {
 
 function statusSub(extra = "") {
   const total = state.snapshot?.meta?.row_count ?? state.points.length;
-  const loaded = state.points.length;
-  const latest = state.customDates
-    ? latestTime(state.points)
-    : state.snapshot?.meta?.latest_timestamp_ms || latestTime(state.points);
+  const loaded = state.shardPoints.length || state.points.length;
+  const latest = Math.max(
+    state.customDates ? latestTime(state.points) : state.snapshot?.meta?.latest_timestamp_ms || latestTime(state.points),
+    liveLatest()
+  );
   const rows = state.customDates ? `${loaded.toLocaleString("en-US")} of ${Number(total).toLocaleString("en-US")} rows` : `${total} rows`;
   return `${rows} · ${relativeTime(latest)}${extra}`;
 }
@@ -1335,12 +1510,14 @@ function statusSub(extra = "") {
 function updateCountdown() {
   const sub = $("status-sub");
   if (!sub || state.demo || state.error || state.loading || !state.snapshot) return;
+  const presence = state.presence;
+  const liveCount = presence?.mode === "relay" ? ` · ${Number(presence.online) || 0} live` : "";
   if (!state.live) {
-    sub.textContent = statusSub(" · auto off");
+    sub.textContent = statusSub(` · auto off${liveCount}`);
     return;
   }
   const seconds = Math.max(0, Math.round((state.nextRefresh - Date.now()) / 1000));
-  sub.textContent = statusSub(` · ${seconds}s`);
+  sub.textContent = statusSub(` · ${seconds}s${liveCount}`);
 }
 
 function showBanner(message, persistent = false) {
@@ -1370,6 +1547,7 @@ function showToast(message) {
 
 function tick() {
   updateCountdown();
+  updateLiveUi();
   if (!state.live || state.loading || document.hidden) return;
   if (Date.now() >= state.nextRefresh) {
     refresh();

@@ -390,6 +390,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--entsoe-zones", default=env_str("ENTSOE_ZONES"), help="ENTSO-E zones, comma-separated or all")
     parser.add_argument("--elecz-zones", default=env_str("ELECZ_ZONES"), help="Elecz zones, comma-separated or all")
     parser.add_argument("--lookback-hours", type=int, default=env_int("ENTSOE_LOOKBACK_HOURS", 48))
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="High-cadence mode: fetch AEMO dispatch and Elecz spot, skip day-ahead ENTSO-E",
+    )
     return parser.parse_args(argv)
 
 
@@ -417,6 +422,12 @@ def main(argv: list[str] | None = None) -> int:
     zones_aemo = [zone for zone in zones_aemo if ZONE_REGISTRY[zone].aemo]
     zones_entsoe = [zone for zone in zones_entsoe if ZONE_REGISTRY[zone].entsoe]
     zones_elecz = [zone for zone in zones_elecz if ZONE_REGISTRY[zone].elecz]
+    if args.live:
+        # Day-ahead feeds publish once a day. Polling them every five minutes
+        # wastes API quota and adds no freshness, so the live lane skips them
+        # and the full scheduled run keeps them current.
+        zones_entsoe = []
+        print("Live mode: day-ahead ENTSO-E zones are skipped; the 30-minute run covers them.")
     print(f"Zones: AEMO={','.join(zones_aemo) or '-'} ENTSO-E={','.join(zones_entsoe) or '-'} Elecz={','.join(zones_elecz) or '-'}")
     return run(zones_elecz, zones_entsoe, zones_aemo, args.lookback_hours, args.dry_run)
 

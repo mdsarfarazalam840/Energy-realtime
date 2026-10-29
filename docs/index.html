@@ -7,7 +7,7 @@
   <meta name="description" content="VoltScope — a live 3D energy price intelligence dashboard fed by Databricks and published on GitHub Pages.">
   <title>VoltScope — Live Energy Price Intelligence</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23070d18'/%3E%3Cpath d='M18 4 9 18h6l-2 10 10-15h-6z' fill='%234cd7ff'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="assets/css/dashboard.css?v=20261029-3">
+  <link rel="stylesheet" href="assets/css/dashboard.css?v=20261029-5">
 </head>
 <body>
   <a class="skip-link" href="#viewport">Skip to dashboard</a>
@@ -31,6 +31,9 @@
       </div>
 
       <div class="topbar-actions">
+        <div class="chip-live" id="live-chip" hidden title="People viewing right now">
+          <span class="live-dot" aria-hidden="true"></span><span id="live-chip-text">— live</span>
+        </div>
         <button class="chip-toggle" id="btn-live" type="button" aria-pressed="true" title="Toggle automatic refresh">
           <span class="chip-dot"></span><span>Auto</span>
         </button>
@@ -156,6 +159,28 @@
     </main>
 
     <aside class="rail rail-right" id="rail-right" aria-label="Insights">
+      <section class="card live-card" id="live-card" aria-label="Realtime status">
+        <div class="card-head">
+          <h2>Live now</h2>
+          <span class="card-note" id="live-transport">connecting</span>
+        </div>
+        <div class="live-grid">
+          <div class="live-stat">
+            <span class="live-value" id="live-online">—</span>
+            <span class="live-label">viewing</span>
+          </div>
+          <div class="live-stat">
+            <span class="live-value" id="live-peak">—</span>
+            <span class="live-label">peak</span>
+          </div>
+          <div class="live-stat">
+            <span class="live-value" id="live-sync">—</span>
+            <span class="live-label">last push</span>
+          </div>
+        </div>
+        <p class="live-meta" id="live-meta">Connecting to the realtime layer…</p>
+      </section>
+
       <section class="card focus-card" id="focus-card">
         <div class="card-head">
           <h2>Focus</h2>
@@ -273,6 +298,7 @@
         <div>
           <h3>Data path</h3>
           <p>GitHub Action → Kafka producer → Databricks stream → Delta table → SQL Statement API → static JSON on Pages. Your Databricks token never reaches the browser.</p>
+          <p class="help-small">A five-minute lane publishes the newest readings; the optional relay adds WebSocket presence and a 20-second Databricks cache.</p>
           <p class="help-small" id="help-meta">—</p>
         </div>
       </div>
@@ -302,7 +328,7 @@
     }
   }
   </script>
-  <script type="module" src="assets/js/main.js?v=20261029-4"></script>
+  <script type="module" src="assets/js/main.js?v=20261029-5"></script>
   <script>
     /* If the module graph cannot load (missing vendor files, syntax error), the
        boot overlay must not trap the page forever. */

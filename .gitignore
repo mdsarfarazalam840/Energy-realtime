@@ -10,3 +10,6 @@ scratch/**
 **/!explorations/README.md
 
 opencode.json
+.dev.vars
+.dev.vars.*
+.wrangler/

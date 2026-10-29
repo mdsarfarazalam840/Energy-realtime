@@ -40,6 +40,27 @@ AEMO five-region NEM dispatch + ENTSO-E + Elecz
 The Databricks token stays in GitHub Actions secrets. The browser only reads
 static JSON files, so the page can be public without exposing credentials.
 
+A second, faster lane runs every five minutes:
+
+```
+AEMO dispatch + Elecz spot
+      │  live_feed.yml (every 5 min)
+      ▼
+   Kafka ──► Databricks job ──► Delta ──► export_live_data.py
+                                              │
+                                              ▼
+                         docs/data/live.json ──► browser polls every 12 s
+```
+
+The dashboard merges those newest points into the current view and repaints,
+without reloading the 30-day history. `data/live.json` only carries the last six
+hours (2000 rows max) and is committed only when it changes.
+
+For true realtime, deploy the optional relay in `../workers/live`. It adds a
+WebSocket presence count and a `/api/live` endpoint backed by a 20-second cache.
+Set its URL in `data/live-config.json`; with an empty URL the page stays on the
+static path and labels presence as this tab only.
+
 The exporter publishes the manifest and the day shards together. The manifest
 is small (dates, row counts, time bounds) and is revalidated every 60 seconds;
 day files for completed UTC days are immutable. The dashboard reads the
@@ -125,6 +146,32 @@ A row is `[t, zone_index, price, source_index]`; the indexes point into the
 object keys. Past day files never change, so the CDN can cache them; only the
 manifest and the newest day are revalidated.
 
+`data/live.json` (five-minute tail, schema 1)
+
+```json
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-29T05:05:12Z",
+  "mode": "live",
+  "transport": "github-actions",
+  "window_minutes": 360,
+  "points": [{ "t": 1793236200000, "z": "VIC1", "p": 50.4485, "s": "aemo" }],
+  "meta": { "row_count": 104, "latest_timestamp_ms": 1793236200000 }
+}
+```
+
+`data/live-config.json` controls the client:
+
+```json
+{ "schema_version": 1, "enabled": true, "relay_url": "", "poll_ms": 12000 }
+```
+
+- `enabled: false` turns the live card and polling off.
+- `relay_url` points at the deployed Cloudflare Worker. Leave it empty for the
+  static `live.json` lane.
+- `poll_ms` is clamped to 5–120 seconds; the static lane uses 12 seconds by
+  default, the relay 15.
+
 ## Filters and interactions
 
 - Hover a column for the reading; click to pin it in **Focus**.
@@ -136,6 +183,10 @@ manifest and the newest day are revalidated.
 - Replay animates the session; `Space` toggles it.
 - Camera presets: `1` overview, `2` profile, `3` top.
 - `F` focuses a pinned column, `R` refreshes, `L` toggles auto refresh.
+- **Live now** counts people on the dashboard (relay) and shows the last live
+  push. Without a relay it counts this tab and says so.
+- The live lane merges the newest Databricks readings every 12 seconds without
+  resetting filters, the brush, or the replay playhead.
 - Window baseline trims the vertical axis to the session range; Zero baseline
   keeps a truthful origin, including negative prices.
 - Indexed mode rebases each zone to 100 so different price levels compare.
@@ -171,6 +222,10 @@ python scripts/dashboard_shards.py docs/data/energy.json --out docs/data
    branch `main`, folder `/docs`.
 4. Run **Energy Market Data to Kafka**, then **Publish Dashboard Snapshot**
    from the Actions tab to verify the configured ingestion and publishing path.
+5. Run **Live Databricks Feed** once to publish `docs/data/live.json`. After
+   that the schedule keeps the tail fresh every five minutes.
+6. Optional: deploy `workers/live` and put its URL in `data/live-config.json`
+   for shared presence and a 15-second data path.
 
 If the export has not run yet, the page renders a deterministic demo snapshot
 and clearly labels it as demo data.
