@@ -37,7 +37,7 @@ import {
 } from "./data.js?v=20261029-5";
 import { createDemoSnapshot } from "./demo.js?v=20261029-5";
 import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-5";
-import { loadLiveConfig, createLiveFeed, createPresence } from "./live.js?v=20261029-7";
+import { loadLiveConfig, createLiveFeed, createPresence } from "./live.js?v=20261029-8";
 
 const RANGES = {
   "6h": 6 * 3600 * 1000,
@@ -494,7 +494,9 @@ function updateLiveUi() {
             : live.state === "off"
               ? "offline"
               : "connecting";
-  $("live-transport").textContent = transportLabel;
+  // The card is titled "Live now" and the first two stats are viewers, so its
+  // note follows the presence transport whenever the relay is connected.
+  $("live-transport").textContent = relay ? "realtime" : transportLabel;
 
   $("live-online").textContent = relay ? String(online) : mode === "local" ? "1" : "—";
   $("live-peak").textContent = relay ? String(Number(presence.peak) || online) : "—";
