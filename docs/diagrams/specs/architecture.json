@@ -3,61 +3,92 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "VoltScope System Architecture",
+    "subtitle": "Market feeds to a public 3D dashboard, with a five-minute live tail and a presence relay",
     "output": "docs/diagrams/architecture.html",
     "quality_profile": "showcase",
-    "viewBox": [1180, 640],
+    "viewBox": [1240, 720],
     "views": [
       {
         "id": "ingest-path",
         "label": "Ingest path",
-        "focus": ["entsoe", "elecz", "producer", "kafka", "databricks", "delta"],
-        "note": "Two market feeds become one Kafka topic and land in Delta Lake."
+        "focus": ["aemo", "entsoe", "elecz", "producer", "live-producer", "kafka", "databricks", "delta"],
+        "note": "AEMO, ENTSO-E, and Elecz normalize into one Kafka topic and land in Delta Lake."
       },
       {
         "id": "serving-path",
         "label": "Serving path",
-        "focus": ["delta", "warehouse", "exporter", "snapshot", "pages", "browser"],
-        "note": "A token-scoped export turns the table into a static JSON snapshot."
+        "focus": ["delta", "warehouse", "exporter", "shards", "pages", "browser"],
+        "note": "The exporter publishes an index plus UTC-day shards; the browser downloads only the days it needs."
+      },
+      {
+        "id": "live-path",
+        "label": "Live path",
+        "focus": ["live-producer", "kafka", "warehouse", "live-export", "live-json", "relay", "browser"],
+        "note": "A five-minute lane appends live.json, and the relay supplies shared presence over a WebSocket."
       },
       {
         "id": "trust-boundary",
         "label": "Trust boundary",
-        "focus": ["secrets", "producer", "databricks", "exporter"],
-        "note": "Credentials stay in GitHub Actions secrets and the Databricks secret scope."
+        "focus": ["secrets", "producer", "databricks", "exporter", "relay"],
+        "note": "Kafka and Databricks credentials stay in Actions secrets and the Databricks secret scope; the browser only reads static JSON."
       }
     ]
   },
   "components": [
-    { "id": "entsoe", "type": "external", "label": "ENTSO-E", "sublabel": "DE_LU day-ahead", "pos": [40, 80], "size": [150, 64] },
-    { "id": "elecz", "type": "external", "label": "Elecz", "sublabel": "DE spot API", "pos": [40, 240], "size": [150, 64] },
-    { "id": "producer", "type": "backend", "label": "Dual Producer", "sublabel": "GitHub Actions · 30 min", "pos": [260, 160], "size": [160, 64], "tag": "python" },
-    { "id": "kafka", "type": "messagebus", "label": "Aiven Kafka", "sublabel": "energy-prices", "pos": [490, 160], "size": [150, 64], "tag": "SASL_SSL" },
-    { "id": "databricks", "type": "cloud", "label": "Databricks Job", "sublabel": "kafka_ingest.ipynb", "pos": [710, 160], "size": [160, 64], "tag": "availableNow" },
-    { "id": "delta", "type": "database", "label": "Delta Table", "sublabel": "energy_prices_realtime", "pos": [940, 160], "size": [180, 64], "tag": "Unity Catalog" },
-    { "id": "warehouse", "type": "cloud", "label": "SQL Warehouse", "sublabel": "Statement Execution API", "pos": [940, 340], "size": [180, 64] },
-    { "id": "exporter", "type": "backend", "label": "Snapshot Export", "sublabel": "export_dashboard_data.py", "pos": [710, 340], "size": [160, 64], "tag": "retry + fallback" },
-    { "id": "snapshot", "type": "database", "label": "energy.json", "sublabel": "docs/data · schema v1", "pos": [490, 340], "size": [150, 64] },
-    { "id": "pages", "type": "cloud", "label": "GitHub Pages", "sublabel": "static hosting", "pos": [260, 340], "size": [160, 64], "tag": "main · /docs" },
-    { "id": "browser", "type": "frontend", "label": "VoltScope", "sublabel": "Three.js dashboard", "pos": [40, 340], "size": [150, 64], "tag": "polls 60 s" },
-    { "id": "secrets", "type": "security", "label": "Secrets", "sublabel": "Actions + Databricks scope", "pos": [260, 24], "size": [170, 56], "tag": "never in browser" }
+    { "id": "aemo", "type": "external", "label": "AEMO NEMWeb", "sublabel": "5 NEM regions · 5 min", "pos": [40, 72], "size": [170, 64], "tag": "public ZIP" },
+    { "id": "entsoe", "type": "external", "label": "ENTSO-E", "sublabel": "48 day-ahead zones", "pos": [40, 176], "size": [170, 64], "tag": "Transparency API" },
+    { "id": "elecz", "type": "external", "label": "Elecz", "sublabel": "DE spot", "pos": [40, 280], "size": [170, 64], "tag": "JSON API" },
+
+    { "id": "secrets", "type": "security", "label": "Secrets", "sublabel": "Actions + secret scope", "pos": [260, 12], "size": [180, 56], "tag": "never in browser" },
+    { "id": "producer", "type": "backend", "label": "Dual producer", "sublabel": "AEMO + ENTSO-E + Elecz", "pos": [260, 112], "size": [180, 64], "tag": "every 30 min" },
+    { "id": "live-producer", "type": "backend", "label": "Live producer", "sublabel": "AEMO + Elecz", "pos": [260, 248], "size": [180, 64], "tag": "every 5 min" },
+
+    { "id": "kafka", "type": "messagebus", "label": "Aiven Kafka", "sublabel": "energy-prices", "pos": [500, 176], "size": [150, 64], "tag": "SASL_SSL" },
+    { "id": "databricks", "type": "cloud", "label": "Databricks job", "sublabel": "kafka_ingest.ipynb", "pos": [700, 176], "size": [170, 64], "tag": "availableNow" },
+    { "id": "delta", "type": "database", "label": "Delta table", "sublabel": "energy_prices_realtime", "pos": [920, 176], "size": [180, 64], "tag": "Unity Catalog" },
+
+    { "id": "warehouse", "type": "cloud", "label": "SQL warehouse", "sublabel": "Statement Execution API", "pos": [920, 336], "size": [180, 64] },
+    { "id": "exporter", "type": "backend", "label": "Snapshot export", "sublabel": "schema v2 shards", "pos": [700, 336], "size": [170, 64], "tag": "dedupe + atomic" },
+    { "id": "shards", "type": "database", "label": "index + days", "sublabel": "docs/data", "pos": [500, 336], "size": [150, 64], "tag": "UTC shards" },
+
+    { "id": "live-export", "type": "backend", "label": "Live export", "sublabel": "live.json tail", "pos": [700, 500], "size": [170, 64], "tag": "6 h · 2k rows" },
+    { "id": "live-json", "type": "database", "label": "live.json", "sublabel": "newest readings", "pos": [500, 500], "size": [150, 64], "tag": "polled every 12 s" },
+    { "id": "relay", "type": "cloud", "label": "Presence relay", "sublabel": "Cloudflare Worker", "pos": [270, 520], "size": [180, 64], "tag": "WebSocket /ws" },
+
+    { "id": "pages", "type": "cloud", "label": "GitHub Pages", "sublabel": "static hosting", "pos": [270, 400], "size": [180, 64], "tag": "main · /docs" },
+    { "id": "browser", "type": "frontend", "label": "VoltScope", "sublabel": "Three.js dashboard", "pos": [40, 480], "size": [170, 80], "tag": "polls 60 s" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "GitHub Actions", "wraps": ["producer", "live-producer"], "pad": 24 },
+    { "kind": "region", "label": "Lakehouse", "wraps": ["databricks", "delta"], "pad": 24 }
   ],
   "connections": [
-    { "id": "entsoe-to-producer", "from": "entsoe", "to": "producer", "label": "XML / API", "variant": "default" },
-    { "id": "elecz-to-producer", "from": "elecz", "to": "producer", "label": "JSON / API", "variant": "default" },
+    { "id": "aemo-to-producer", "from": "aemo", "to": "producer", "label": "dispatch", "variant": "default" },
+    { "id": "entsoe-to-producer", "from": "entsoe", "to": "producer", "label": "day-ahead", "variant": "default" },
+    { "id": "elecz-to-live", "from": "elecz", "to": "live-producer", "label": "spot", "variant": "default" },
+
     { "id": "producer-to-kafka", "from": "producer", "to": "kafka", "label": "produce", "variant": "emphasis" },
+    { "id": "live-producer-to-kafka", "from": "live-producer", "to": "kafka", "label": "produce", "variant": "emphasis" },
     { "id": "kafka-to-databricks", "from": "kafka", "to": "databricks", "label": "readStream", "variant": "emphasis" },
     { "id": "databricks-to-delta", "from": "databricks", "to": "delta", "label": "append", "variant": "emphasis" },
-    { "id": "delta-to-warehouse", "from": "delta", "to": "warehouse", "label": "SQL", "variant": "default", "fromSide": "bottom", "toSide": "top", "labelAt": [1030, 282] },
+
+    { "id": "delta-to-warehouse", "from": "delta", "to": "warehouse", "label": "SQL", "variant": "default", "fromSide": "bottom", "toSide": "top" },
     { "id": "warehouse-to-exporter", "from": "warehouse", "to": "exporter", "label": "statement", "variant": "default" },
-    { "id": "exporter-to-snapshot", "from": "exporter", "to": "snapshot", "label": "git commit", "variant": "emphasis" },
-    { "id": "snapshot-to-pages", "from": "snapshot", "to": "pages", "label": "branch build", "variant": "default" },
+    { "id": "exporter-to-shards", "from": "exporter", "to": "shards", "label": "commit", "variant": "emphasis" },
+    { "id": "shards-to-pages", "from": "shards", "to": "pages", "label": "build", "variant": "default" },
     { "id": "pages-to-browser", "from": "pages", "to": "browser", "label": "HTTPS", "variant": "default" },
-    { "id": "secrets-to-producer", "from": "secrets", "to": "producer", "label": "KAFKA_PASSWORD", "variant": "security", "fromSide": "bottom", "toSide": "top", "labelDy": -6 },
-    { "id": "secrets-to-databricks", "from": "secrets", "to": "databricks", "label": "Aiven secret scope", "variant": "security", "fromSide": "right", "toSide": "top", "via": [[790, 52]], "labelDy": -14 }
+
+    { "id": "warehouse-to-live-export", "from": "warehouse", "to": "live-export", "label": "statement", "variant": "default", "fromSide": "bottom", "toSide": "top" },
+    { "id": "live-export-to-live-json", "from": "live-export", "to": "live-json", "label": "commit", "variant": "emphasis" },
+    { "id": "live-json-to-browser", "from": "live-json", "to": "browser", "label": "newest points", "variant": "default" },
+    { "id": "relay-to-browser", "from": "relay", "to": "browser", "label": "presence", "variant": "dashed" },
+
+    { "id": "secrets-to-producer", "from": "secrets", "to": "producer", "label": "KAFKA_PASSWORD", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "secrets-to-databricks", "from": "secrets", "to": "databricks", "label": "secret scope", "variant": "security" }
   ],
   "cards": [
-    { "dot": "cyan", "title": "Ingest", "items": ["GitHub Actions runs the dual producer every 30 minutes", "Aiven Kafka carries both feeds on one topic", "Databricks drains available offsets into Delta"] },
-    { "dot": "emerald", "title": "Serving", "items": ["The exporter queries through the SQL Statement API", "A compact schema-v1 snapshot is committed to main", "Pages serves static files; no token reaches the browser"] },
-    { "dot": "amber", "title": "Failure handling", "items": ["Exporter retries 429 and 5xx responses with backoff", "An empty window falls back to the newest rows", "Unchanged payloads skip the commit and Pages rebuild"] }
+    { "dot": "cyan", "title": "Ingest", "items": ["AEMO, ENTSO-E, and Elecz share one message contract in EUR/MWh", "One Kafka topic buffers every feed", "Databricks drains available offsets into Delta Lake"] },
+    { "dot": "emerald", "title": "Serving", "items": ["The exporter writes index.json plus UTC-day shards", "The browser downloads only the selected days", "No warehouse token reaches the page"] },
+    { "dot": "amber", "title": "Freshness", "items": ["A five-minute lane refreshes live.json", "The relay counts viewers over a WebSocket", "Unchanged payloads skip the commit"] }
   ]
 }

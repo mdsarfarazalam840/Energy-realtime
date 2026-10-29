@@ -2,7 +2,7 @@
 
 **Live 3D energy price intelligence for Australia's NEM and Europe's day-ahead markets.**
 
-VoltScope collects AEMO five-minute dispatch prices for Australia's five National Electricity Market regions from the free, public NEMWeb feed, alongside ENTSO-E day-ahead prices and Elecz DE spot. GitHub Actions sends normalized readings through Kafka into Databricks Delta Lake, then publishes a compact static snapshot to GitHub Pages. No Databricks token ever reaches the browser.
+VoltScope collects AEMO five-minute dispatch prices for Australia's five National Electricity Market regions from the free, public NEMWeb feed, alongside ENTSO-E day-ahead prices and Elecz DE spot. GitHub Actions sends normalized readings through Kafka into Databricks Delta Lake, then publishes a small manifest, UTC-day shards, and a five-minute live tail to GitHub Pages. No Databricks token ever reaches the browser.
 
 [![Live dashboard](https://img.shields.io/badge/dashboard-live-4cd7ff?style=flat-square)](https://mdsaifedu.eu.cc/Energy-realtime/)
 [![Publish Dashboard Snapshot](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/publish_dashboard.yml/badge.svg?branch=main)](https://github.com/mdsarfarazalam840/Energy-realtime/actions/workflows/publish_dashboard.yml)
@@ -50,7 +50,7 @@ Australia's NEM dispatch and Europe's day-ahead and spot electricity markets pub
 1. **Collect** AEMO five-minute dispatch prices for NSW, Queensland, Victoria, South Australia, and Tasmania, plus ENTSO-E day-ahead prices and Elecz DE spot.
 2. **Buffer** every feed on one Kafka topic with TLS and SCRAM authentication.
 3. **Land** parsed JSON in a Delta table through Databricks Structured Streaming.
-4. **Publish** a compact, deduplicated JSON manifest plus UTC-day shards through the Databricks SQL Statement API.
+4. **Publish** a compact schema v2 manifest, immutable UTC-day shards, and a five-minute live tail through the Databricks SQL Statement API.
 5. **Render** a static Three.js dashboard on GitHub Pages, with no server and no credentials in the browser.
 
 The result is a live 3D price surface with source comparison, a timeline brush, distribution analysis, replay, camera presets, and shareable URL state. A date picker loads only the UTC days a visitor selects, so the full 30-day window never has to reach the browser. The pipeline is intentionally small enough to read end to end, while still showing the boundaries that matter: retries, freshness checks, atomic publication, credential isolation, and a graceful demo fallback.
@@ -97,6 +97,7 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 - **Compare panel** summarizes each zone: latest value, min, max, mean, standard deviation, change.
 - **Distribution histogram** shows the shape of the current window.
 - **Date picker** selects a UTC day range; the browser downloads only those day shards and reports how many of the published readings are loaded.
+- **Schema v2 shards** split the 30-day window into a small manifest plus immutable UTC-day files, so first paint does not depend on an 80,000-row JSON file.
 - **Timeline brush** narrows the session; double-click clears it.
 - **Replay** animates the session point by point, with 1x, 2x, and 4x speeds.
 - **Camera presets** for overview, profile, and top views.
@@ -132,59 +133,76 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 
 ## Architecture
 
-The system has four boundaries: market data sources, GitHub Actions automation, the Databricks lakehouse, and the public static site. The primary path runs left to right; the serving path wraps back to the browser.
+The system has four boundaries: market data sources, GitHub Actions automation, the Databricks lakehouse, and the public static site. An optional Cloudflare Worker adds shared presence outside those boundaries. The primary path runs left to right; the live lane adds freshness, and the serving path wraps back to the browser.
 
 ```mermaid
 flowchart LR
   subgraph Sources["Market data"]
     direction TB
+    A["AEMO NEMWeb<br/>5 NEM regions · 5 min"]
     E["ENTSO-E<br/>48 day-ahead zones"]
     Z["Elecz<br/>DE spot"]
-    A["AEMO NEMWeb<br/>5-min dispatch"]
   end
 
   subgraph CICD["GitHub Actions"]
     direction TB
     P["producer_dual.py<br/>every 30 min"]
-    X["export_dashboard_data.py<br/>snapshot export"]
+    L["live_feed.yml<br/>every 5 min"]
+    X["export_dashboard_data.py<br/>schema v2 shards"]
+    Y["export_live_data.py<br/>live.json tail"]
   end
 
   K[("Aiven Kafka<br/>energy-prices")]
   D["Databricks job<br/>Spark Structured Streaming"]
   T[("Delta Lake<br/>energy_prices_realtime")]
   S[("docs/data/index.json<br/>+ days/*.json<br/>schema v2")]
+  V[("docs/data/live.json<br/>6 h · 2k rows")]
+  R["Cloudflare Worker<br/>presence relay"]
   PAGES["GitHub Pages<br/>main /docs"]
   UI["VoltScope<br/>Three.js dashboard"]
 
+  A -->|"dispatch"| P
   E -->|"day-ahead"| P
   Z -->|"spot"| P
-  A -->|"5-minute regional RRP"| P
+  A -->|"dispatch"| L
+  Z -->|"spot"| L
   P -->|"SASL_SSL produce"| K
+  L -->|"SASL_SSL produce"| K
   K -->|"readStream"| D
-  D -->|"price append"| T
+  D -->|"append"| T
   T -->|"SQL Statement API"| X
+  T -->|"SQL Statement API"| Y
   X -->|"atomic commit"| S
+  Y -->|"atomic commit"| V
   S -->|"Pages build"| PAGES
-  PAGES -->|"HTTPS: manifest poll + selected day files"| UI
+  V -->|"Pages build"| PAGES
+  PAGES -->|"manifest + selected day files"| UI
+  V -->|"poll 12 s"| UI
+  R -->|"WebSocket presence"| UI
 ```
 
 **Open the interactive version:** [System architecture](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html)
 
 [![Interactive system architecture diagram](docs/assets/diagrams/architecture-preview.png)](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html)
 
+The interactive diagram is generated from [`docs/diagrams/specs/architecture.json`](docs/diagrams/specs/architecture.json) with [Archify](https://github.com/tt-a1i/archify) 3.2. The editorial overview is hand-authored inline SVG and follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules.
+
 ### Components
 
 | Component | Source | Responsibility |
 |---|---|---|
 | Market producer | `producer_dual.py` | Fetch AEMO five-minute NEM dispatch prices, ENTSO-E day-ahead prices, and Elecz DE spot; normalize and produce to Kafka |
+| Live producer | `.github/workflows/live_feed.yml` | Refresh AEMO dispatch and Elecz DE spot every five minutes without spending the ENTSO-E quota |
 | Kafka topic | Aiven Kafka | Durable buffer for all market price readings; topic `energy-prices` |
 | Databricks job | `src/kafka_ingest.ipynb`, `resources/energy_job.yml` | Read Kafka with Structured Streaming and append price rows to Delta |
 | Delta table | `workspace.default.energy_prices_realtime` | Append-only price history in Unity Catalog |
 | Checkpoint volume | `/Volumes/workspace/default/energy_realtime/checkpoints` | Streaming checkpoint state |
 | CA volume | `/Volumes/workspace/default/energy_realtime/aiven_ca.pem` | Kafka TLS trust material for Databricks |
-| Snapshot exporter | `scripts/export_dashboard_data.py`, `scripts/dashboard_shards.py` | Query the table through the SQL Statement API, normalize, write `docs/data/energy.json`, `docs/data/index.json`, and UTC-day shards |
-| Static site | `docs/` | GitHub Pages dashboard and diagram gallery |
-| Browser app | `docs/assets/js/` | Three.js scene, filters, charts, replay, URL state |
+| Snapshot exporter | `scripts/export_dashboard_data.py`, `scripts/dashboard_shards.py` | Query the table through the SQL Statement API, normalize, then write `docs/data/energy.json`, `docs/data/index.json`, and the UTC-day shards |
+| Live exporter | `scripts/export_live_data.py` | Publish the newest six hours as `docs/data/live.json` |
+| Static site | `docs/` | GitHub Pages dashboard, diagram gallery, and JSON artifacts |
+| Browser app | `docs/assets/js/` | Three.js scene, date picker, filters, charts, replay, live merge, URL state |
+| Presence relay | `workers/live/` | Optional Cloudflare Worker for shared viewer count and an optional `/api/live` path |
 | Secrets | GitHub Actions + Databricks secret scope | Keep Kafka and Databricks credentials outside the browser |
 
 ### Trust boundaries
@@ -195,6 +213,7 @@ flowchart LR
 - **Databricks → Kafka**: password read from the `kafka-scope` secret scope, not stored in the notebook.
 - **Databricks → Delta**: Unity Catalog permissions; the bundle deploys to `workspace.default`.
 - **Exporter → Pages**: the exporter only writes static JSON files; the browser never receives a token.
+- **Browser → relay**: the optional Worker sees a presence WebSocket only; it does not receive Kafka or Databricks credentials from the page.
 
 ---
 
@@ -211,11 +230,12 @@ sequenceDiagram
   participant DBX as Databricks
   participant DLT as Delta Lake
   participant EXP as Snapshot exporter
+  participant LIVE as Live exporter
   participant PGS as GitHub Pages
   participant UI as Browser
 
-  SRC->>GH: AEMO five NEM regions + ENTSO-E + Elecz DE
-  GH->>K: produce JSON on energy-prices
+  SRC->>GH: AEMO five regions + ENTSO-E + Elecz DE
+  GH->>K: produce JSON on energy-prices (30 min and 5 min lanes)
   GH->>DBX: POST /api/2.1/jobs/run-now
   DBX->>K: readStream with startingOffsets=latest
   K-->>DBX: JSON message values
@@ -223,15 +243,22 @@ sequenceDiagram
   EXP->>DLT: SQL query over the 30-day window
   DLT-->>EXP: rows with timestamp, zone, price, source
   EXP->>PGS: commit index.json + days/*.json
+  LIVE->>DLT: SQL query over the last six hours
+  DLT-->>LIVE: newest rows
+  LIVE->>PGS: commit live.json when the payload changes
   UI->>PGS: GET index.json (revalidated)
-  PGS-->>UI: day list + counts
+  PGS-->>UI: day list, row counts, time bounds
   UI->>PGS: GET days/*.json for the selected dates
   PGS-->>UI: only those readings
+  UI->>PGS: GET live.json every 12 s
+  PGS-->>UI: newest tail, merged by source, zone, and time
 ```
 
 **Open the interactive version:** [Energy data flow](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html)
 
 [![Interactive energy data flow diagram](docs/assets/diagrams/dataflow-preview.png)](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html)
+
+The data flow is generated from [`docs/diagrams/specs/dataflow.json`](docs/diagrams/specs/dataflow.json) with Archify 3.2. It keeps the five stages and the two publication lanes visible without adding a second main path.
 
 ### Stage contract
 
@@ -242,9 +269,10 @@ sequenceDiagram
 | Transport | Kafka topic | Consumer offsets | SASL_SSL, SCRAM-SHA-256, CA-verified TLS |
 | Ingest | Kafka JSON values | Delta rows | `availableNow` drains available offsets, then stops |
 | Storage | Append operations | `energy_prices_realtime` | Append-only history; checkpointed stream |
-| Export | SQL rows | `docs/data/index.json` + `docs/data/days/*.json` | Deduplicated, finite prices, atomic write, stale shards pruned |
+| Snapshot export | SQL rows | `docs/data/index.json` + `docs/data/days/*.json` | Deduplicated, finite prices, atomic write, stale shards pruned |
+| Live export | SQL rows | `docs/data/live.json` | Six-hour tail, 2000-row cap, committed only when the payload changes |
 | Publication | Static JSON | Pages build | No token, no server; immutable past days, revalidated manifest |
-| Browser | Manifest + selected day shards | 3D scene and charts | Fetches only the picked dates; 60-second manifest refresh; demo fallback if missing |
+| Browser | Manifest, selected day shards, live tail | 3D scene and charts | Fetches only the picked dates; 60-second manifest refresh; demo fallback if missing |
 
 ### Schedule
 
@@ -442,7 +470,7 @@ Elecz reports cents per kWh in EUR for DE, so the producer multiplies by 10 to p
 
 ### Snapshot
 
-`docs/data/energy.json` is the public contract between the exporter and the browser.
+`docs/data/index.json` plus its UTC-day shards form the normal public contract between the exporter and the browser. `docs/data/energy.json` keeps the full-window shape as a fallback.
 
 ```json
 {
@@ -494,6 +522,67 @@ Each point uses single-letter keys to keep the payload small:
 
 The browser also accepts a deterministic demo snapshot with `"mode": "demo"` and `"demo": true`. Demo data is always labelled in the UI.
 
+### Published artifact set
+
+The snapshot exporter writes the manifest, day files, and fallback in one run, so the manifest and its shards cannot disagree. The live exporter writes the tail separately.
+
+| File | Schema | Contents |
+|---|---|---|
+| `docs/data/energy.json` | 1 | Full-window fallback; still published for older clients and for shard repair |
+| `docs/data/index.json` | 2 | Manifest: mode, row counts, time bounds, sources, zones, and one entry per UTC day |
+| `docs/data/days/YYYY-MM-DD.json` | 1 | One immutable UTC day of compact rows |
+| `docs/data/live.json` | 1 | Six-hour, 2000-row tail for the five-minute lane |
+| `docs/data/live-config.json` | 1 | Relay URL, live URL, poll interval, and the enabled flag |
+
+`index.json` is deliberately small. The dashboard revalidates it every 60 seconds, then downloads only the day files inside the visitor's date range:
+
+```json
+{
+  "schema_version": 2,
+  "generated_at": "2026-10-29T05:19:09Z",
+  "mode": "live",
+  "meta": {
+    "row_count": 380,
+    "day_count": 3,
+    "sharded": true,
+    "sources": ["aemo", "elecz", "entsoe"],
+    "zones": ["AT", "BE", "DE", "DE_LU", "NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+    "latest_timestamp_ms": 1793250900000
+  },
+  "days": [
+    { "date": "2026-10-29", "file": "days/2026-10-29.json", "rows": 102, "first_ms": 1793235600000, "last_ms": 1793250900000, "bytes": 3226 }
+  ]
+}
+```
+
+Each day file interns the source and zone names once, so a row is a four-value array:
+
+```json
+{
+  "date": "2026-10-29",
+  "schema_version": 1,
+  "sources": ["aemo", "elecz", "entsoe"],
+  "zones": ["DE", "NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+  "rows": [[1793235600000, 1, 78.326, 0]]
+}
+```
+
+A row is `[t, zone_index, price, source_index]`; the indexes point into the `sources` and `zones` tables. Completed UTC days never change, so Pages and the browser can cache them as immutable. The manifest and the newest day are revalidated.
+
+The live tail keeps the same point shape as `energy.json`:
+
+```json
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-29T05:05:12Z",
+  "mode": "live",
+  "transport": "github-actions",
+  "window_minutes": 360,
+  "points": [{ "t": 1793236200000, "z": "VIC1", "p": 50.4485, "s": "aemo" }],
+  "meta": { "row_count": 104, "latest_timestamp_ms": 1793236200000 }
+}
+```
+
 ### Export query
 
 The exporter builds a parameterized, validated table name and runs:
@@ -510,6 +599,14 @@ LIMIT 80000;
 ```
 
 If the window returns no rows, it falls back to the newest rows in the table. The output is written to a temporary file and atomically replaced, so a partial JSON file never reaches Pages.
+
+`scripts/dashboard_shards.py` then groups the normalized points by UTC day, writes `data/days/*.json`, and rewrites `data/index.json` last. Stale day files outside the window are pruned. `energy.json` stays as the full-window fallback. The publish workflow commits the manifest, the day files, and the fallback together, and skips the commit when the normalized payload is unchanged.
+
+To rebuild shards locally from an existing snapshot, without Databricks:
+
+```bash
+python scripts/dashboard_shards.py docs/data/energy.json --out docs/data
+```
 
 
 ---
@@ -528,9 +625,11 @@ If the window returns no rows, it falls back to the newest rows in the table. Th
 | Frontend | HTML, CSS, JavaScript ES modules | No build step, no framework |
 | 3D | [Three.js](https://threejs.org/) r169, WebGL | Instanced columns, bloom, camera, picking |
 | Charts | Canvas 2D | Timeline and distribution |
+| Realtime relay | Cloudflare Workers, Durable Objects, KV | WebSocket presence and optional `/api/live` cache |
 | Hosting | GitHub Pages, `main` / `docs`, `.nojekyll` | Static site and diagram gallery |
+| Diagrams | [Archify](https://github.com/tt-a1i/archify) 3.2, [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 | Interactive architecture/dataflow artifacts and the editorial pipeline overview |
 | Deployment | [Declarative Automation Bundles](https://docs.databricks.com/dev-tools/bundles/), `uv`, Hatchling | Job deployment and wheel artifact |
-| Quality | pytest, Ruff, Databricks Connect | Template tests and lint |
+| Quality | pytest, Ruff, Playwright, k6-style load harness, Databricks Connect | Template tests, lint, browser audit, snapshot load tests |
 
 ---
 
@@ -548,8 +647,9 @@ Energy-realtime/
 │   ├── index.html                     # dashboard shell
 │   ├── .nojekyll                      # serve files as-is
 │   ├── data/
-│   │   ├── energy.json                # published 30-day snapshot
-│   │   ├── index.json + days/         # UTC-day shards (schema 2)
+│   │   ├── energy.json                # full-window fallback (schema 1)
+│   │   ├── index.json                 # shard manifest (schema 2)
+│   │   ├── days/YYYY-MM-DD.json       # immutable UTC-day shards
 │   │   ├── live.json                  # five-minute realtime tail
 │   │   └── live-config.json           # relay URL and live poll interval
 │   ├── assets/
@@ -573,7 +673,8 @@ Energy-realtime/
 │   └── energy_job.yml                 # Databricks job resource
 ├── scripts/
 │   ├── export_dashboard_data.py       # SQL API exporter
-│   └── export_live_data.py            # five-minute live tail exporter
+│   ├── export_live_data.py            # five-minute live tail exporter
+│   └── dashboard_shards.py            # index + UTC-day shard writer
 ├── src/
 │   ├── kafka_ingest.ipynb             # Structured Streaming notebook
 │   └── energy_realtime/
@@ -582,7 +683,8 @@ Energy-realtime/
 │       └── taxis.py                   # template sample helper
 ├── tests/
 │   ├── conftest.py                    # Databricks Connect fixtures
-│   └── sample_taxis_test.py           # template sample test
+│   ├── sample_taxis_test.py           # template sample test
+│   └── load/                          # local mirror, load test, browser audit
 ├── fixtures/
 ├── producer_dual.py                   # AEMO NEM + ENTSO-E + Elecz producer
 ├── workers/
@@ -627,7 +729,7 @@ python -m http.server 8000 --directory docs
 # open http://localhost:8000
 ```
 
-If `docs/data/energy.json` is missing or invalid, the page renders a deterministic demo snapshot and labels it as demo data. The boot overlay has a 15-second timeout so a failed module graph cannot trap the page.
+If `docs/data/index.json` or its day shards are missing or invalid, the page falls back to `docs/data/energy.json`, then to a deterministic demo snapshot labelled as demo data. The boot overlay has a 15-second timeout so a failed module graph cannot trap the page.
 
 ### Run the producer locally
 
@@ -897,7 +999,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 
 - Theme and auto-refresh preference are stored in `localStorage` under `voltscope.theme` and `voltscope.live`.
 - Filter state is encoded in the URL hash so a shared link is reproducible.
-- The page polls `data/energy.json` every 60 seconds with a cache-busting query parameter.
+- The page polls `data/index.json` every 60 seconds, revalidates it with an ETag, and downloads only the day shards inside the selected date range. If shards are missing, it falls back to `data/energy.json`.
 - The live lane polls `data/live.json` every 12 seconds and merges only new points; when `live_url` points at the relay it polls `/api/live` instead and falls back to the file on error. Presence is pushed over a WebSocket.
 - The boot overlay hides only after the scene and snapshot are ready, with a 15-second failure timeout.
 
@@ -911,7 +1013,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 2. **Check the Databricks job run.** The producer workflow calls `/api/2.1/jobs/run-now` with the configured job id. A failed run usually means the secret scope, CA volume, checkpoint volume, or Kafka credentials are wrong.
 3. **Check the exporter run.** The publish workflow logs the table, row count, sources, latest reading, and query time in the job summary.
 4. **Check freshness.** The exporter warns when the newest row is more than 120 minutes old. The dashboard status chip also shows the snapshot age.
-5. **Check the snapshot file.** A missing or invalid `docs/data/energy.json` makes the dashboard fall back to demo data.
+5. **Check the published artifacts.** A missing or invalid `docs/data/index.json` or `docs/data/days/` makes the dashboard fall back to `energy.json`, then to demo data.
 
 ### Common failures
 
@@ -993,6 +1095,8 @@ ruff check .
 
 `tests/conftest.py` configures Databricks Connect and falls back to serverless compute when no cluster is specified. The included `tests/sample_taxis_test.py` is a template smoke test against `samples.nyctaxi.trips`; it verifies the test harness, not the energy pipeline.
 
+The dashboard has its own workflow (`dashboard-quality.yml`, pull requests and manual dispatch). It validates the published `energy.json` contract, rebuilds the schema v2 shards, checks that every day file matches the manifest, then runs the local load and Playwright audit. It never calls the live Pages host or Databricks.
+
 ### Manual smoke tests
 
 ```bash
@@ -1041,14 +1145,29 @@ scenarios, budgets, and results.
 
 ### Diagram validation
 
-The interactive diagrams are generated from JSON specifications with [Archify](https://github.com/tt-a1i/archify). If you change a spec, validate before committing:
+The interactive diagrams are generated from JSON specifications with [Archify](https://github.com/tt-a1i/archify) 3.2. `finalize` runs validation, delivery, strict provenance, and the browser gate in one pass:
 
 ```bash
-node bin/archify.mjs validate architecture docs/diagrams/specs/architecture.json --quality showcase --json
-node bin/archify.mjs validate dataflow docs/diagrams/specs/dataflow.json --quality showcase --json
+ARCHIFY=/path/to/archify/archify/bin/archify.mjs
+node "$ARCHIFY" finalize architecture docs/diagrams/specs/architecture.json docs/diagrams/architecture.html --quality showcase --json
+node "$ARCHIFY" finalize dataflow docs/diagrams/specs/dataflow.json docs/diagrams/dataflow.html --quality showcase --json
 ```
 
-The editorial pipeline follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) rules: 4px grid, hairline rules, one accent family, no shadows, and a single primary path.
+A passing receipt writes the self-contained HTML artifact plus a delivery receipt beside it. If a gate fails, edit the spec and rerun the same command; do not hand-edit the generated HTML.
+
+The editorial pipeline follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules: 4px grid, 1px hairlines, 6px radius, one accent family, one primary path, mono only for technical sublabels, and no shadows. It is hand-authored inline SVG, so it needs no generator at runtime and stays readable offline.
+
+After a diagram change, refresh the preview images used by this README and the gallery:
+
+```powershell
+chrome --headless=new --disable-gpu --no-sandbox --hide-scrollbars `
+  --user-data-dir="$env:TEMP\chrome-diagram" `
+  --window-size=1440,900 `
+  --screenshot="docs/assets/diagrams/architecture-preview.png" `
+  "http://localhost:8000/diagrams/architecture.html"
+```
+
+Repeat for `dataflow.html` and, with `--window-size=1440,1000`, `pipeline.html`.
 
 ---
 
@@ -1064,7 +1183,7 @@ The editorial pipeline follows the [diagram-design](https://github.com/cathrynla
 
 `docs/.nojekyll` disables Jekyll processing, so files and folders that start with an underscore are served as-is.
 
-The publish workflow commits `docs/data/energy.json` with `[skip ci]`, which prevents a snapshot commit from retriggering the workflow. It compares the normalized payload and skips the commit when only timestamps or query timings changed.
+The publish workflow commits `docs/data/energy.json`, `docs/data/index.json`, the day shards, and `docs/data/live.json` with `[skip ci]`, which prevents an artifact commit from retriggering the workflow. It compares the normalized payload and skips the commit when only timestamps or query timings changed.
 
 ### Databricks bundle
 
@@ -1088,9 +1207,10 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - [ ] SQL warehouse id is stored in `DATABRICKS_WAREHOUSE_ID`.
 - [ ] `DATABRICKS_HOST` and `DATABRICKS_TOKEN` are stored as secrets.
 - [ ] The Databricks job runs successfully once.
-- [ ] The exporter writes a non-empty `docs/data/energy.json`.
+- [ ] The exporter writes a non-empty `docs/data/energy.json`, `docs/data/index.json`, and at least one day shard.
 - [ ] Pages is configured for `main` / `docs`.
 - [ ] The dashboard shows live rows, not demo data.
+- [ ] Optional: `docs/data/live.json` exists and `live-config.json` points at the relay.
 
 ---
 
@@ -1099,8 +1219,9 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - **`startingOffsets=latest` can skip data.** If the Databricks job is down while the producer writes, those offsets are not replayed. Use `earliest` or a stored offset policy if exact-once ingest matters.
 - **Delta writes are append-only.** There is no `MERGE` deduplication in the table; duplicates are removed only when the snapshot is built.
 - **The public history is capped.** The exporter defaults to 30 days and 80,000 rows. Older rows remain in Delta but are not published.
-- **Realtime is layered, not absolute.** The static path polls a committed `live.json`; freshness depends on a five-minute GitHub cron that can drift. The optional relay adds a 20-second cache and true WebSocket presence, but it is extra infrastructure that must be deployed and funded.
+- **Realtime is layered, not absolute.** The static path polls a committed `live.json`; freshness depends on a five-minute GitHub cron that can drift. The relay can add a 20-second `/api/live` cache, but the current deployment serves presence only and reads points from `data/live.json`.
 - **Presence needs the relay.** GitHub Pages cannot count visitors. Without `workers/live`, the card counts this tab only and says so. Do not read that number as an audience metric.
+- **Only the newest day changes.** Completed UTC-day shards are immutable, so a late-arriving row for a past day needs a full shard rebuild, not an in-place merge.
 - **The live lane runs the Databricks job every five minutes.** That increases warehouse and job cost versus the 30-minute path. Lower the cron or disable `live_feed.yml` if the budget is tight; the site falls back to the 60-second snapshot.
 - **The template tests are not pipeline tests.** `sample_taxis_test.py` exercises Databricks Connect, not the energy contract.
 - **Three.js is vendored, not upgraded automatically.** `docs/assets/vendor/three/` pins r169. Refresh those files together with any addon import when you upgrade.
@@ -1127,6 +1248,9 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - [x] Add multi-zone support: 48 ENTSO-E zones across 34 countries.
 - [x] Add public AEMO five-minute NEM dispatch prices with regional lanes.
 - [x] Add per-zone lanes, country colours, and a country filter to the scene and timeline.
+- [x] Add schema v2 UTC-day shards and a date picker.
+- [x] Deploy the presence relay and keep the static live tail as the data path.
+- [ ] Move the relay onto the live data path once its Databricks secrets are set.
 - [ ] Add non-DE Elecz zones with EUR conversion.
 - [ ] Add forecast vs actual overlays and negative-price callouts.
 - [x] Vendor Three.js for offline and air-gapped use.
@@ -1140,7 +1264,7 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 
 1. Fork the repository and create a branch from `main`.
 2. Install dependencies with `uv sync --dev`.
-3. Keep the data contract stable. If you change `points`, `meta`, or `schema_version`, update the exporter, the dashboard parser, and [docs/README.md](docs/README.md) together.
+3. Keep the data contract stable. If you change `points`, `meta`, `schema_version`, `index.json`, or the day-shard row shape, update the exporter, the shard writer, the dashboard parser, and [docs/README.md](docs/README.md) together.
 4. Run `ruff check .` and `uv run pytest`.
 5. Serve `docs/` locally and test the dashboard at desktop and mobile widths.
 6. If you change a diagram, edit the JSON spec and validate it with Archify before committing the generated HTML.

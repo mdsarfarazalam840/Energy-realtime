@@ -3,27 +3,28 @@
   "diagram_type": "dataflow",
   "meta": {
     "title": "VoltScope Energy Data Flow",
+    "subtitle": "Three market feeds become a small, versioned artifact the browser can cache",
     "output": "docs/diagrams/dataflow.html",
     "quality_profile": "showcase",
-    "viewBox": [1080, 680],
+    "viewBox": [1075, 620],
     "views": [
       {
         "id": "market-feeds",
         "label": "Market feeds",
-        "focus": ["entsoe", "elecz", "producer"],
-        "note": "Two independent price feeds normalize into one message contract."
+        "focus": ["aemo", "entsoe", "elecz", "producer", "live-producer"],
+        "note": "AEMO dispatch, ENTSO-E day-ahead, and Elecz spot normalize into one EUR/MWh message."
       },
       {
         "id": "durable-state",
         "label": "Durable state",
         "focus": ["producer", "kafka", "databricks", "delta"],
-        "note": "Kafka absorbs bursts; Delta keeps append-only history."
+        "note": "Kafka absorbs bursts; Delta keeps append-only history for both export lanes."
       },
       {
         "id": "publication",
         "label": "Publication",
-        "focus": ["delta", "dashboard"],
-        "note": "The exporter turns table rows into a static, browser-safe snapshot."
+        "focus": ["delta", "exporter", "live-export", "shards", "live-json"],
+        "note": "The snapshot exporter writes schema v2 shards; the live exporter writes a small tail."
       }
     ]
   },
@@ -35,25 +36,41 @@
     { "label": "Serve" }
   ],
   "nodes": [
-    { "id": "entsoe", "type": "external", "label": "ENTSO-E", "sublabel": "DE_LU day-ahead", "stage": 0, "row": 0, "tag": "XML / API" },
-    { "id": "elecz", "type": "external", "label": "Elecz", "sublabel": "DE spot", "stage": 0, "row": 2, "tag": "JSON / API" },
-    { "id": "producer", "type": "backend", "label": "Dual Producer", "sublabel": "requests + entsoe-py", "stage": 1, "row": 1, "tag": "GitHub Actions · 30 min" },
+    { "id": "aemo", "type": "external", "label": "AEMO NEMWeb", "sublabel": "five NEM regions", "stage": 0, "row": 0, "tag": "5-minute dispatch" },
+    { "id": "entsoe", "type": "external", "label": "ENTSO-E", "sublabel": "48 day-ahead zones", "stage": 0, "row": 1, "tag": "hourly curve" },
+    { "id": "elecz", "type": "external", "label": "Elecz", "sublabel": "DE spot", "stage": 0, "row": 2, "tag": "cents/kWh" },
+
+    { "id": "producer", "type": "backend", "label": "Dual producer", "sublabel": "requests + entsoe-py", "stage": 1, "row": 1, "tag": "30 min · FX to EUR" },
+    { "id": "live-producer", "type": "backend", "label": "Live producer", "sublabel": "AEMO + Elecz only", "stage": 1, "row": 3, "tag": "5 min" },
+
     { "id": "kafka", "type": "messagebus", "label": "Aiven Kafka", "sublabel": "energy-prices", "stage": 2, "row": 1, "tag": "SASL_SSL · SCRAM" },
+
     { "id": "databricks", "type": "cloud", "label": "Databricks", "sublabel": "kafka_ingest.ipynb", "stage": 3, "row": 0, "tag": "availableNow" },
-    { "id": "delta", "type": "database", "label": "Delta Table", "sublabel": "energy_prices_realtime", "stage": 3, "row": 2, "tag": "Unity Catalog" },
-    { "id": "dashboard", "type": "frontend", "label": "VoltScope", "sublabel": "static GitHub Pages", "stage": 4, "row": 1, "tag": "browser polls 60 s" }
+    { "id": "delta", "type": "database", "label": "Delta table", "sublabel": "energy_prices_realtime", "stage": 3, "row": 2, "tag": "append-only" },
+
+    { "id": "exporter", "type": "backend", "label": "Snapshot export", "sublabel": "30-day window", "stage": 4, "row": 0, "tag": "schema v2 shards" },
+    { "id": "shards", "type": "database", "label": "index + days", "sublabel": "docs/data", "stage": 4, "row": 1, "tag": "UTC-day files" },
+    { "id": "live-export", "type": "backend", "label": "Live export", "sublabel": "360-minute window", "stage": 4, "row": 2, "tag": "live.json · schema v1" },
+    { "id": "live-json", "type": "database", "label": "live.json", "sublabel": "newest readings", "stage": 4, "row": 3, "tag": "2000-row cap" }
   ],
   "flows": [
-    { "from": "entsoe", "to": "producer", "label": "day-ahead curve", "classification": "EUR/MWh · hourly", "variant": "default" },
-    { "from": "elecz", "to": "producer", "label": "spot price", "classification": "EUR/MWh · 30 min", "variant": "default" },
-    { "from": "producer", "to": "kafka", "label": "produce", "classification": "topic energy-prices", "variant": "emphasis", "route": "straight" },
+    { "from": "aemo", "to": "producer", "label": "dispatch prices", "classification": "AUD/MWh · 5 min", "variant": "default" },
+    { "from": "entsoe", "to": "producer", "label": "day-ahead curves", "classification": "EUR/MWh · hourly", "variant": "default", "route": "straight" },
+    { "from": "elecz", "to": "live-producer", "label": "spot price", "classification": "EUR/MWh · 30 min", "variant": "default" },
+
+    { "from": "producer", "to": "kafka", "label": "normalized JSON", "classification": "52 zones + 5 regions", "variant": "emphasis", "route": "straight" },
+    { "from": "live-producer", "to": "kafka", "label": "fast JSON", "classification": "5 regions + DE", "variant": "emphasis" },
     { "from": "kafka", "to": "databricks", "label": "readStream", "classification": "latest offsets", "variant": "emphasis" },
-    { "from": "databricks", "to": "delta", "label": "append", "classification": "checkpointed stream", "variant": "emphasis", "labelDy": 24 },
-    { "from": "delta", "to": "dashboard", "label": "SQL export", "classification": "energy.json · schema v1", "variant": "emphasis" }
+    { "from": "databricks", "to": "delta", "label": "append rows", "classification": "checkpointed stream", "variant": "emphasis" },
+
+    { "from": "delta", "to": "exporter", "label": "30-day window", "classification": "SQL Statement API", "variant": "default" },
+    { "from": "delta", "to": "live-export", "label": "360-minute tail", "classification": "SQL Statement API", "variant": "default", "route": "straight" },
+    { "from": "exporter", "to": "shards", "label": "publish shards", "classification": "index.json + days/*.json", "variant": "emphasis", "labelDy": 25 },
+    { "from": "live-export", "to": "live-json", "label": "publish tail", "classification": "deduped · rounded", "variant": "emphasis" }
   ],
   "cards": [
-    { "dot": "amber", "title": "One Message Contract", "items": ["timestamp, zone, price, source", "Two feeds, one Kafka topic", "Prices stay in EUR/MWh"] },
+    { "dot": "amber", "title": "One Message Contract", "items": ["timestamp, zone, price, source", "AEMO AUD/MWh converts to EUR/MWh with the daily Frankfurter rate", "Native price and FX rate stay in Kafka"] },
     { "dot": "cyan", "title": "Durable By Default", "items": ["Delta keeps append-only history", "Checkpoint lives in a Unity Catalog volume", "availableNow drains then stops"] },
-    { "dot": "emerald", "title": "Browser-Safe Publication", "items": ["The SQL token never leaves Actions", "Snapshot points are deduped and rounded", "Atomic write prevents partial JSON"] }
+    { "dot": "emerald", "title": "Browser-Safe Publication", "items": ["The SQL token never leaves Actions", "Points are deduped by source, zone, and time", "Atomic writes prevent partial JSON"] }
   ]
 }
