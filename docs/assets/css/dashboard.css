@@ -425,6 +425,66 @@ html[data-theme="light"] .icon-sun { display: block; }
   text-transform: uppercase;
   color: var(--faint);
 }
+.field-sub {
+  margin-left: 4px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: .06em;
+  opacity: .75;
+}
+
+.date-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.date-field > span {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.date-input {
+  width: 100%;
+  height: 32px;
+  min-width: 0;
+  padding: 0 7px;
+  border-radius: 9px;
+  border: 1px solid var(--stroke);
+  background: var(--chip);
+  color: var(--text);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color-scheme: dark;
+}
+html[data-theme="light"] .date-input { color-scheme: light; }
+.date-input:hover { border-color: var(--stroke-strong); }
+.date-input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.date-input:disabled { opacity: .55; cursor: progress; }
+.date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: .7;
+}
+html[data-theme="dark"] .date-input::-webkit-calendar-picker-indicator { filter: invert(.85); }
+.date-note {
+  font-size: 9.5px;
+  line-height: 1.45;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.date-note[data-state="loading"] { color: var(--accent); }
+.date-note[data-state="error"] { color: var(--bad); }
+
+@media (max-width: 430px) {
+  .date-range { grid-template-columns: 1fr; }
+}
 
 .select {
   width: 100%;

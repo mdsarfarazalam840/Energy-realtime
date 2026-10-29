@@ -4,7 +4,9 @@
 The dashboard on GitHub Pages is a static site, so it cannot hold a Databricks
 token. This script runs inside GitHub Actions, queries the Databricks SQL
 Statement Execution API with the repository secret token, and writes a compact
-snapshot that the browser can read safely.
+snapshot that the browser can read safely. It also splits the snapshot into
+UTC-day shards (`data/index.json` plus `data/days/*.json`) so the dashboard can
+fetch only the dates a visitor selects instead of the whole window.
 
 Usage:
     python scripts/export_dashboard_data.py
@@ -37,6 +39,8 @@ from pathlib import Path
 from typing import Any
 
 import requests
+
+from dashboard_shards import ShardError, write_shards
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "docs" / "data" / "energy.json"
@@ -388,6 +392,14 @@ def main(argv: list[str] | None = None) -> int:
         else:
             write_json(out_path, snapshot)
             log(f"wrote {out_path} ({out_path.stat().st_size / 1024:.1f} KiB)")
+            # Day shards keep the browser from downloading the whole window.
+            # The legacy full snapshot stays for consumers and older pages.
+            shard_index = write_shards(out_path.parent, snapshot)
+            shard_kib = sum(day["bytes"] for day in shard_index["days"]) / 1024
+            log(
+                f"wrote {out_path.parent / 'index.json'} + "
+                f"{len(shard_index['days'])} day shards ({shard_kib:.1f} KiB)"
+            )
 
         log(
             "rows={rows} sources={sources} zones={zones} latest={latest} window={days}d fallback={fallback}".format(
@@ -405,7 +417,7 @@ def main(argv: list[str] | None = None) -> int:
         if age_min > 120:
             log(f"warning: newest row is {age_min:.0f} min old; check the ingest job")
         return 0
-    except ExportError as exc:
+    except (ExportError, ShardError) as exc:
         log(f"error: {exc}")
         return 1
 

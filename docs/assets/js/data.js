@@ -183,6 +183,216 @@ export async function loadSnapshot(url = "data/energy.json") {
   }
 }
 
+/* ---------------- day shards ----------------
+ *
+ * `data/index.json` is a small manifest of UTC days. Each day file holds only
+ * that day's readings. The dashboard loads the index, then fetches only the
+ * days the visitor asks for, so a 30-day snapshot no longer lands in the
+ * browser on first paint.
+ */
+
+export const DAY_MS = 86400000;
+const SHARD_CACHE_LIMIT = 90;
+
+/** UTC calendar day for an epoch-ms timestamp: `2026-10-28`. */
+export function utcDayKey(ms) {
+  return new Date(Number(ms)).toISOString().slice(0, 10);
+}
+
+export function utcDayStart(key) {
+  const parsed = Date.parse(`${key}T00:00:00Z`);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function dayLabel(key, { short = false } = {}) {
+  const ms = utcDayStart(key);
+  if (!ms) return "—";
+  const date = new Date(ms);
+  const options = { day: "2-digit", month: "short", timeZone: "UTC" };
+  if (!short) options.year = "numeric";
+  if (!short) options.weekday = "short";
+  return date.toLocaleDateString("en-GB", options);
+}
+
+const shardCache = new Map();
+
+function cacheShard(date, lastMs, points) {
+  shardCache.delete(date);
+  shardCache.set(date, { lastMs, points });
+  while (shardCache.size > SHARD_CACHE_LIMIT) {
+    shardCache.delete(shardCache.keys().next().value);
+  }
+}
+
+/** Read the manifest. Throws when the deployment has no shards yet. */
+export async function loadDayIndex(url = "data/index.json") {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(url, {
+      cache: "no-cache",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const index = await response.json();
+    if (!index || !Array.isArray(index.days) || !index.days.length) {
+      throw new Error("Manifest has no days");
+    }
+    return index;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function decodeDay(document) {
+  const points = [];
+  if (Array.isArray(document?.points)) return parseSnapshot({ points: document.points }).points;
+  const sources = Array.isArray(document?.sources) ? document.sources : [];
+  const zones = Array.isArray(document?.zones) ? document.zones : [];
+  for (const row of document?.rows || []) {
+    if (!Array.isArray(row) || row.length < 4) continue;
+    const t = Number(row[0]);
+    const p = Number(row[2]);
+    if (!Number.isFinite(t) || !Number.isFinite(p)) continue;
+    const z = String(zones[row[1]] ?? "unknown");
+    const s = String(sources[row[3]] ?? "unknown");
+    points.push({ t, p, z, s, l: `${s}|${z}` });
+  }
+  return points;
+}
+
+/** Day keys covered by a date picker value or a window preset. */
+export function dayKeysForWindow(index, { dateFrom = null, dateTo = null, rangeMs = 0, anchor = 0 } = {}) {
+  const days = index.days.map((day) => day.date);
+  let fromKey = dateFrom;
+  const toKey = dateTo || dateFrom;
+  if (!fromKey) {
+    const cutoff = rangeMs ? anchor - rangeMs : 0;
+    fromKey = cutoff ? utcDayKey(cutoff) : days[0];
+  }
+  const keys = days.filter((date) => date >= fromKey && (!toKey || date <= toKey));
+  if (!keys.length) return [days[days.length - 1]];
+  return keys;
+}
+
+/** Clamp a picker value into the range the manifest actually covers. */
+export function clampDayKey(index, key) {
+  const days = index.days;
+  if (!key) return days[days.length - 1].date;
+  if (key < days[0].date) return days[0].date;
+  const last = days[days.length - 1].date;
+  if (key > last) return last;
+  return key;
+}
+
+async function fetchShardDocument(url, { cache = "default", signal } = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  const abort = () => controller.abort();
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener("abort", abort, { once: true });
+  }
+  try {
+    const response = await fetch(url, {
+      cache,
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+    if (signal) signal.removeEventListener("abort", abort);
+  }
+}
+
+/**
+ * Load the requested day files and return their readings in time order.
+ * Cached days are reused until the manifest reports a new `last_ms` for them.
+ */
+export async function loadDayPoints(
+  index,
+  keys,
+  { concurrency = 4, signal, onProgress, dataDir = "data" } = {}
+) {
+  const entries = new Map(index.days.map((day) => [day.date, day]));
+  const latest = index.days[index.days.length - 1]?.date;
+  const wanter = keys.filter((key) => entries.has(key));
+  const loaded = [];
+  let finished = 0;
+
+  const fetchOne = async (key) => {
+    const entry = entries.get(key);
+    if (!entry || !entry.file) return [];
+    const cached = shardCache.get(key);
+    if (cached && cached.lastMs === entry.last_ms) return cached.points;
+    const url = `${dataDir}/${entry.file}`;
+    // Past days are immutable; only the newest day can still grow.
+    const document = await fetchShardDocument(url, {
+      cache: key === latest ? "no-cache" : "default",
+      signal,
+    });
+    const points = decodeDay(document);
+    cacheShard(key, entry.last_ms, points);
+    return points;
+  };
+
+  let cursor = 0;
+  const workers = Array.from({ length: Math.max(1, Math.min(concurrency, wanter.length)) }, async () => {
+    while (cursor < wanter.length) {
+      const indexNow = cursor;
+      cursor += 1;
+      const key = wanter[indexNow];
+      loaded.push({ key, points: await fetchOne(key) });
+      finished += 1;
+      onProgress?.(finished, wanter.length);
+    }
+  });
+  await Promise.all(workers);
+  loaded.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+
+  const points = [];
+  for (const item of loaded) points.push(...item.points);
+  return { points, keys: loaded.map((item) => item.key), total: wanter.length };
+}
+
+/** Build a manifest-shaped index from a full snapshot (legacy file or demo). */
+export function indexFromSnapshot(snapshot) {
+  const groups = new Map();
+  for (const point of snapshot.points) {
+    const key = utcDayKey(point.t);
+    let group = groups.get(key);
+    if (!group) {
+      group = { date: key, file: null, rows: 0, first_ms: point.t, last_ms: point.t };
+      groups.set(key, group);
+    }
+    group.rows += 1;
+    if (point.t < group.first_ms) group.first_ms = point.t;
+    if (point.t > group.last_ms) group.last_ms = point.t;
+  }
+  const days = [...groups.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
+  const meta = { ...(snapshot.meta || {}) };
+  meta.day_count = days.length;
+  meta.sharded = false;
+  return {
+    schema_version: snapshot.schema_version || 1,
+    generated_at: snapshot.generated_at || new Date().toISOString(),
+    mode: snapshot.mode || "live",
+    meta,
+    days,
+    legacy: true,
+  };
+}
+
+/** Window a full snapshot (legacy/demo mode) to the selected day keys. */
+export function filterPointsByDays(points, keys) {
+  if (!keys?.length) return points;
+  const wanted = new Set(keys);
+  return points.filter((point) => wanted.has(utcDayKey(point.t)));
+}
+
 export function sourceIds(points) {
   return [...new Set(points.map((p) => p.s))].sort();
 }

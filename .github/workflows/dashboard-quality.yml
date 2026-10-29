@@ -1,0 +1,114 @@
+name: Dashboard Load and User Tests
+
+# Static Dashboard tests only. Nothing here calls the live Pages host or
+# Databricks; the site is served from a local in-memory mirror.
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "scripts/dashboard_shards.py"
+      - "scripts/export_dashboard_data.py"
+      - "tests/load/**"
+      - ".github/workflows/dashboard-quality.yml"
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "scripts/dashboard_shards.py"
+      - "scripts/export_dashboard_data.py"
+      - "tests/load/**"
+      - ".github/workflows/dashboard-quality.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dashboard-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  load-and-user-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Validate the published snapshot contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("docs/data/energy.json").read_text())
+          assert data["schema_version"] == 1
+          assert isinstance(data["points"], list) and data["points"]
+          assert {"t", "z", "p", "s"} <= set(data["points"][0])
+          assert data["meta"]["row_count"] >= len(data["points"]) - 1
+          print(f"snapshot ok: {len(data['points'])} points, {len(data['meta']['zones'])} zones")
+          PY
+
+      - name: Rebuild day shards from the published sample
+        run: python scripts/dashboard_shards.py docs/data/energy.json --out docs/data
+
+      - name: Validate the day-shard contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          index = json.loads(Path("docs/data/index.json").read_text())
+          assert index["schema_version"] == 2
+          assert index["days"] and index["meta"]["sharded"] is True
+          total = 0
+          for day in index["days"]:
+              doc = json.loads((Path("docs/data") / day["file"]).read_text())
+              assert doc["date"] == day["date"]
+              assert len(doc["rows"]) == day["rows"] > 0
+              total += day["rows"]
+          assert total == index["meta"]["row_count"]
+          print(f"shards ok: {len(index['days'])} days, {total} rows")
+          PY
+
+      - name: Generate 80k stress snapshot
+        run: python tests/load/generate_snapshot.py --points 80000 --zones 49 --out tests/load/data/energy-80k.json
+
+      - name: Start local origin
+        run: |
+          node tests/load/serve_docs.mjs --root docs --port 8000 --workers 2 &
+          for i in $(seq 1 40); do
+            curl -sf http://127.0.0.1:8000/ > /dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://127.0.0.1:8000/data/index.json > /dev/null
+
+      - name: Load test (1000 virtual users)
+        run: node tests/load/load_test.mjs --users 1000 --duration 30 --ramp 10 --scenario revalidate --out tests/load/results/load-ci.json
+
+      - name: User journey and 80k stress audit
+        run: python tests/load/ui_audit.py --snapshot tests/load/data/energy-80k.json --label ci-80k --soak 3 --out tests/load/results/ui-ci.json
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-test-reports
+          path: tests/load/results/
+          if-no-files-found: warn

@@ -7,7 +7,7 @@
   <meta name="description" content="VoltScope — a live 3D energy price intelligence dashboard fed by Databricks and published on GitHub Pages.">
   <title>VoltScope — Live Energy Price Intelligence</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23070d18'/%3E%3Cpath d='M18 4 9 18h6l-2 10 10-15h-6z' fill='%234cd7ff'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="assets/css/dashboard.css?v=20261029-1">
+  <link rel="stylesheet" href="assets/css/dashboard.css?v=20261029-2">
 </head>
 <body>
   <a class="skip-link" href="#viewport">Skip to dashboard</a>
@@ -74,6 +74,20 @@
           <span class="field-label">Zone</span>
           <select id="zone-select" class="select"></select>
         </label>
+        <div class="field">
+          <span class="field-label">Date range <em class="field-sub">UTC</em></span>
+          <div class="date-range">
+            <label class="date-field">
+              <span>From</span>
+              <input class="date-input" id="date-from" type="date" aria-label="Start date" autocomplete="off">
+            </label>
+            <label class="date-field">
+              <span>To</span>
+              <input class="date-input" id="date-to" type="date" aria-label="End date" autocomplete="off">
+            </label>
+          </div>
+          <p class="date-note" id="date-note">Loading available dates…</p>
+        </div>
         <div class="field">
           <span class="field-label">Window</span>
           <div class="segmented" id="range-group" role="group" aria-label="Time window">
@@ -235,6 +249,7 @@
             <li>Drag to orbit, scroll to zoom, right-drag to pan.</li>
             <li>Click a column to pin its reading.</li>
             <li>Drag across the timeline to brush a time window. Double-click to clear.</li>
+            <li>Pick a date range to load only those UTC days from the snapshot shards.</li>
             <li>Replay animates the session point by point.</li>
           </ul>
         </div>
@@ -282,7 +297,7 @@
     }
   }
   </script>
-  <script type="module" src="assets/js/main.js?v=20261029-1"></script>
+  <script type="module" src="assets/js/main.js?v=20261029-3"></script>
   <script>
     /* If the module graph cannot load (missing vendor files, syntax error), the
        boot overlay must not trap the page forever. */

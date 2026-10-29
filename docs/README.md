@@ -31,14 +31,19 @@ AEMO five-region NEM dispatch + ENTSO-E + Elecz
                                    │
                                    │  publish_dashboard.yml + Databricks SQL Statement API
                                    ▼
-                         docs/data/energy.json  (committed snapshot)
+                         docs/data/index.json + days/*.json  (committed)
                                    │
                                    ▼
                         GitHub Pages ──► browser polls every 60 s
 ```
 
-The Databricks token stays in GitHub Actions secrets. The browser only reads a
-small static JSON file, so the page can be public without exposing credentials.
+The Databricks token stays in GitHub Actions secrets. The browser only reads
+static JSON files, so the page can be public without exposing credentials.
+
+The exporter publishes the manifest and the day shards together. The manifest
+is small (dates, row counts, time bounds) and is revalidated every 60 seconds;
+day files for completed UTC days are immutable. The dashboard reads the
+manifest, then downloads only the days inside the selected date range.
 
 ## Local preview
 
@@ -79,9 +84,52 @@ and sorts by time. AEMO points use the five NEM region codes (`NSW1`, `QLD1`,
 `VIC1`, `SA1`, `TAS1`). Their source values are AUD/MWh and are converted to
 EUR/MWh before being written to the common price contract.
 
+`energy.json` stays published as the full-window artifact and as the fallback
+when shards are missing. The dashboard normally reads the shards instead:
+
+`data/index.json` (manifest, schema 2)
+
+```json
+{
+  "schema_version": 2,
+  "generated_at": "2026-10-29T05:23:36Z",
+  "mode": "live",
+  "meta": { "row_count": 79968, "day_count": 30, "sharded": true },
+  "days": [
+    {
+      "date": "2026-10-28",
+      "file": "days/2026-10-28.json",
+      "rows": 2303,
+      "first_ms": 1793145600000,
+      "last_ms": 1793231999000,
+      "bytes": 41234
+    }
+  ]
+}
+```
+
+`data/days/YYYY-MM-DD.json` (one UTC day, compact)
+
+```json
+{
+  "date": "2026-10-28",
+  "schema_version": 1,
+  "sources": ["elecz", "entsoe"],
+  "zones": ["DE", "DE_LU"],
+  "rows": [[1793145600000, 1, 20.9779, 0]]
+}
+```
+
+A row is `[t, zone_index, price, source_index]`; the indexes point into the
+`sources` and `zones` string tables. This halves the payload versus repeated
+object keys. Past day files never change, so the CDN can cache them; only the
+manifest and the newest day are revalidated.
+
 ## Filters and interactions
 
 - Hover a column for the reading; click to pin it in **Focus**.
+- **Date range** (`From` / `To`) loads only the selected UTC days. Presets
+  (`6h`, `24h`, `7d`, `30d`, `All`) return to a rolling window.
 - Drag across the timeline to brush a window; double-click to clear.
 - Replay animates the session; `Space` toggles it.
 - Camera presets: `1` overview, `2` profile, `3` top.
@@ -103,6 +151,12 @@ python scripts/export_dashboard_data.py --window-days 30 --out docs/data/energy.
 
 Useful flags: `--wait-new-data 300` waits for a newer row before publishing,
 `--dry-run` validates without writing, `--max-rows 80000` caps payload size.
+The exporter also writes `docs/data/index.json` and `docs/data/days/*.json`.
+To rebuild shards from an existing snapshot without Databricks:
+
+```bash
+python scripts/dashboard_shards.py docs/data/energy.json --out docs/data
+```
 
 ## Setup checklist
 

@@ -2,6 +2,13 @@
 
 import {
   loadSnapshot,
+  loadDayIndex,
+  loadDayPoints,
+  indexFromSnapshot,
+  filterPointsByDays,
+  dayKeysForWindow,
+  clampDayKey,
+  dayLabel,
   sourceIds,
   zoneIds,
   countryIds,
@@ -27,9 +34,9 @@ import {
   fullLabel,
   relativeTime,
   rangeLabel,
-} from "./data.js?v=20261029-2";
-import { createDemoSnapshot } from "./demo.js?v=20261029-2";
-import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-2";
+} from "./data.js?v=20261029-3";
+import { createDemoSnapshot } from "./demo.js?v=20261029-3";
+import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-3";
 
 const RANGES = {
   "6h": 6 * 3600 * 1000,
@@ -73,6 +80,16 @@ const state = {
   displayRows: [],
   stats: null,
   knownSources: new Set(),
+  /* Date window and shard state. `mode` is "shards", "legacy" or "demo". */
+  mode: null,
+  index: null,
+  legacyPoints: null,
+  loadedDays: [],
+  dateFrom: null,
+  dateTo: null,
+  customDates: false,
+  loadingDates: false,
+  datasetSignature: "",
 };
 
 let scene = null;
@@ -85,6 +102,8 @@ let replayClock = null;
 let lastPlayheadPaint = 0;
 let lastPlayheadStats = 0;
 let drawerScrim = null;
+let windowToken = 0;
+let windowAbort = null;
 
 /* ---------------- boot / setup ---------------- */
 
@@ -154,7 +173,7 @@ function syncFilterButtons() {
 async function initScene() {
   const container = $("scene");
   try {
-    const module = await import("./scene.js?v=20261029-2");
+    const module = await import("./scene.js?v=20261029-3");
     scene = new module.PriceScene(container, {
       onHover: handleSceneHover,
       onSelect: handleSceneSelect,
@@ -232,47 +251,51 @@ function initCharts() {
 
 async function refresh({ initial = false } = {}) {
   if (state.loading) return;
+  if (state.loadingDates) return;
   state.loading = true;
   $("btn-refresh").classList.add("is-busy");
   $("status").dataset.state = "loading";
 
   try {
     const fetchStarted = performance.now();
-    const snapshot = await loadSnapshot();
-    timings.fetchMs = Math.round(performance.now() - fetchStarted);
-    const previousLatest = state.snapshot?.meta?.latest_timestamp_ms || 0;
-    const unchanged =
-      !initial &&
-      Boolean(state.snapshot) &&
-      previousLatest === (snapshot.meta?.latest_timestamp_ms || 0) &&
-      snapshot.points.length === state.points.length;
-    state.snapshot = snapshot;
-    state.error = null;
-    if (unchanged) {
-      // The 60s poll usually returns the same snapshot. Re-rendering 80k bars
-      // for identical data freezes the page for seconds, so skip it.
-      state.demo = false;
-      updateStatus();
-          return;
+    let index;
+    let legacyPoints = null;
+
+    if (state.mode === "legacy" || state.mode === "demo") {
+      /* A deployment without shards (or demo mode) keeps reading the full
+         snapshot. The date picker still filters it in memory. */
+      const snapshot = await loadSnapshot();
+      legacyPoints = snapshot.points;
+      index = indexFromSnapshot(snapshot);
+    } else {
+      try {
+        index = await loadDayIndex();
+      } catch (manifestError) {
+        if (state.mode === "shards") throw manifestError;
+        // First visit against a site that has not published shards yet.
+        const snapshot = await loadSnapshot();
+        legacyPoints = snapshot.points;
+        index = indexFromSnapshot(snapshot);
+        state.mode = "legacy";
+        console.info("Day shards unavailable, using the full snapshot", manifestError);
+      }
     }
-    state.points = snapshot.points;
+
+    timings.fetchMs = Math.round(performance.now() - fetchStarted);
+    state.index = index;
+    state.mode = index.legacy ? "legacy" : "shards";
+    if (legacyPoints) state.legacyPoints = legacyPoints;
+    state.error = null;
     state.demo = false;
-    hydrateSources(true);
     hideBanner();
 
-    if (!initial && snapshot.meta?.latest_timestamp_ms !== previousLatest) {
-      const rows = snapshot.meta?.row_count ?? snapshot.points.length;
+    updateDateControls();
+    const previousLatest = state.snapshot?.meta?.latest_timestamp_ms || 0;
+    await loadWindow({ initial, animate: true });
+    if (!initial && previousLatest && index.meta?.latest_timestamp_ms > previousLatest) {
+      const rows = index.meta?.row_count ?? state.points.length;
       showToast(`New snapshot · ${rows} readings published`);
     }
-    state.playhead = null;
-    stopReplay();
-    $("banner").dataset.persistent = "0";
-    hideBanner();
-    updateCountryOptions();
-    updateZoneOptions();
-    const renderStarted = performance.now();
-    updateView({ animate: true });
-    timings.renderMs = Math.round(performance.now() - renderStarted);
     $("boot").dataset.state = "ready";
   } catch (error) {
     console.warn("Snapshot load failed", error);
@@ -281,10 +304,18 @@ async function refresh({ initial = false } = {}) {
       state.snapshot = demo;
       state.points = demo.points;
       state.demo = true;
+      state.mode = "demo";
       state.error = error;
+      state.index = indexFromSnapshot(demo);
+      state.legacyPoints = demo.points;
+      state.dateFrom = state.index.days[0].date;
+      state.dateTo = state.index.days[state.index.days.length - 1].date;
+      state.customDates = false;
+      state.loadedDays = state.index.days.map((day) => day.date);
       hydrateSources(true);
       updateCountryOptions();
       updateZoneOptions();
+      updateDateControls();
       updateView({ animate: true });
       showBanner(
         "Demo data is on screen. The Databricks export has not published a snapshot yet. Run the publish workflow to replace this with live rows.",
@@ -293,6 +324,7 @@ async function refresh({ initial = false } = {}) {
       $("boot").dataset.state = "ready";
     } else {
       state.error = error;
+      $("date-note").dataset.state = "error";
       showBanner("Refresh failed. Showing the last published snapshot.", true);
       showToast("Refresh failed · keeping last snapshot");
     }
@@ -303,7 +335,235 @@ async function refresh({ initial = false } = {}) {
     $("btn-refresh").classList.remove("is-busy");
     updateStatus();
     updateCountdown();
+    setDateInputsBusy(false);
   }
+}
+
+/** Resolve the picker window against the days the manifest actually has. */
+function resolveDateWindow(index = state.index) {
+  if (!index?.days?.length) return;
+  const last = index.days[index.days.length - 1].date;
+  if (state.customDates) {
+    state.dateFrom = clampDayKey(index, state.dateFrom || last);
+    state.dateTo = clampDayKey(index, state.dateTo || state.dateFrom);
+    if (state.dateFrom > state.dateTo) {
+      const swap = state.dateFrom;
+      state.dateFrom = state.dateTo;
+      state.dateTo = swap;
+      state.customDates = true;
+    }
+  } else {
+    const keys = dayKeysForWindow(index, {
+      rangeMs: RANGES[state.range] || 0,
+      anchor: index.meta?.latest_timestamp_ms || 0,
+    });
+    state.dateFrom = keys[0];
+    state.dateTo = keys[keys.length - 1];
+  }
+}
+
+/**
+ * Load only the day shards covered by the current date window, then render.
+ * Every call is tokenised so a fast second click cannot paint stale data.
+ */
+async function loadWindow({ initial = false, animate = true } = {}) {
+  const index = state.index;
+  if (!index) return;
+
+  resolveDateWindow(index);
+  const keys = dayKeysForWindow(index, {
+    dateFrom: state.customDates ? state.dateFrom : null,
+    dateTo: state.customDates ? state.dateTo : null,
+    rangeMs: state.customDates ? 0 : RANGES[state.range] || 0,
+    anchor: index.meta?.latest_timestamp_ms || 0,
+  });
+
+  const token = ++windowToken;
+  if (windowAbort) windowAbort.abort();
+  windowAbort = new AbortController();
+  state.loadingDates = true;
+  setDateInputsBusy(true);
+  updateDateNote(`Loading ${keys.length} day${keys.length === 1 ? "" : "s"}…`);
+
+  try {
+    let points;
+    let loadedKeys;
+    if (index.legacy) {
+      points = filterPointsByDays(state.legacyPoints || [], keys);
+      loadedKeys = keys;
+    } else {
+      const result = await loadDayPoints(index, keys, {
+        signal: windowAbort.signal,
+        onProgress: (done, total) => {
+          if (token !== windowToken) return;
+          updateDateNote(`Loading ${done}/${total} day files…`);
+        },
+      });
+      points = result.points;
+      loadedKeys = result.keys;
+    }
+    if (token !== windowToken) return;
+
+    const signature = datasetSignature(index, loadedKeys);
+    const unchanged = !initial && Boolean(state.snapshot) && signature === state.datasetSignature;
+
+    state.points = points;
+    state.loadedDays = loadedKeys;
+    state.datasetSignature = signature;
+    state.snapshot = {
+      meta: index.meta,
+      generated_at: index.generated_at,
+      mode: index.mode,
+      days: index.days,
+      points,
+    };
+    state.snapshot.demo = state.demo;
+
+    hydrateSources(!state.knownSources.size);
+    updateCountryOptions();
+    updateZoneOptions();
+    updateDateControls();
+    updateStatus();
+    updateCountdown();
+
+    if (unchanged) {
+      state.loadingDates = false;
+      setDateInputsBusy(false);
+      return;
+    }
+
+    state.playhead = null;
+    stopReplay();
+    $("banner").dataset.persistent = "0";
+    hideBanner();
+
+    const renderStarted = performance.now();
+    updateView({ animate });
+    timings.renderMs = Math.round(performance.now() - renderStarted);
+  } catch (error) {
+    if (token !== windowToken || error?.name === "AbortError") return;
+    throw error;
+  } finally {
+    if (token === windowToken) {
+      state.loadingDates = false;
+      setDateInputsBusy(false);
+      updateDateNote();
+    }
+  }
+}
+
+function datasetSignature(index, keys) {
+  const wanted = new Set(keys);
+  const parts = [];
+  for (const day of index.days) {
+    if (!wanted.has(day.date)) continue;
+    parts.push(`${day.date}:${day.last_ms}:${day.rows}`);
+  }
+  return `${index.meta?.latest_timestamp_ms || 0}|${parts.join(",")}`;
+}
+
+function setDateInputsBusy(busy) {
+  const from = $("date-from");
+  const to = $("date-to");
+  if (!from || !to) return;
+  from.disabled = busy;
+  to.disabled = busy;
+}
+
+function updateDateControls() {
+  const from = $("date-from");
+  const to = $("date-to");
+  if (!from || !to) return;
+  const index = state.index;
+  if (!index?.days?.length) {
+    updateDateNote("Dates unavailable in this snapshot.");
+    return;
+  }
+  resolveDateWindow(index);
+  const first = index.days[0].date;
+  const last = index.days[index.days.length - 1].date;
+  from.min = first;
+  from.max = last;
+  to.min = first;
+  to.max = last;
+  if (from.value !== state.dateFrom) from.value = state.dateFrom || "";
+  if (to.value !== state.dateTo) to.value = state.dateTo || "";
+  updateDateNote();
+}
+
+function updateDateNote(message = null) {
+  const note = $("date-note");
+  if (!note) return;
+  if (message) {
+    note.textContent = message;
+    note.dataset.state = "loading";
+    return;
+  }
+  const index = state.index;
+  if (!index?.days?.length) {
+    note.textContent = "Dates unavailable in this snapshot.";
+    note.dataset.state = "error";
+    return;
+  }
+  const totalDays = index.days.length;
+  const loaded = state.loadedDays.length || 0;
+  const rows = state.points.length;
+  const totalRows = index.meta?.row_count ?? rows;
+  note.dataset.state = "ready";
+  note.textContent = `${loaded}/${totalDays} day${totalDays === 1 ? "" : "s"} loaded · ${rows.toLocaleString(
+    "en-US"
+  )} of ${Number(totalRows).toLocaleString("en-US")} readings · ${dayLabel(state.dateFrom, { short: true })} → ${dayLabel(
+    state.dateTo,
+    { short: true }
+  )} UTC`;
+}
+
+function applyDateSelection(from, to) {
+  if (!state.index) return;
+  const first = state.index.days[0].date;
+  const last = state.index.days[state.index.days.length - 1].date;
+  let start = from || to || last;
+  let end = to || from || start;
+  if (start > end) {
+    const swap = start;
+    start = end;
+    end = swap;
+  }
+  start = start < first ? first : start > last ? last : start;
+  end = end < first ? first : end > last ? last : end;
+  state.customDates = true;
+  state.dateFrom = start;
+  state.dateTo = end;
+  state.range = "custom";
+  state.customRange = null;
+  state.playhead = null;
+  state.selectedKey = null;
+  stopReplay();
+  syncFilterButtons();
+  updateDateControls();
+  loadWindowSafe({ animate: true });
+}
+
+function clearDateSelection() {
+  state.customDates = false;
+  state.dateFrom = null;
+  state.dateTo = null;
+  state.range = "7d";
+  syncFilterButtons();
+  loadWindowSafe({ animate: true });
+}
+
+function loadWindowSafe(options) {
+  return loadWindow(options).catch((error) => {
+    console.warn("Date range load failed", error);
+    showBanner("Could not load that date range. Showing the previous window.", true);
+    showToast("Date range load failed");
+    const note = $("date-note");
+    if (note) {
+      note.textContent = "Date load failed · previous window kept";
+      note.dataset.state = "error";
+    }
+  });
 }
 
 function parseDemo() {
@@ -340,7 +600,9 @@ function currentAnchor() {
 }
 
 function viewRows() {
-  const rangeMs = RANGES[state.range] || 0;
+  // A custom date pick already narrowed the downloaded days, so no extra
+  // time cut is needed. Presets still trim inside the loaded shards.
+  const rangeMs = state.customDates ? 0 : RANGES[state.range] || 0;
   let rows = filterPoints(state.points, {
     sources: state.sources,
     country: state.country,
@@ -695,17 +957,23 @@ function updatePipelineMeta() {
   const table = meta.table || "unknown table";
   const queryMs = meta.query_ms != null ? `${meta.query_ms} ms` : "—";
   const generated = state.snapshot?.generated_at ? fullLabel(Date.parse(state.snapshot.generated_at)) : "—";
-  $("pipeline-meta").innerHTML = `${esc(table)}<br>${meta.row_count ?? state.points.length} rows · query ${esc(
-    queryMs
-  )}<br>published ${esc(generated)}`;
-  $("help-meta").textContent = `${table} · ${meta.row_count ?? state.points.length} rows · warehouse ${
-    meta.warehouse_id || "—"
-  }`;
+  const loaded = state.points.length;
+  const total = meta.row_count ?? loaded;
+  $("pipeline-meta").innerHTML = `${esc(table)}<br>${loaded.toLocaleString("en-US")} / ${Number(
+    total
+  ).toLocaleString("en-US")} rows · ${state.loadedDays.length} day${
+    state.loadedDays.length === 1 ? "" : "s"
+  } · query ${esc(queryMs)}<br>published ${esc(generated)}`;
+  $("help-meta").textContent = `${table} · ${total} rows · warehouse ${meta.warehouse_id || "—"}`;
 }
 
 function updateFilterHint() {
   const hint = $("filter-hint");
-  if (state.seriesMode === "indexed") {
+  if (state.customDates) {
+    hint.textContent = `Date picker active: ${dayLabel(state.dateFrom)} → ${dayLabel(
+      state.dateTo
+    )} UTC. Only those day shards were downloaded; presets return to rolling windows.`;
+  } else if (state.seriesMode === "indexed") {
     hint.textContent = "Indexed mode rebases each feed to 100 at its first visible reading. KPIs stay in EUR/MWh.";
   } else if (state.baseline === "zero") {
     hint.textContent = "Zero baseline anchors columns at 0, including negative prices. Taller columns mean higher prices.";
@@ -994,22 +1262,29 @@ function updateStatus() {
     return;
   }
   status.dataset.state = "live";
-  const latest = state.snapshot.meta?.latest_timestamp_ms || latestTime(state.points);
-  text.textContent = "Live snapshot";
-  sub.textContent = `${state.snapshot.meta?.row_count ?? state.points.length} rows · ${relativeTime(latest)}`;
+  text.textContent = state.customDates ? "Date window" : "Live snapshot";
+  sub.textContent = statusSub();
+}
+
+function statusSub(extra = "") {
+  const total = state.snapshot?.meta?.row_count ?? state.points.length;
+  const loaded = state.points.length;
+  const latest = state.customDates
+    ? latestTime(state.points)
+    : state.snapshot?.meta?.latest_timestamp_ms || latestTime(state.points);
+  const rows = state.customDates ? `${loaded.toLocaleString("en-US")} of ${Number(total).toLocaleString("en-US")} rows` : `${total} rows`;
+  return `${rows} · ${relativeTime(latest)}${extra}`;
 }
 
 function updateCountdown() {
   const sub = $("status-sub");
   if (!sub || state.demo || state.error || state.loading || !state.snapshot) return;
   if (!state.live) {
-    const latest = state.snapshot.meta?.latest_timestamp_ms || latestTime(state.points);
-    sub.textContent = `${state.snapshot.meta?.row_count ?? state.points.length} rows · auto off · ${relativeTime(latest)}`;
+    sub.textContent = statusSub(" · auto off");
     return;
   }
   const seconds = Math.max(0, Math.round((state.nextRefresh - Date.now()) / 1000));
-  const latest = state.snapshot.meta?.latest_timestamp_ms || latestTime(state.points);
-  sub.textContent = `${state.snapshot.meta?.row_count ?? state.points.length} rows · ${relativeTime(latest)} · ${seconds}s`;
+  sub.textContent = statusSub(` · ${seconds}s`);
 }
 
 function showBanner(message, persistent = false) {
@@ -1098,14 +1373,25 @@ function bindControls() {
     const button = event.target.closest("[data-range]");
     if (!button) return;
     state.range = button.dataset.range;
+    state.customDates = false;
+    state.dateFrom = null;
+    state.dateTo = null;
     state.customRange = null;
     state.playhead = null;
     stopReplay();
     for (const item of $("range-group").querySelectorAll("[data-range]")) {
       item.setAttribute("aria-pressed", String(item.dataset.range === state.range));
     }
-    updateView({ animate: true });
+    updateDateControls();
+    loadWindowSafe({ animate: true });
     closeDrawers();
+  });
+
+  $("date-from").addEventListener("change", (event) => {
+    applyDateSelection(event.target.value, $("date-to").value);
+  });
+  $("date-to").addEventListener("change", (event) => {
+    applyDateSelection($("date-from").value, event.target.value);
   });
 
   $("baseline-group").addEventListener("click", (event) => {
@@ -1228,7 +1514,8 @@ function bindControls() {
     updateCountryOptions();
     updateZoneOptions();
     syncFilterButtons();
-    updateView({ animate: false });
+    updateDateControls();
+    loadWindowSafe({ animate: false });
   });
 
   document.addEventListener("visibilitychange", () => {
@@ -1246,6 +1533,9 @@ function resetFilters() {
   state.baseline = "window";
   state.seriesMode = "raw";
   state.customRange = null;
+  state.customDates = false;
+  state.dateFrom = null;
+  state.dateTo = null;
   state.playhead = null;
   state.selectedKey = null;
   stopReplay();
@@ -1261,7 +1551,8 @@ function resetFilters() {
     button.setAttribute("aria-pressed", String(button.dataset.series === state.seriesMode));
   }
   renderSourceList();
-  updateView({ animate: true });
+  updateDateControls();
+  loadWindowSafe({ animate: true });
   closeDrawers();
 }
 
@@ -1376,6 +1667,10 @@ function writeHash() {
   params.set("country", state.country);
   params.set("zone", state.zone);
   params.set("range", state.range);
+  if (state.customDates) {
+    params.set("from", state.dateFrom);
+    params.set("to", state.dateTo);
+  }
   params.set("baseline", state.baseline);
   params.set("series", state.seriesMode);
   params.set("cam", state.camera);
@@ -1399,6 +1694,14 @@ function applyHash() {
   if (zone) state.zone = zone;
   const range = params.get("range");
   if (range && RANGE_KEYS.includes(range)) state.range = range;
+  const from = params.get("from");
+  const to = params.get("to");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(from || "")) {
+    state.customDates = true;
+    state.dateFrom = from;
+    state.dateTo = /^\d{4}-\d{2}-\d{2}$/.test(to || "") ? to : from;
+    state.range = "custom";
+  }
   const baseline = params.get("baseline");
   if (baseline === "window" || baseline === "zero") state.baseline = baseline;
   const series = params.get("series");
@@ -1438,4 +1741,5 @@ window.__voltscope = {
   },
   refresh,
   updateView,
+  loadWindow: loadWindowSafe,
 };

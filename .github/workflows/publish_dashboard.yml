@@ -2,7 +2,8 @@ name: Publish Dashboard Snapshot
 
 # Static GitHub Pages cannot hold a Databricks token, so this job pulls the
 # latest Delta rows through the SQL Statement API and commits a compact JSON
-# snapshot. The 3D site then polls that file from the browser.
+# snapshot plus UTC-day shards. The 3D site reads the day shards for the date
+# range a visitor selects, then revalidates the small manifest.
 
 on:
   schedule:
@@ -83,12 +84,12 @@ jobs:
           PY
           )
           if [ "$changed" != "true" ]; then
-            git checkout -- docs/data/energy.json 2>/dev/null || true
+            git checkout -- docs/data 2>/dev/null || true
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Snapshot is unchanged."
             exit 0
           fi
-          git add docs/data/energy.json
+          git add -A docs/data
           rows=$(python -c "import json;print(json.load(open('docs/data/energy.json'))['meta']['row_count'])")
           latest=$(python -c "import json;print(json.load(open('docs/data/energy.json'))['meta']['latest_timestamp'])")
           git config user.name "voltscope-bot"

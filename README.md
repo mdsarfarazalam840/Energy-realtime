@@ -50,10 +50,10 @@ Australia's NEM dispatch and Europe's day-ahead and spot electricity markets pub
 1. **Collect** AEMO five-minute dispatch prices for NSW, Queensland, Victoria, South Australia, and Tasmania, plus ENTSO-E day-ahead prices and Elecz DE spot.
 2. **Buffer** every feed on one Kafka topic with TLS and SCRAM authentication.
 3. **Land** parsed JSON in a Delta table through Databricks Structured Streaming.
-4. **Publish** a compact, deduplicated JSON snapshot through the Databricks SQL Statement API.
+4. **Publish** a compact, deduplicated JSON manifest plus UTC-day shards through the Databricks SQL Statement API.
 5. **Render** a static Three.js dashboard on GitHub Pages, with no server and no credentials in the browser.
 
-The result is a live 3D price surface with source comparison, a timeline brush, distribution analysis, replay, camera presets, and shareable URL state. The pipeline is intentionally small enough to read end to end, while still showing the boundaries that matter: retries, freshness checks, atomic publication, credential isolation, and a graceful demo fallback.
+The result is a live 3D price surface with source comparison, a timeline brush, distribution analysis, replay, camera presets, and shareable URL state. A date picker loads only the UTC days a visitor selects, so the full 30-day window never has to reach the browser. The pipeline is intentionally small enough to read end to end, while still showing the boundaries that matter: retries, freshness checks, atomic publication, credential isolation, and a graceful demo fallback.
 
 The repository started from the Databricks **default-python** Declarative Automation Bundle template. The energy pipeline, exporter, dashboard, workflows, and diagrams were added on top. A few template files (`src/energy_realtime/taxis.py` and `tests/sample_taxis_test.py`) remain as template examples rather than pipeline coverage.
 
@@ -96,12 +96,13 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 - **Focus panel** pins a reading; hover gives the exact timestamp, zone, source, and price.
 - **Compare panel** summarizes each zone: latest value, min, max, mean, standard deviation, change.
 - **Distribution histogram** shows the shape of the current window.
+- **Date picker** selects a UTC day range; the browser downloads only those day shards and reports how many of the published readings are loaded.
 - **Timeline brush** narrows the session; double-click clears it.
 - **Replay** animates the session point by point, with 1x, 2x, and 4x speeds.
 - **Camera presets** for overview, profile, and top views.
 - **Window vs zero baseline** so small moves stay visible without lying about the origin.
 - **Raw vs indexed mode** so feeds with different price levels can be compared by shape.
-- **Shareable URL hash** captures filters, country, zone, range, baseline, series mode, and camera.
+- **Shareable URL hash** captures filters, country, zone, date range, baseline, series mode, and camera.
 - **Auto refresh** every 60 seconds; `L` toggles it.
 - **Theme toggle** with a persisted dark/light preference.
 - **Demo fallback** with a deterministic synthetic snapshot when no published data exists; always labelled as demo.
@@ -148,7 +149,7 @@ flowchart LR
   K[("Aiven Kafka<br/>energy-prices")]
   D["Databricks job<br/>Spark Structured Streaming"]
   T[("Delta Lake<br/>energy_prices_realtime")]
-  S[("docs/data/energy.json<br/>schema v1")]
+  S[("docs/data/index.json<br/>+ days/*.json<br/>schema v2")]
   PAGES["GitHub Pages<br/>main /docs"]
   UI["VoltScope<br/>Three.js dashboard"]
 
@@ -161,7 +162,7 @@ flowchart LR
   T -->|"SQL Statement API"| X
   X -->|"atomic commit"| S
   S -->|"Pages build"| PAGES
-  PAGES -->|"HTTPS, 60 s poll"| UI
+  PAGES -->|"HTTPS: manifest poll + selected day files"| UI
 ```
 
 **Open the interactive version:** [System architecture](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html)
@@ -178,7 +179,7 @@ flowchart LR
 | Delta table | `workspace.default.energy_prices_realtime` | Append-only price history in Unity Catalog |
 | Checkpoint volume | `/Volumes/workspace/default/energy_realtime/checkpoints` | Streaming checkpoint state |
 | CA volume | `/Volumes/workspace/default/energy_realtime/aiven_ca.pem` | Kafka TLS trust material for Databricks |
-| Snapshot exporter | `scripts/export_dashboard_data.py` | Query the table through the SQL Statement API, normalize, write `docs/data/energy.json` |
+| Snapshot exporter | `scripts/export_dashboard_data.py`, `scripts/dashboard_shards.py` | Query the table through the SQL Statement API, normalize, write `docs/data/energy.json`, `docs/data/index.json`, and UTC-day shards |
 | Static site | `docs/` | GitHub Pages dashboard and diagram gallery |
 | Browser app | `docs/assets/js/` | Three.js scene, filters, charts, replay, URL state |
 | Secrets | GitHub Actions + Databricks secret scope | Keep Kafka and Databricks credentials outside the browser |
@@ -190,7 +191,7 @@ flowchart LR
 - **GitHub Actions → Databricks**: bearer token from `DATABRICKS_TOKEN`, warehouse ID from a repository variable.
 - **Databricks → Kafka**: password read from the `kafka-scope` secret scope, not stored in the notebook.
 - **Databricks → Delta**: Unity Catalog permissions; the bundle deploys to `workspace.default`.
-- **Exporter → Pages**: the exporter only writes a static JSON file; the browser never receives a token.
+- **Exporter → Pages**: the exporter only writes static JSON files; the browser never receives a token.
 
 ---
 
@@ -218,9 +219,11 @@ sequenceDiagram
   DBX->>DLT: append parsed rows (availableNow)
   EXP->>DLT: SQL query over the 30-day window
   DLT-->>EXP: rows with timestamp, zone, price, source
-  EXP->>PGS: commit docs/data/energy.json
-  UI->>PGS: GET energy.json?v=timestamp
-  PGS-->>UI: compact snapshot
+  EXP->>PGS: commit index.json + days/*.json
+  UI->>PGS: GET index.json (revalidated)
+  PGS-->>UI: day list + counts
+  UI->>PGS: GET days/*.json for the selected dates
+  PGS-->>UI: only those readings
 ```
 
 **Open the interactive version:** [Energy data flow](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html)
@@ -236,9 +239,9 @@ sequenceDiagram
 | Transport | Kafka topic | Consumer offsets | SASL_SSL, SCRAM-SHA-256, CA-verified TLS |
 | Ingest | Kafka JSON values | Delta rows | `availableNow` drains available offsets, then stops |
 | Storage | Append operations | `energy_prices_realtime` | Append-only history; checkpointed stream |
-| Export | SQL rows | `docs/data/energy.json` | Deduplicated, finite prices, atomic write |
-| Publication | Static JSON | Pages build | No token, no server, cache-busted fetch |
-| Browser | Snapshot points | 3D scene and charts | 60-second auto refresh; demo fallback if missing |
+| Export | SQL rows | `docs/data/index.json` + `docs/data/days/*.json` | Deduplicated, finite prices, atomic write, stale shards pruned |
+| Publication | Static JSON | Pages build | No token, no server; immutable past days, revalidated manifest |
+| Browser | Manifest + selected day shards | 3D scene and charts | Fetches only the picked dates; 60-second manifest refresh; demo fallback if missing |
 
 ### Schedule
 
