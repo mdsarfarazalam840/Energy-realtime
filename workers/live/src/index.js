@@ -140,7 +140,18 @@ export class PresenceRoom {
       return;
     }
     if (payload?.type === "ping") {
-      socket.send(JSON.stringify({ type: "pong", ts: Date.now() }));
+      const online = this.online();
+      // Echo the count on the heartbeat so a client heals from a missed
+      // broadcast (or an HTTP snapshot that predates its own join) without
+      // waiting for the next alarm.
+      socket.send(
+        JSON.stringify({
+          type: "pong",
+          online,
+          peak: Math.max(this.peak, online),
+          ts: Date.now(),
+        })
+      );
     }
   }
 

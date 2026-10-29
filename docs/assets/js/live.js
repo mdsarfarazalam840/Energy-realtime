@@ -103,6 +103,21 @@ export function createPresence(config, { onUpdate } = {}) {
     onUpdate?.(current);
   }
 
+  function applyPresence(payload) {
+    const online = Number(payload?.online);
+    const peak = Number(payload?.peak);
+    if (!Number.isFinite(online)) return;
+    emit({
+      mode: "relay",
+      // This tab is on the page by definition. A snapshot taken before its
+      // socket registered (or the HTTP fallback, which cannot see the socket)
+      // can report 0 while the visitor is still here.
+      online: Math.max(1, online),
+      peak: Math.max(1, Number.isFinite(peak) ? peak : current.peak),
+      ts: Number(payload?.ts) || Date.now(),
+    });
+  }
+
   function sendPing() {
     if (socket?.readyState === WebSocket.OPEN) {
       try {
@@ -147,15 +162,10 @@ export function createPresence(config, { onUpdate } = {}) {
       } catch {
         return;
       }
-      if (payload?.type !== "presence") return;
-      const online = Number(payload.online);
-      const peak = Number(payload.peak);
-      emit({
-        mode: "relay",
-        online: Number.isFinite(online) ? online : current.online,
-        peak: Number.isFinite(peak) ? peak : current.peak,
-        ts: Number(payload.ts) || Date.now(),
-      });
+      // `presence` is the broadcast; `pong` answers this tab's heartbeat and
+      // carries the same fields so a quiet room still refreshes its count.
+      if (payload?.type !== "presence" && payload?.type !== "pong") return;
+      applyPresence(payload);
     };
 
     socket.onclose = () => {
@@ -184,15 +194,11 @@ export function createPresence(config, { onUpdate } = {}) {
       });
       if (!response.ok) return;
       const payload = await response.json();
-      const online = Number(payload.online);
-      const peak = Number(payload.peak);
-      if (!Number.isFinite(online)) return;
-      emit({
-        mode: "relay",
-        online,
-        peak: Number.isFinite(peak) ? peak : current.peak,
-        ts: Number(payload.ts) || Date.now(),
-      });
+      // The socket can open while this request is in flight. A WebSocket push
+      // includes this tab; an HTTP snapshot may have been computed before the
+      // socket registered, so it must not overwrite a live connection.
+      if (socket?.readyState === WebSocket.OPEN) return;
+      applyPresence(payload);
     } catch {
       /* the WebSocket reconnect path will keep trying */
     }
