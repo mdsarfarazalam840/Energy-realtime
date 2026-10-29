@@ -46,12 +46,24 @@ Then enable the relay in the static site config:
   "schema_version": 1,
   "enabled": true,
   "relay_url": "https://voltscope-live.<account>.workers.dev",
-  "poll_ms": 15000
+  "poll_ms": 12000
 }
 ```
 
 Edit `docs/data/live-config.json` in the repository and push. The dashboard
 reads that file on load; no rebuild is needed.
+
+If the Worker runs without `DATABRICKS_*` secrets, add `"live_url": "data/live.json"`
+so the page reads points from the published file. Presence still comes from the
+relay, and `/api/live` stays unused instead of returning 502.
+
+## Deployed instance
+
+| Item | Value |
+|---|---|
+| URL | `https://voltscope-live.md-sarfarazalam840.workers.dev` |
+| KV binding | `LIVE_CACHE`, id `d659208acf384ac19e09613a6a081af8` |
+| State | Presence live. `/api/live` returns 502 until the three `DATABRICKS_*` secrets are set. |
 
 ## Optional: let the Worker trigger GitHub Actions
 

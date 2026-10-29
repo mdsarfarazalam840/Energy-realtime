@@ -796,12 +796,16 @@ wrangler deploy
 Then set the deployed URL in `docs/data/live-config.json`:
 
 ```json
-{ "schema_version": 1, "enabled": true, "relay_url": "https://voltscope-live.<account>.workers.dev", "poll_ms": 15000 }
+{ "schema_version": 1, "enabled": true, "relay_url": "https://voltscope-live.<account>.workers.dev", "poll_ms": 12000 }
 ```
 
+Leave `live_url` unset to read the newest rows straight from the relay. Set it to
+`data/live.json` when the Worker has no Databricks secrets: presence then comes
+from the relay while the five-minute file keeps the readings fresh.
+
 Without a relay URL, the card shows `1 here` and labels it as this tab only.
-With one, presence is shared across every open dashboard and the live data path
-drops to a 20-second cache instead of the five-minute workflow cadence.
+With one, presence is shared across every open dashboard. The relay data path
+serves a 20-second cache instead of the five-minute workflow cadence.
 
 ### Producer environment
 
@@ -894,7 +898,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 - Theme and auto-refresh preference are stored in `localStorage` under `voltscope.theme` and `voltscope.live`.
 - Filter state is encoded in the URL hash so a shared link is reproducible.
 - The page polls `data/energy.json` every 60 seconds with a cache-busting query parameter.
-- The live lane polls `data/live.json` every 12 seconds and merges only new points; with the relay it polls `/api/live` every 15 seconds and presence is pushed over a WebSocket.
+- The live lane polls `data/live.json` every 12 seconds and merges only new points; when `live_url` points at the relay it polls `/api/live` instead and falls back to the file on error. Presence is pushed over a WebSocket.
 - The boot overlay hides only after the scene and snapshot are ready, with a 15-second failure timeout.
 
 ---

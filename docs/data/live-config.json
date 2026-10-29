@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "enabled": true,
-  "relay_url": "",
+  "relay_url": "https://voltscope-live.md-sarfarazalam840.workers.dev",
+  "live_url": "data/live.json",
   "poll_ms": 12000
 }

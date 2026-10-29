@@ -37,7 +37,7 @@ import {
 } from "./data.js?v=20261029-5";
 import { createDemoSnapshot } from "./demo.js?v=20261029-5";
 import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-5";
-import { loadLiveConfig, createLiveFeed, createPresence } from "./live.js?v=20261029-5";
+import { loadLiveConfig, createLiveFeed, createPresence } from "./live.js?v=20261029-6";
 
 const RANGES = {
   "6h": 6 * 3600 * 1000,

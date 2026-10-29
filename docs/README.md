@@ -163,14 +163,23 @@ manifest and the newest day are revalidated.
 `data/live-config.json` controls the client:
 
 ```json
-{ "schema_version": 1, "enabled": true, "relay_url": "", "poll_ms": 12000 }
+{
+  "schema_version": 1,
+  "enabled": true,
+  "relay_url": "https://voltscope-live.md-sarfarazalam840.workers.dev",
+  "live_url": "data/live.json",
+  "poll_ms": 12000
+}
 ```
 
 - `enabled: false` turns the live card and polling off.
-- `relay_url` points at the deployed Cloudflare Worker. Leave it empty for the
-  static `live.json` lane.
-- `poll_ms` is clamped to 5–120 seconds; the static lane uses 12 seconds by
-  default, the relay 15.
+- `relay_url` points at the deployed Cloudflare Worker and enables shared
+  presence over a WebSocket.
+- `live_url` is where the points come from. Leave it unset to read them from the
+  relay (`/api/live`, 20-second cache), or set `data/live.json` when the Worker
+  has no Databricks secrets. The current deployment serves presence only.
+- `poll_ms` is clamped to 5–120 seconds and defaults to 12 for both transports.
+  A relay failure falls back to `data/live.json` instead of stalling the card.
 
 ## Filters and interactions
 

@@ -69,6 +69,9 @@ export function normaliseConfig(raw) {
     relay,
     liveUrl,
     presenceUrl,
+    // A relay without Databricks secrets serves presence only. Pointing
+    // `live_url` at the published file keeps that case free of failed requests.
+    liveViaRelay: Boolean(relay && liveUrl.startsWith(relay)),
     pollMs: clampPoll(source.poll_ms),
     staticFallback: source.static !== false,
   };
@@ -238,10 +241,27 @@ export function createLiveFeed(config, { onPoints, onStatus } = {}) {
   let timer = null;
   let controller = null;
   let failures = 0;
-  const transport = config.relay ? "relay" : "static";
+  let transport = config.liveViaRelay ? "relay" : "static";
 
   function status(patch) {
     onStatus?.({ transport, ...patch });
+  }
+
+  async function read(kind) {
+    const base = (kind === "static" ? "data/live.json" : config.liveUrl) || "data/live.json";
+    // A cache bucket keeps GitHub Pages from serving a 10-minute-old file while
+    // still letting the CDN absorb bursts inside one poll window.
+    const bucket = kind === "static" ? Math.floor(Date.now() / config.pollMs) : null;
+    const url = bucket == null ? base : `${base}${base.includes("?") ? "&" : "?"}v=${bucket}`;
+
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
   }
 
   async function poll() {
@@ -251,29 +271,27 @@ export function createLiveFeed(config, { onPoints, onStatus } = {}) {
       return;
     }
 
-    const base = config.liveUrl || "data/live.json";
-    // A cache bucket keeps GitHub Pages from serving a 10-minute-old file while
-    // still letting the CDN absorb bursts inside one poll window.
-    const bucket = transport === "static" ? Math.floor(Date.now() / config.pollMs) : null;
-    const url = bucket == null ? base : `${base}${base.includes("?") ? "&" : "?"}v=${bucket}`;
-
     controller?.abort();
     controller = new AbortController();
     const abortTimer = setTimeout(() => controller.abort(), 15000);
 
     try {
-      const response = await fetch(url, {
-        cache: "no-store",
-        headers: { Accept: "application/json" },
-        signal: controller.signal,
-      });
-      if (response.status === 404) {
+      let document;
+      try {
+        document = await read(transport);
+      } catch (error) {
+        // The relay can be deployed without Databricks secrets, throttled, or
+        // simply down. Fall back to the published five-minute file instead of
+        // leaving the live card stuck on "retrying".
+        if (transport !== "relay" || !config.staticFallback) throw error;
+        document = await read("static");
+        transport = "static";
+      }
+      if (document === null) {
         failures = 0;
         status({ state: "waiting", reason: "no live file yet" });
         return;
       }
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const document = await response.json();
       const points = Array.isArray(document?.points) ? document.points : [];
       const generated = document?.generated_at ? Date.parse(document.generated_at) : Date.now();
       failures = 0;

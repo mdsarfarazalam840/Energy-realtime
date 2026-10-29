@@ -91,6 +91,11 @@ export class PresenceRoom {
   online() {
     const visitors = new Set();
     for (const socket of this.state.getWebSockets()) {
+      // `getWebSockets()` can briefly include a socket that is closing, so
+      // trust the socket state instead of the list membership. A socket is not
+      // OPEN yet while its own join is broadcast, so only closing states count
+      // as gone.
+      if (typeof socket.readyState === "number" && socket.readyState >= 2) continue;
       const attachment = socket.deserializeAttachment?.() || {};
       visitors.add(attachment.visitor || "anonymous");
     }
@@ -117,6 +122,7 @@ export class PresenceRoom {
       ts: Date.now(),
     });
     for (const socket of this.state.getWebSockets()) {
+      if (typeof socket.readyState === "number" && socket.readyState >= 2) continue;
       try {
         socket.send(payload);
       } catch {
@@ -139,9 +145,6 @@ export class PresenceRoom {
   }
 
   async webSocketClose(socket, code, reason, wasClean) {
-    // `getWebSockets()` can still include the socket that just closed, so give
-    // the runtime a beat before recomputing the count.
-    await new Promise((resolve) => setTimeout(resolve, 60));
     this.broadcast();
   }
 
@@ -151,7 +154,6 @@ export class PresenceRoom {
     } catch {
       /* already closed */
     }
-    await new Promise((resolve) => setTimeout(resolve, 60));
     this.broadcast();
   }
 
