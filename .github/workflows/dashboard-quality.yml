@@ -11,14 +11,8 @@ on:
       - "scripts/export_dashboard_data.py"
       - "tests/load/**"
       - ".github/workflows/dashboard-quality.yml"
-  push:
-    branches: [main]
-    paths:
-      - "docs/**"
-      - "scripts/dashboard_shards.py"
-      - "scripts/export_dashboard_data.py"
-      - "tests/load/**"
-      - ".github/workflows/dashboard-quality.yml"
+  # No push trigger: merging to main must not start the load and user tests.
+  # Pull requests and the manual dispatch below cover the same checks.
   workflow_dispatch:
 
 permissions:
