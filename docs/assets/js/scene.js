@@ -6,7 +6,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { laneLabel, laneOf, pointKey } from "./data.js?v=20261029-2";
+import { laneLabel, laneOf, pointKey } from "./data.js?v=20261029-4";
 
 const STAGE_WIDTH = 30;
 const MAX_HEIGHT = 13;
@@ -203,14 +203,14 @@ export class PriceScene {
 
   initFloor() {
     this.floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(140, 140),
+      new THREE.PlaneGeometry(200, 200),
       new THREE.MeshStandardMaterial({ color: 0x070c16, metalness: 0.62, roughness: 0.44 })
     );
     this.floor.rotation.x = -Math.PI / 2;
     this.floor.position.y = -0.03;
     this.scene.add(this.floor);
 
-    this.grid = new THREE.GridHelper(96, 48, 0x5088b8, 0x233a55);
+    this.grid = new THREE.GridHelper(140, 64, 0x5088b8, 0x233a55);
     this.grid.material.transparent = true;
     this.grid.material.opacity = 0.8;
     this.grid.position.y = 0.004;
@@ -328,7 +328,7 @@ export class PriceScene {
     this.scene.remove(this.grid);
     this.grid.geometry.dispose();
     this.grid.material.dispose();
-    this.grid = new THREE.GridHelper(96, 48, palette.gridA, palette.gridB);
+    this.grid = new THREE.GridHelper(140, 64, palette.gridA, palette.gridB);
     this.grid.material.transparent = true;
     this.grid.material.opacity = this.theme === "light" ? 0.55 : 0.8;
     this.grid.position.y = 0.004;
@@ -800,8 +800,8 @@ export class PriceScene {
     const portrait = (this.camera.aspect || 1) < 0.85;
     const presets = {
       overview: {
-        position: new THREE.Vector3(0, distance * (portrait ? 0.34 : 0.6), distance * (portrait ? 0.98 : 0.84)),
-        target: new THREE.Vector3(0, portrait ? 3.4 : 2.8, 0),
+        position: new THREE.Vector3(0, distance * (portrait ? 0.46 : 0.6), distance * 0.84),
+        target: new THREE.Vector3(0, portrait ? 1.2 : 2.8, 0),
       },
       profile: {
         position: new THREE.Vector3(0, distance * 0.22, distance * 1.06),
@@ -851,8 +851,8 @@ export class PriceScene {
     if (!this.userHasOrbited && this.model) {
       const distance = this.frameDistance();
       const portrait = (this.camera.aspect || 1) < 0.85;
-      this.controls.target.set(0, portrait ? 3.4 : 2.8, 0);
-      this.camera.position.set(0, distance * (portrait ? 0.34 : 0.6), distance * (portrait ? 0.98 : 0.84));
+      this.controls.target.set(0, portrait ? 1.2 : 2.8, 0);
+      this.camera.position.set(0, distance * (portrait ? 0.46 : 0.6), distance * 0.84);
     }
   }
 
@@ -939,17 +939,21 @@ export class PriceScene {
     for (const label of this.labels) {
       vector.set(-STAGE_WIDTH / 2 - 2.6, 0.95, label.z);
       vector.project(this.camera);
-      const onScreen = vector.z < 1 && vector.z > -1;
-      const x = Math.min(Math.max((vector.x * 0.5 + 0.5) * width, 54), Math.max(54, width - 54));
+      const rawX = (vector.x * 0.5 + 0.5) * width;
       const y = (-vector.y * 0.5 + 0.5) * height;
+      const onScreen = vector.z < 1 && vector.z > -1 && rawX > 34 && rawX < width - 34 && y > 8 && y < height - 8;
+      const x = Math.min(Math.max(rawX, 34), Math.max(34, width - 34));
       label.element.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-      placed.push({ label, y, onScreen });
+      placed.push({ label, x, y, onScreen });
     }
     placed.sort((a, b) => a.y - b.y);
     let lastY = -Infinity;
     let count = 0;
+    // Label pills are ~18px tall. With many lanes, show only the first few so
+    // the stage stays readable; hover still names every column.
+    const maxLabels = this.labels.length > 24 ? 14 : 28;
     for (const item of placed) {
-      const clear = item.onScreen && item.y - lastY >= 14 && count < 28;
+      const clear = item.onScreen && item.y - lastY >= 18 && count < maxLabels;
       item.label.element.classList.toggle("is-visible", clear);
       if (clear) {
         lastY = item.y;

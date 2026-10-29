@@ -34,9 +34,9 @@ import {
   fullLabel,
   relativeTime,
   rangeLabel,
-} from "./data.js?v=20261029-3";
-import { createDemoSnapshot } from "./demo.js?v=20261029-3";
-import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-3";
+} from "./data.js?v=20261029-4";
+import { createDemoSnapshot } from "./demo.js?v=20261029-4";
+import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-4";
 
 const RANGES = {
   "6h": 6 * 3600 * 1000,
@@ -46,6 +46,9 @@ const RANGES = {
   all: 0,
 };
 const RANGE_KEYS = Object.keys(RANGES);
+// Rendering every zone at once turns the stage and timeline into spaghetti.
+// These presets keep the default view legible while "all" stays one click away.
+const ZONE_FOCUS = { top12: 12, top24: 24 };
 const REFRESH_MS = 60 * 1000;
 const REPLAY_MS = 14000;
 
@@ -59,7 +62,7 @@ const state = {
   points: [],
   sources: new Set(),
   country: "all",
-  zone: "all",
+  zone: "top12",
   range: "7d",
   baseline: "window",
   seriesMode: "raw",
@@ -173,7 +176,7 @@ function syncFilterButtons() {
 async function initScene() {
   const container = $("scene");
   try {
-    const module = await import("./scene.js?v=20261029-3");
+    const module = await import("./scene.js?v=20261029-4");
     scene = new module.PriceScene(container, {
       onHover: handleSceneHover,
       onSelect: handleSceneSelect,
@@ -606,15 +609,50 @@ function viewRows() {
   let rows = filterPoints(state.points, {
     sources: state.sources,
     country: state.country,
-    zone: state.zone,
+    zone: isZoneFocus() ? "all" : state.zone,
     rangeMs,
     anchor: currentAnchor(),
   });
+  if (isZoneFocus()) {
+    const keep = new Set(busiestZones(rows, ZONE_FOCUS[state.zone]));
+    rows = rows.filter((point) => keep.has(point.z));
+  }
   if (state.customRange) {
     const { t0, t1 } = state.customRange;
     rows = rows.filter((point) => point.t >= t0 && point.t <= t1);
   }
   return rows;
+}
+
+function isZoneFocus(value = state.zone) {
+  return Object.prototype.hasOwnProperty.call(ZONE_FOCUS, value);
+}
+
+/** Zones ranked by reading count, with one guaranteed pick per feed. */
+function busiestZones(points, limit) {
+  const counts = new Map();
+  const bySource = new Map();
+  for (const point of points) {
+    counts.set(point.z, (counts.get(point.z) || 0) + 1);
+    if (!bySource.has(point.s)) bySource.set(point.s, new Map());
+    const zones = bySource.get(point.s);
+    zones.set(point.z, (zones.get(point.z) || 0) + 1);
+  }
+  const picked = new Set();
+  // Keep every feed represented; otherwise a dense day-ahead feed can push a
+  // whole real-time source out of the default stage.
+  const sources = [...bySource.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  for (const [, zones] of sources) {
+    const [zone] = [...zones.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0] || [];
+    if (zone) picked.add(zone);
+  }
+  if (picked.size > limit) return [...picked].slice(0, limit);
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  for (const [zone] of ranked) {
+    if (picked.size >= limit) break;
+    picked.add(zone);
+  }
+  return [...picked];
 }
 
 function updateCountryOptions() {
@@ -624,12 +662,13 @@ function updateCountryOptions() {
   select.innerHTML = "";
   const all = document.createElement("option");
   all.value = "all";
-  all.textContent = `All countries (${countries.length})`;
+  all.textContent = "All";
   select.appendChild(all);
   for (const code of countries) {
     const option = document.createElement("option");
     option.value = code;
     option.textContent = `${countryLabel(code)} (${code})`;
+    option.title = `${countryLabel(code)} (${code})`;
     select.appendChild(option);
   }
   if (previous !== "all" && countries.includes(previous)) select.value = previous;
@@ -647,16 +686,28 @@ function updateZoneOptions() {
   select.innerHTML = "";
   const all = document.createElement("option");
   all.value = "all";
-  all.textContent = `All zones (${zones.length})`;
+  all.textContent = "All zones";
   select.appendChild(all);
+  if (zones.length > 12) {
+    for (const [value, limit] of Object.entries(ZONE_FOCUS)) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = `Top ${limit} zones`;
+      select.appendChild(option);
+    }
+  }
   for (const zone of zones) {
     const option = document.createElement("option");
     option.value = zone;
     option.textContent = `${zone} - ${countryLabel(countryOf(zone))}`;
+    option.title = option.textContent;
     select.appendChild(option);
   }
-  if (previous !== "all" && zones.includes(previous)) select.value = previous;
-  else state.zone = "all";
+  if (previous === "all") select.value = "all";
+  else if (isZoneFocus(previous) && zones.length > 12) select.value = previous;
+  else if (zones.includes(previous)) select.value = previous;
+  else state.zone = zones.length > 12 ? "top12" : "all";
+  select.value = state.zone;
 }
 
 /* ---------------- rendering ---------------- */
@@ -747,6 +798,8 @@ function updateKpis() {
   }
 
   const feedCount = new Set(stats.lanes.map((lane) => lane.source)).size;
+  const shownZones = new Set(stats.lanes.map((lane) => lane.zone)).size;
+  const totalZones = zonesForCountry(state.points, state.country).length;
   cards.push(`
     <article class="kpi">
       <div class="kpi-label">Range</div>
@@ -755,7 +808,7 @@ function updateKpis() {
     </article>
     <article class="kpi">
       <div class="kpi-label">Coverage</div>
-      <div class="kpi-value">${stats.lanes.length}<span>zone${stats.lanes.length === 1 ? "" : "s"}</span></div>
+      <div class="kpi-value">${shownZones}<span>of ${totalZones} zone${totalZones === 1 ? "" : "s"}</span></div>
       <div class="kpi-foot">${stats.count} readings - ${feedCount} feed${feedCount === 1 ? "" : "s"} - ${rangeLabel(stats.lastTime - stats.firstTime)}</div>
     </article>`);
 
@@ -813,15 +866,15 @@ function renderSourceList() {
       const zoneCount = zonesBySource.get(id)?.size || 0;
       const active = state.sources.has(id);
       return `
-        <button type="button" class="source-row" data-source="${esc(id)}" aria-pressed="${active}" title="${active ? "Hide" : "Show"} ${esc(meta.label)}">
+        <button type="button" class="source-row" data-source="${esc(id)}" aria-pressed="${active}" title="${active ? "Hide" : "Show"} ${esc(meta.label)} - ${zoneCount} zone${zoneCount === 1 ? "" : "s"} - ${esc(meta.hint)}">
           <span class="source-swatch" style="--swatch:${sourceColor(id, state.theme)}"></span>
           <span class="source-name">
             <b>${esc(meta.label)}</b>
             <small>${zoneCount} zone${zoneCount === 1 ? "" : "s"} - ${esc(meta.hint)}</small>
           </span>
           <span class="source-figs">
-            <span class="source-price">${latest ? timeLabel(latest.t) : "-"}</span>
-            <span class="source-delta">${latest ? "UTC" : ""}</span>
+            <span class="source-price">${latest ? formatPrice(latest.p) : "—"}</span>
+            <span class="source-delta">${latest ? `${timeLabel(latest.t)} UTC` : ""}</span>
           </span>
         </button>`;
     })
@@ -831,8 +884,10 @@ function renderSourceList() {
 function updateSourceList() {
   const summary = $("source-summary");
   const active = [...state.sources];
-  const lanes = laneIds(state.rows);
-  summary.textContent = `${active.length}/${sourceIds(state.points).length} feeds - ${lanes.length} zones - ${state.rows.length} pts`;
+  const zones = zoneIds(state.rows);
+  const totalZones = zonesForCountry(state.points, state.country).length;
+  const zoneNote = isZoneFocus() ? `${zones.length}/${totalZones}` : String(zones.length);
+  summary.textContent = `${active.length}/${sourceIds(state.points).length} feeds - ${zoneNote} zones - ${state.rows.length} pts`;
   const visible = new Set(state.rows.map((row) => row.s));
   for (const button of $("source-list").querySelectorAll("[data-source]")) {
     const id = button.dataset.source;
@@ -875,7 +930,9 @@ function updateCompare(lanes) {
     })
     .join("");
   const suffix = visible.length > shown.length ? ` (top ${shown.length})` : "";
-  $("compare-note").textContent = `${visible.length} zone${visible.length === 1 ? "" : "s"}${suffix} - avg`;
+  const totalZones = zonesForCountry(state.points, state.country).length;
+  const scope = visible.length < totalZones ? `${visible.length} of ${totalZones}` : String(visible.length);
+  $("compare-note").textContent = `${scope} zone${visible.length === 1 ? "" : "s"}${suffix} - avg`;
 }
 
 function updateTimeline(rows, displayRows) {
@@ -926,19 +983,15 @@ function updateTimeline(rows, displayRows) {
 
 function updateDistribution(rows) {
   if (!distributionChart) return;
-  const grouped = new Map();
-  for (const point of rows) {
-    const lane = point.l || laneOf(point);
-    if (!grouped.has(lane)) grouped.set(lane, []);
-    grouped.get(lane).push(point);
-  }
-  const series = [...grouped.entries()].map(([id, points]) => ({
-    id,
-    color: laneColor(id, state.theme),
-    points,
-  }));
-  distributionChart.setData({ series, bins: 18 });
-  $("dist-meta").textContent = rows.length ? `${rows.length} pts - ${grouped.size} zones` : "-";
+  // One aggregated histogram reads far better than 52 overlapping zone series;
+  // the per-zone detail already lives in Compare and the timeline.
+  const accent = state.theme === "light" ? "#0a84b8" : "#4cd7ff";
+  distributionChart.setData({
+    series: rows.length ? [{ id: "all", color: accent, points: rows }] : [],
+    bins: 18,
+  });
+  const zones = zoneIds(rows).length;
+  $("dist-meta").textContent = rows.length ? `${rows.length} pts - ${zones} zone${zones === 1 ? "" : "s"}` : "-";
 }
 
 function updateScale(domain) {
@@ -969,10 +1022,13 @@ function updatePipelineMeta() {
 
 function updateFilterHint() {
   const hint = $("filter-hint");
+  const totalZones = zonesForCountry(state.points, state.country).length;
   if (state.customDates) {
     hint.textContent = `Date picker active: ${dayLabel(state.dateFrom)} → ${dayLabel(
       state.dateTo
     )} UTC. Only those day shards were downloaded; presets return to rolling windows.`;
+  } else if (isZoneFocus() && totalZones > ZONE_FOCUS[state.zone]) {
+    hint.textContent = `Stage shows the ${ZONE_FOCUS[state.zone]} busiest of ${totalZones} zones. Choose All zones, or a specific zone, for the full set.`;
   } else if (state.seriesMode === "indexed") {
     hint.textContent = "Indexed mode rebases each feed to 100 at its first visible reading. KPIs stay in EUR/MWh.";
   } else if (state.baseline === "zero") {
@@ -1416,7 +1472,7 @@ function bindControls() {
 
   $("country-select").addEventListener("change", (event) => {
     state.country = event.target.value;
-    state.zone = "all";
+    state.zone = isZoneFocus() ? state.zone : "all";
     state.selectedKey = null;
     state.playhead = null;
     stopReplay();
@@ -1528,7 +1584,7 @@ function bindControls() {
 function resetFilters() {
   state.sources = new Set(sourceIds(state.points));
   state.country = "all";
-  state.zone = "all";
+  state.zone = zoneIds(state.points).length > 12 ? "top12" : "all";
   state.range = "7d";
   state.baseline = "window";
   state.seriesMode = "raw";

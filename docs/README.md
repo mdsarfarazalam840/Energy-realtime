@@ -128,6 +128,8 @@ manifest and the newest day are revalidated.
 ## Filters and interactions
 
 - Hover a column for the reading; click to pin it in **Focus**.
+- **Zone focus** starts on the 12 busiest zones (one pick per feed) so the stage
+  and timeline stay readable. Pick **All zones** or a single zone to widen it.
 - **Date range** (`From` / `To`) loads only the selected UTC days. Presets
   (`6h`, `24h`, `7d`, `30d`, `All`) return to a rolling window.
 - Drag across the timeline to brush a window; double-click to clear.

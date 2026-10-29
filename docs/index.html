@@ -7,7 +7,7 @@
   <meta name="description" content="VoltScope — a live 3D energy price intelligence dashboard fed by Databricks and published on GitHub Pages.">
   <title>VoltScope — Live Energy Price Intelligence</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23070d18'/%3E%3Cpath d='M18 4 9 18h6l-2 10 10-15h-6z' fill='%234cd7ff'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="assets/css/dashboard.css?v=20261029-2">
+  <link rel="stylesheet" href="assets/css/dashboard.css?v=20261029-3">
 </head>
 <body>
   <a class="skip-link" href="#viewport">Skip to dashboard</a>
@@ -66,14 +66,16 @@
           <h2>Filters</h2>
           <button class="link-btn" id="btn-reset" type="button">Reset</button>
         </div>
-        <label class="field">
-          <span class="field-label">Country</span>
-          <select id="country-select" class="select"></select>
-        </label>
-        <label class="field">
-          <span class="field-label">Zone</span>
-          <select id="zone-select" class="select"></select>
-        </label>
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">Country</span>
+            <select id="country-select" class="select"></select>
+          </label>
+          <label class="field">
+            <span class="field-label">Zone set</span>
+            <select id="zone-select" class="select"></select>
+          </label>
+        </div>
         <div class="field">
           <span class="field-label">Date range <em class="field-sub">UTC</em></span>
           <div class="date-range">
@@ -98,18 +100,20 @@
             <button type="button" data-range="all">All</button>
           </div>
         </div>
-        <div class="field">
-          <span class="field-label">Price baseline</span>
-          <div class="segmented" id="baseline-group" role="group" aria-label="Price baseline">
-            <button type="button" data-baseline="window">Window</button>
-            <button type="button" data-baseline="zero">Zero</button>
+        <div class="field-row">
+          <div class="field">
+            <span class="field-label">Baseline</span>
+            <div class="segmented" id="baseline-group" role="group" aria-label="Price baseline">
+              <button type="button" data-baseline="window">Window</button>
+              <button type="button" data-baseline="zero">Zero</button>
+            </div>
           </div>
-        </div>
-        <div class="field">
-          <span class="field-label">Series mode</span>
-          <div class="segmented" id="series-group" role="group" aria-label="Series mode">
-            <button type="button" data-series="raw">Raw</button>
-            <button type="button" data-series="indexed">Indexed</button>
+          <div class="field">
+            <span class="field-label">Series</span>
+            <div class="segmented" id="series-group" role="group" aria-label="Series mode">
+              <button type="button" data-series="raw">Raw</button>
+              <button type="button" data-series="indexed">Indexed</button>
+            </div>
           </div>
         </div>
         <p class="hint" id="filter-hint">Window scale starts at the session low. Zero scale always starts at 0.</p>
@@ -241,6 +245,7 @@
             <li><b>Baseline Window</b> starts at the session low so small moves stay visible.</li>
             <li><b>Baseline Zero</b> keeps a truthful zero axis, including negative prices.</li>
             <li><b>Indexed</b> rebases each zone to 100 at the first reading, so shapes compare.</li>
+            <li><b>Zone focus</b> starts on the 12 busiest zones, with one pick per feed. Choose All zones to plot every zone.</li>
           </ul>
         </div>
         <div>
@@ -297,7 +302,7 @@
     }
   }
   </script>
-  <script type="module" src="assets/js/main.js?v=20261029-3"></script>
+  <script type="module" src="assets/js/main.js?v=20261029-4"></script>
   <script>
     /* If the module graph cannot load (missing vendor files, syntax error), the
        boot overlay must not trap the page forever. */
