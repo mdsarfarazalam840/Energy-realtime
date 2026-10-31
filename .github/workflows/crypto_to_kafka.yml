@@ -62,7 +62,13 @@ jobs:
       - name: Trigger Databricks crypto ingest job
         if: success()
         run: |
-          curl -s -X POST "${DATABRICKS_HOST}/api/2.1/jobs/run-now" \
+          HOST="${DATABRICKS_HOST}"
+          case "$HOST" in
+            https://*) ;;
+            http://*) HOST="https://${HOST#http://}" ;;
+            *) HOST="https://${HOST}" ;;
+          esac
+          curl -s -X POST "${HOST}/api/2.1/jobs/run-now" \
             -H "Authorization: Bearer ${DATABRICKS_TOKEN}" \
             -H "Content-Type: application/json" \
             -d '{"job_id": "${{ vars.DATABRICKS_CRYPTO_JOB_ID }}"}'
