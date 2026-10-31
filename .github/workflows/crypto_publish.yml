@@ -1,0 +1,59 @@
+name: Publish Crypto Dashboard Snapshot
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'   # twice an hour, offset from energy publish
+  workflow_run:
+    workflows: ["Crypto Market Data to Kafka"]
+    types: [completed]
+  workflow_dispatch:
+
+env:
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  DATABRICKS_WAREHOUSE_ID: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
+  CRYPTO_TABLE: 'workspace.default.crypto_market_realtime'
+  CRYPTO_WINDOW_DAYS: '7'
+  CRYPTO_MAX_ROWS: '20000'
+  CRYPTO_OUT: 'docs/data/crypto.json'
+  CRYPTO_MAX_WAIT: '240'
+  CRYPTO_WAIT_NEW_DATA: '420'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests==2.32.3
+
+      - name: Export crypto snapshot from Databricks
+        run: |
+          python scripts/export_crypto_data.py \
+            --wait-new-data "${CRYPTO_WAIT_NEW_DATA}" \
+            --window-days "${CRYPTO_WINDOW_DAYS}" \
+            --max-rows "${CRYPTO_MAX_ROWS}" \
+            --out "${CRYPTO_OUT}" \
+            --max-wait "${CRYPTO_MAX_WAIT}"
+
+      - name: Commit changed snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet docs/data/crypto.json; then
+            echo "Crypto snapshot unchanged; skipping commit."
+          else
+            git add docs/data/crypto.json
+            git commit -m "chore: publish crypto snapshot [skip ci]"
+            git push
+          fi

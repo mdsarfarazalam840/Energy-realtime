@@ -10,7 +10,8 @@ snapshot from GitHub Pages.
 Usage:
     python producer_crypto.py --dry-run
     python producer_crypto.py --coins 25 --trending 10
-    python producer_crypto.py
+    python producer_crypto.py --interval 300          # loop every 5 minutes
+    python producer_crypto.py --interval 60 --once    # single run, exit
 
 Environment:
     KAFKA_BOOTSTRAP   Kafka bootstrap servers (required unless --dry-run)
@@ -19,6 +20,7 @@ Environment:
     KAFKA_CA_LOCATION CA certificate path, default aiven_ca.pem
     CRYPTO_TOPIC      Topic name, default crypto-market
     CRYPTO_COINS      Coins per run, default 25
+    CRYPTO_INTERVAL   Loop interval seconds, default 300
 """
 
 from __future__ import annotations
@@ -235,25 +237,36 @@ def produce(messages: list[dict[str, Any]], topic: str, dry_run: bool) -> int:
     return 0
 
 
+def env_int(name: str, default: int) -> int:
+    raw = env_str(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        print(f"warning: {name}={raw!r} is not an integer; using {default}")
+        return default
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Fetch keyless CoinGecko market data and produce it to Kafka")
-    parser.add_argument("--coins", type=int, default=env_int("CRYPTO_COINS", 25), help="Top coins by market cap, 1-100")
+    parser.add_argument("--coins", type=int, default=env_int("CRYPTO_COINS", 100), help="Top coins by market cap, 1-100")
     parser.add_argument("--trending", type=int, default=env_int("CRYPTO_TRENDING", 10), help="Trending coins, 0-20")
     parser.add_argument("--topic", default=env_str("CRYPTO_TOPIC") or TOPIC)
     parser.add_argument("--timeout", type=float, default=25.0)
+    parser.add_argument("--interval", type=int, default=env_int("CRYPTO_INTERVAL", 300), help="Loop interval seconds; 0 means run once and exit")
+    parser.add_argument("--once", action="store_true", help="Run a single fetch and exit (overrides --interval)")
     parser.add_argument("--dry-run", action="store_true", help="Fetch and print without Kafka credentials")
     return parser.parse_args(argv)
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv)
+def run_once(client: CoinGeckoClient, args: argparse.Namespace) -> int:
     coins = max(1, min(args.coins, MAX_COINS))
     trending = max(0, min(args.trending, MAX_TRENDING))
     if coins != args.coins or trending != args.trending:
         print(f"Clamped request to coins={coins} trending={trending}")
 
     try:
-        client = CoinGeckoClient(timeout=args.timeout)
         messages = build_messages(client, coins, trending)
     except Exception as exc:  # noqa: BLE001 - the workflow reports the message
         print(f"CoinGecko fetch failed: {exc}")
@@ -268,6 +281,31 @@ def main(argv: list[str] | None = None) -> int:
     except KeyError as exc:
         print(f"Kafka configuration is incomplete: missing {exc}")
         return 2
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    once = args.once or args.interval <= 0
+    coins = max(1, min(args.coins, MAX_COINS))
+    trending = max(0, min(args.trending, MAX_TRENDING))
+    if coins != args.coins or trending != args.trending:
+        print(f"Clamped request to coins={coins} trending={trending}")
+
+    try:
+        client = CoinGeckoClient(timeout=args.timeout)
+    except Exception as exc:
+        print(f"CoinGecko client failed: {exc}")
+        return 1
+
+    if once:
+        return run_once(client, args)
+
+    print(f"Crypto producer looping every {args.interval}s (Ctrl-C to stop).")
+    while True:
+        code = run_once(client, args)
+        if code != 0:
+            print(f"Producer run exited with code {code}; retrying in {args.interval}s")
+        time.sleep(args.interval)
 
 
 if __name__ == "__main__":
