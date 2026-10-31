@@ -68,7 +68,7 @@ jobs:
             http://*) HOST="https://${HOST#http://}" ;;
             *) HOST="https://${HOST}" ;;
           esac
-          curl -s -X POST "${HOST}/api/2.1/jobs/run-now" \
+          curl -sS --fail -X POST "${HOST}/api/2.1/jobs/run-now" \
             -H "Authorization: Bearer ${DATABRICKS_TOKEN}" \
             -H "Content-Type: application/json" \
             -d '{"job_id": "${{ vars.DATABRICKS_CRYPTO_JOB_ID }}"}'
