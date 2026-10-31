@@ -20,7 +20,6 @@ env:
   CRYPTO_MAX_ROWS: '20000'
   CRYPTO_OUT: 'docs/data/crypto.json'
   CRYPTO_MAX_WAIT: '240'
-  CRYPTO_WAIT_NEW_DATA: '420'
 
 jobs:
   publish:
@@ -43,7 +42,6 @@ jobs:
       - name: Export crypto snapshot from Databricks
         run: |
           python scripts/export_crypto_data.py \
-            --wait-new-data "${CRYPTO_WAIT_NEW_DATA}" \
             --window-days "${CRYPTO_WINDOW_DAYS}" \
             --max-rows "${CRYPTO_MAX_ROWS}" \
             --out "${CRYPTO_OUT}" \
