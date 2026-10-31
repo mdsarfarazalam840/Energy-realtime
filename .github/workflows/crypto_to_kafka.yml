@@ -71,5 +71,5 @@ jobs:
           curl -sS --fail -X POST "${HOST}/api/2.1/jobs/run-now" \
             -H "Authorization: Bearer ${DATABRICKS_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d '{"job_id": "${{ vars.DATABRICKS_CRYPTO_JOB_ID }}"}'
+            -d '{"job_id": "913950436608512"}'
           echo "Triggered Databricks crypto ingest job."
