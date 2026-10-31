@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { changeColor, formatPercent, metricValue } from "./crypto-data.js?v=20261031-1";
 
-const MAX_COINS = 48;
+const MAX_COINS = 200;
 const MAX_HEIGHT = 11.5;
 const SPACING = 3.5;
 

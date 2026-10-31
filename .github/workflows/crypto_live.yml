@@ -1,0 +1,54 @@
+name: Crypto Live Feed
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # every 5 minutes: fresh crypto tail for the dashboard
+  workflow_dispatch:
+
+env:
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  DATABRICKS_WAREHOUSE_ID: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
+  CRYPTO_TABLE: 'workspace.default.crypto_market_realtime'
+  CRYPTO_LIVE_OUT: 'docs/data/live-crypto.json'
+  CRYPTO_LIVE_WINDOW_MINUTES: '360'
+  CRYPTO_LIVE_MAX_ROWS: '500'
+  CRYPTO_LIVE_MAX_WAIT: '60'
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests==2.32.3
+
+      - name: Export crypto live tail from Databricks
+        run: |
+          python scripts/export_live_crypto.py \
+            --out "${CRYPTO_LIVE_OUT}" \
+            --window-minutes "${CRYPTO_LIVE_WINDOW_MINUTES}" \
+            --max-rows "${CRYPTO_LIVE_MAX_ROWS}" \
+            --max-wait "${CRYPTO_LIVE_MAX_WAIT}"
+
+      - name: Commit changed live tail
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet docs/data/live-crypto.json; then
+            echo "Crypto live tail unchanged; skipping commit."
+          else
+            git add docs/data/live-crypto.json
+            git commit -m "chore: publish crypto live tail [skip ci]"
+            git push
+          fi

@@ -12,10 +12,13 @@ import {
   metricLabel,
   changeColor,
   coinColor,
+  createLiveCryptoFeed,
+  mergeLiveCoins,
 } from "./crypto-data.js?v=20261031-1";
 import { CryptoScene } from "./crypto-scene.js?v=20261031-1";
 
 const REFRESH_MS = 60 * 1000;
+const LIVE_POLL_MS = 12 * 1000;
 const $ = (id) => document.getElementById(id);
 
 const state = {
@@ -33,8 +36,12 @@ const state = {
   theme: "dark",
   demo: false,
   loading: false,
+  live: false,
+  liveTransport: "static",
+  liveAge: 0,
   scene: null,
   timer: 0,
+  liveFeed: null,
   chartIndex: -1,
   demoNoticeShown: false,
 };
@@ -156,6 +163,7 @@ async function loadSnapshot({ silent = false } = {}) {
     state.snapshot = snapshot;
     state.demo = false;
     if (!silent) setStatus("live", "Live market snapshot", `${snapshot.coins.length} coins`);
+    startLiveFeed();
   } catch (error) {
     console.warn("Crypto snapshot unavailable", error);
     if (!state.snapshot) {
@@ -178,6 +186,26 @@ async function loadSnapshot({ silent = false } = {}) {
   render();
   hideBoot();
   if (state.auto) startTimer();
+}
+
+function startLiveFeed() {
+  if (state.liveFeed) state.liveFeed.stop();
+  state.liveFeed = createLiveCryptoFeed({
+    pollMs: LIVE_POLL_MS,
+    onUpdate: (coins, meta) => {
+      if (!state.snapshot) return;
+      const merged = mergeLiveCoins(state.snapshot.coins, coins);
+      const changed = merged.length !== state.snapshot.coins.length ||
+        merged.some((c, i) => c.id !== state.snapshot.coins[i]?.id || c.t !== state.snapshot.coins[i]?.t);
+      if (!changed) return;
+      state.snapshot.coins = merged;
+      state.live = true;
+      state.liveTransport = "static";
+      state.liveAge = Date.now() - (Number(meta.latest_timestamp_ms) || 0);
+      state.snapshot.meta = { ...state.snapshot.meta, ...meta, live: true };
+      render();
+    },
+  });
 }
 
 function startTimer() {
@@ -236,10 +264,11 @@ function render() {
 function renderStatus() {
   const meta = state.snapshot.meta || {};
   const latest = meta.latest_timestamp_ms || summarize(state.coins).latest;
+  const liveSuffix = state.live && state.liveAge > 0 ? ` · live ${Math.round(state.liveAge / 1000)}s ago` : "";
   if (state.demo) {
     setStatus("demo", "Demo snapshot", "no live export yet");
   } else {
-    setStatus("live", "Live market snapshot", `${state.coins.length} coins · ${relativeTime(latest)}`);
+    setStatus("live", "Live market snapshot", `${state.coins.length} coins · ${relativeTime(latest)}${liveSuffix}`);
   }
   $("pulse-note").textContent = state.demo ? "demo" : relativeTime(latest);
 }

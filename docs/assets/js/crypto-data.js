@@ -1,6 +1,7 @@
 /* Crypto dashboard data layer: snapshot loading, demo fallback, and formatting helpers. */
 
 export const DATA_URL = "data/crypto.json";
+export const LIVE_URL = "data/live-crypto.json";
 export const SCHEMA_VERSION = 1;
 
 const DEMO_COINS = [
@@ -260,4 +261,102 @@ export function metricLabel(metric) {
   if (metric === "price") return "Price";
   if (metric === "volume_24h") return "24h volume";
   return "Market cap";
+}
+
+/* ------------------------------------------------------------------ */
+/* Live crypto tail                                                   */
+/* ------------------------------------------------------------------ */
+
+const DEFAULT_LIVE_POLL_MS = 12000;
+
+/**
+ * Poll the published crypto live tail and merge newer readings into the
+ * current snapshot by coin id. `onUpdate` receives `(coins, meta)` whenever
+ * the payload changes. Returns a `{ poll, stop }` controller.
+ */
+export function createLiveCryptoFeed({ pollMs = DEFAULT_LIVE_POLL_MS, onUpdate } = {}) {
+  let stopped = false;
+  let timer = null;
+  let lastGenerated = null;
+
+  async function read() {
+    const url = `${LIVE_URL}${LIVE_URL.includes("?") ? "&" : "?"}v=${Date.now()}`;
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  }
+
+  async function poll() {
+    if (stopped) return;
+    let document;
+    try {
+      document = await read();
+    } catch (error) {
+      // Live tail is optional; a missing or failing file is not fatal.
+      schedule();
+      return;
+    }
+    if (!document || !Array.isArray(document.coins)) {
+      schedule();
+      return;
+    }
+    const generated = document.generated_at ? Date.parse(document.generated_at) : Date.now();
+    if (lastGenerated !== null && generated <= lastGenerated) {
+      schedule();
+      return;
+    }
+    lastGenerated = generated;
+    onUpdate?.(document.coins, document.meta || {});
+    schedule();
+  }
+
+  function schedule() {
+    clearTimeout(timer);
+    if (stopped) return;
+    timer = setTimeout(async () => {
+      await poll();
+    }, pollMs);
+  }
+
+  poll();
+  schedule();
+
+  return {
+    poll,
+    stop() {
+      stopped = true;
+      clearTimeout(timer);
+    },
+  };
+}
+
+/**
+ * Merge live coin readings into an existing coin list, replacing any coin
+ * whose id matches and whose timestamp is newer. Returns a new array.
+ */
+export function mergeLiveCoins(existing, live) {
+  const byId = new Map();
+  for (const coin of existing) byId.set(String(coin.id || "").toLowerCase(), coin);
+  for (const raw of live) {
+    const id = String(raw.id || "").toLowerCase();
+    if (!id) continue;
+    const current = byId.get(id);
+    const incomingT = Number(raw.t) || 0;
+    const currentT = current ? Number(current.t) || 0 : 0;
+    if (!current || incomingT >= currentT) {
+      byId.set(id, {
+        ...current,
+        ...raw,
+        id,
+        symbol: String(raw.symbol || id.slice(0, 4)).toUpperCase(),
+        name: String(raw.name || id),
+        t: incomingT || Date.now(),
+      });
+    }
+  }
+  return [...byId.values()].sort((a, b) => (a.market_rank || 999) - (b.market_rank || 999));
 }
