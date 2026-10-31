@@ -1,0 +1,61 @@
+name: CoinGecko Crypto Data to Kafka
+
+# CoinGecko's public API needs no key. This lane pulls the top coins by market
+# cap plus the trending list every ten minutes, produces them to the
+# `crypto-market` Kafka topic, and asks the Databricks job to ingest both the
+# energy and crypto topics. The publish workflow exports the Delta table to
+# docs/data/crypto.json for the 3D crypto dashboard.
+
+on:
+  schedule:
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: crypto-to-kafka
+  cancel-in-progress: false
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install "requests==2.32.3" "confluent-kafka>=2.4"
+
+      - name: Write Kafka CA certificate
+        run: echo "${{ secrets.KAFKA_CA_PEM }}" > aiven_ca.pem
+
+      - name: Produce CoinGecko market data
+        run: python producer_crypto.py
+        env:
+          KAFKA_BOOTSTRAP: ${{ secrets.KAFKA_BOOTSTRAP }}
+          KAFKA_PASSWORD: ${{ secrets.KAFKA_PASSWORD }}
+          CRYPTO_TOPIC: ${{ vars.CRYPTO_TOPIC || 'crypto-market' }}
+          CRYPTO_COINS: ${{ vars.CRYPTO_COINS || '25' }}
+          CRYPTO_TRENDING: ${{ vars.CRYPTO_TRENDING || '10' }}
+
+      - name: Trigger Databricks ingest
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          test -n "$DATABRICKS_TOKEN" || { echo "::error::Missing DATABRICKS_TOKEN secret"; exit 1; }
+          host="${DATABRICKS_HOST#https://}"; host="${host#http://}"; host="${host%/}"
+          curl -sf -X POST \
+            -H "Authorization: Bearer ${DATABRICKS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"job_id\": ${DATABRICKS_JOB_ID}}" \
+            "https://${host}/api/2.1/jobs/run-now"
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_JOB_ID: ${{ vars.DATABRICKS_JOB_ID || '913950436608512' }}

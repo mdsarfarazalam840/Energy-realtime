@@ -30,6 +30,7 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       DATABRICKS_WAREHOUSE_ID: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
       ENERGY_TABLE: ${{ vars.ENERGY_TABLE || 'workspace.default.energy_prices_realtime' }}
+      CRYPTO_TABLE: ${{ vars.CRYPTO_TABLE || 'workspace.default.crypto_market_realtime' }}
       ENERGY_WAIT_NEW_DATA: ${{ github.event_name == 'workflow_run' && '420' || '0' }}
 
     steps:
@@ -57,6 +58,10 @@ jobs:
       - name: Export snapshot from Databricks
         run: python scripts/export_dashboard_data.py --wait-new-data "$ENERGY_WAIT_NEW_DATA"
 
+      - name: Export crypto snapshot from Databricks
+        continue-on-error: true
+        run: python scripts/export_crypto_data.py --window-days 7 --max-rows 20000
+
       - name: Commit snapshot when it changed
         id: commit
         run: |
@@ -67,6 +72,7 @@ jobs:
           import json, subprocess
 
           VOLATILE = {"query_ms", "publish_ms", "window_days", "max_rows", "truncated"}
+          PATHS = ["docs/data/energy.json", "docs/data/crypto.json"]
 
           def normalize(doc):
               doc = dict(doc)
@@ -75,12 +81,20 @@ jobs:
               doc["meta"] = meta
               return doc
 
-          try:
-              old = json.loads(subprocess.check_output(["git", "show", "HEAD:docs/data/energy.json"]))
-          except Exception:
-              old = None
-          new = json.load(open("docs/data/energy.json", encoding="utf-8"))
-          print("true" if old is None or normalize(old) != normalize(new) else "false")
+          changed = False
+          for path in PATHS:
+              try:
+                  old = json.loads(subprocess.check_output(["git", "show", f"HEAD:{path}"], stderr=subprocess.DEVNULL))
+              except Exception:
+                  old = None
+              try:
+                  new = json.load(open(path, encoding="utf-8"))
+              except Exception:
+                  continue
+              if old is None or normalize(old) != normalize(new):
+                  changed = True
+                  break
+          print("true" if changed else "false")
           PY
           )
           if [ "$changed" != "true" ]; then
@@ -92,9 +106,13 @@ jobs:
           git add -A docs/data
           rows=$(python -c "import json;print(json.load(open('docs/data/energy.json'))['meta']['row_count'])")
           latest=$(python -c "import json;print(json.load(open('docs/data/energy.json'))['meta']['latest_timestamp'])")
+          coins=""
+          if [ -f docs/data/crypto.json ]; then
+            coins=$(python -c "import json;print(json.load(open('docs/data/crypto.json'))['meta']['coin_count'])")
+          fi
           git config user.name "voltscope-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore(data): publish dashboard snapshot (${rows} rows, ${latest}) [skip ci]"
+          git commit -m "chore(data): publish dashboard snapshot (${rows} rows, ${latest}${coins:+, ${coins} coins}) [skip ci]"
           for attempt in 1 2 3; do
             git pull --rebase --autostash origin main && git push origin HEAD:main && break
             echo "push attempt ${attempt} failed; retrying"
@@ -123,6 +141,14 @@ jobs:
               echo "- Query: ${query} ms"
             else
               echo "- Snapshot file missing."
+            fi
+            if [ -f docs/data/crypto.json ]; then
+              coins=$(jq -r '.meta.coin_count' docs/data/crypto.json)
+              cap=$(jq -r '.meta.total_market_cap' docs/data/crypto.json)
+              clatest=$(jq -r '.meta.latest_timestamp' docs/data/crypto.json)
+              echo "- Crypto: **${coins}** coins, $${cap} market cap, latest \`${clatest}\`"
+            else
+              echo "- Crypto snapshot not produced yet."
             fi
             echo ""
             echo "Live page: https://mdsaifedu.eu.cc/Energy-realtime/"

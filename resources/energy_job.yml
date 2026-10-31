@@ -6,3 +6,6 @@ resources:
       - task_key: kafka_streaming
         notebook_task:
           notebook_path: ../src/kafka_ingest.ipynb
+      - task_key: crypto_streaming
+        notebook_task:
+          notebook_path: ../src/crypto_ingest.ipynb

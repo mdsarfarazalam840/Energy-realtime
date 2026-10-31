@@ -1,0 +1,96 @@
+name: Release
+
+# Creates a GitHub release and git tag for the project.
+# Trigger manually or by pushing a tag matching v*.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag name (e.g. v1.0.0)"
+        required: true
+        default: "v1.0.0"
+      ref:
+        description: "Branch or commit to tag (default: dev)"
+        required: false
+        default: "dev"
+      release_notes:
+        description: "Release notes / changelog summary"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "voltscope-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine tag and ref
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            REF="${TAG}"
+          else
+            TAG="${{ inputs.tag }}"
+            REF="${{ inputs.ref }}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+
+      - name: Create lightweight tag
+        run: |
+          if ! git rev-parse "${{ steps.vars.outputs.tag }}" >/dev/null 2>&1; then
+            git tag "${{ steps.vars.outputs.tag }}" "${{ steps.vars.outputs.ref }}"
+            git push origin "${{ steps.vars.outputs.tag }}"
+            echo "Created and pushed tag ${{ steps.vars.outputs.tag }}"
+          else
+            echo "Tag ${{ steps.vars.outputs.tag }} already exists; skipping tag creation."
+          fi
+
+      - name: Build changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag --sort=-v:refname | grep '^v' | head -n 2 | tail -n 1 || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            LOG=$(git log "${PREV_TAG}..${{ steps.vars.outputs.tag }}" --pretty=format:"- %s (%h)" --no-merges)
+          else
+            LOG=$(git log --pretty=format:"- %s (%h)" --no-merges | head -n 50)
+          fi
+          NOTES="${{ inputs.release_notes }}"
+          if [ -z "$NOTES" ]; then
+            NOTES="Auto-generated release for ${{ steps.vars.outputs.tag }}."
+          fi
+          BODY="${NOTES}
+
+## Changes since ${PREV_TAG:-previous release}
+
+${LOG}"
+
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$BODY" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: "Release ${{ steps.vars.outputs.tag }}"
+          body: ${{ steps.changelog.outputs.body }}
+          draft: false
+          prerelease: false

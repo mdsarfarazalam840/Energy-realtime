@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#060a12">
+  <meta name="description" content="VoltScope Crypto — a live 3D cryptocurrency market dashboard fed by CoinGecko, Kafka, and Databricks.">
+  <title>VoltScope Crypto — Live 3D Market Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23070d18'/%3E%3Cpath d='M18 4 9 18h6l-2 10 10-15h-6z' fill='%23ffc45c'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/css/crypto.css?v=20261031-1">
+</head>
+<body>
+  <a class="skip-link" href="#viewport">Skip to crypto dashboard</a>
+
+  <div class="app" id="app">
+    <header class="topbar">
+      <a class="brand" href="crypto.html" aria-label="VoltScope Crypto home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="24" height="24"><path d="M18 3 8 18h7l-2 11 11-16h-7z" fill="currentColor"/></svg>
+        </span>
+        <span class="brand-copy">
+          <strong>VoltScope</strong>
+          <small>Crypto intelligence</small>
+        </span>
+      </a>
+
+      <nav class="site-nav" aria-label="Dashboards">
+        <a href="index.html">Energy</a>
+        <a href="crypto.html" class="is-active" aria-current="page">Crypto</a>
+        <a href="diagrams/">Architecture</a>
+      </nav>
+
+      <div class="status" id="status" data-state="loading">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-text" id="status-text">Loading market snapshot…</span>
+        <span class="status-sub" id="status-sub"></span>
+      </div>
+
+      <div class="topbar-actions">
+        <label class="search-wrap">
+          <span class="sr-only">Search coins</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+          <input id="coin-search" type="search" placeholder="Search coin" autocomplete="off" spellcheck="false">
+          <kbd aria-hidden="true">/</kbd>
+        </label>
+        <button class="chip-toggle" id="btn-auto" type="button" aria-pressed="true" title="Toggle automatic refresh (L)">
+          <span class="chip-dot"></span><span>Auto</span>
+        </button>
+        <button class="icon-btn" id="btn-refresh" type="button" title="Refresh data (R)" aria-label="Refresh data">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-share" type="button" title="Copy a link to this view" aria-label="Copy link to this view">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-theme" type="button" title="Switch theme (T)" aria-label="Switch theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8Z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-help" type="button" title="Help and shortcuts (?)" aria-label="Help and shortcuts">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.1-2.5 3.8"/><path d="M12 17.2h.01"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="layout" id="viewport">
+      <section class="stage-panel" aria-label="3D crypto market scene">
+        <div class="scene" id="scene">
+          <div class="scene-loading" id="scene-loading">
+            <span class="loader" aria-hidden="true"></span>
+            <p>Building the market stage…</p>
+          </div>
+          <div class="scene-fallback" id="scene-fallback" hidden>
+            <strong>3D view unavailable</strong>
+            <p>WebGL is blocked in this browser. The market board and coin chart below still work.</p>
+          </div>
+          <div class="coin-tooltip" id="coin-tooltip" hidden></div>
+        </div>
+
+        <div class="scene-tools">
+          <div class="segmented" id="metric-group" role="group" aria-label="Column height metric">
+            <button type="button" data-metric="market_cap" class="is-active">Market cap</button>
+            <button type="button" data-metric="price">Price</button>
+            <button type="button" data-metric="volume_24h">Volume</button>
+          </div>
+          <label class="color-pick">
+            <span class="sr-only">Column colour</span>
+            <select id="color-select" aria-label="Column colour">
+              <option value="change">Colour: 24h change</option>
+              <option value="rank">Colour: rank</option>
+              <option value="trending">Colour: trending</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="camera-tools" role="group" aria-label="Camera presets">
+          <button type="button" data-cam="overview" class="is-active" title="Overview camera (1)">Overview</button>
+          <button type="button" data-cam="close" title="Close camera (2)">Close</button>
+          <button type="button" data-cam="top" title="Top camera (3)">Top</button>
+          <button type="button" id="btn-spin" class="spin-btn" aria-pressed="true" title="Toggle auto orbit">Orbit</button>
+        </div>
+
+        <div class="scene-legend">
+          <span class="legend-label" id="legend-label">Height: market cap</span>
+          <div class="legend-row">
+            <i class="legend-swatch up"></i><span>24h gain</span>
+            <i class="legend-swatch down"></i><span>24h loss</span>
+            <i class="legend-swatch hot"></i><span>Trending</span>
+          </div>
+        </div>
+
+        <p class="scene-hint" id="scene-hint">Drag to orbit · Scroll to zoom · Click a column to inspect</p>
+      </section>
+
+      <aside class="insights" aria-label="Market insights">
+        <section class="card pulse-card">
+          <div class="card-head">
+            <h2>Market pulse</h2>
+            <span class="card-note" id="pulse-note">—</span>
+          </div>
+          <dl class="kpi-grid">
+            <div class="kpi">
+              <dt>Total market cap</dt>
+              <dd id="kpi-cap">—</dd>
+              <small id="kpi-cap-sub">—</small>
+            </div>
+            <div class="kpi">
+              <dt>24h volume</dt>
+              <dd id="kpi-vol">—</dd>
+              <small id="kpi-vol-sub">—</small>
+            </div>
+            <div class="kpi">
+              <dt>24h breadth</dt>
+              <dd id="kpi-breadth">—</dd>
+              <small id="kpi-breadth-sub">—</small>
+            </div>
+            <div class="kpi">
+              <dt>BTC dominance</dt>
+              <dd id="kpi-dominance">—</dd>
+              <small id="kpi-dominance-sub">—</small>
+            </div>
+          </dl>
+        </section>
+
+        <section class="card trending-card">
+          <div class="card-head">
+            <h2>Trending</h2>
+            <span class="card-note" id="trending-note">CoinGecko</span>
+          </div>
+          <ol class="trending-list" id="trending-list"></ol>
+        </section>
+
+        <section class="card focus-card" id="focus-card">
+          <div class="card-head">
+            <h2>Focus</h2>
+            <span class="card-note" id="focus-note">selection</span>
+          </div>
+          <div class="focus-empty" id="focus-empty">
+            <p>Select a column, a trending coin, or a market row.</p>
+          </div>
+          <div class="focus-body" id="focus-body" hidden>
+            <div class="focus-ident">
+              <span class="coin-avatar" id="focus-avatar" aria-hidden="true">—</span>
+              <div>
+                <strong id="focus-name">—</strong>
+                <small id="focus-symbol">—</small>
+              </div>
+              <span class="trend-badge" id="focus-trend" hidden>HOT</span>
+            </div>
+            <div class="focus-price">
+              <strong id="focus-price">—</strong>
+              <span id="focus-change">—</span>
+            </div>
+            <canvas id="coin-chart" role="img" aria-label="Selected coin price history"></canvas>
+            <dl class="focus-stats">
+              <div><dt>Rank</dt><dd id="focus-rank">—</dd></div>
+              <div><dt>Market cap</dt><dd id="focus-cap">—</dd></div>
+              <div><dt>Volume 24h</dt><dd id="focus-vol">—</dd></div>
+              <div><dt>Updated</dt><dd id="focus-updated">—</dd></div>
+            </dl>
+          </div>
+        </section>
+      </aside>
+
+      <section class="board" aria-label="Market board">
+        <div class="board-head">
+          <div>
+            <h2>Market board</h2>
+            <p id="board-count">Loading coins…</p>
+          </div>
+          <div class="board-tools">
+            <div class="segmented" id="filter-group" role="group" aria-label="Coin filter">
+              <button type="button" data-filter="all" class="is-active">All</button>
+              <button type="button" data-filter="gainers">Gainers</button>
+              <button type="button" data-filter="losers">Losers</button>
+              <button type="button" data-filter="trending">Trending</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="coin-table" id="coin-table">
+            <thead>
+              <tr>
+                <th scope="col" class="col-rank" aria-sort="ascending"><button type="button" data-sort="market_rank">#</button></th>
+                <th scope="col"><button type="button" data-sort="name">Coin</button></th>
+                <th scope="col" class="num"><button type="button" data-sort="price">Price</button></th>
+                <th scope="col" class="num"><button type="button" data-sort="change_24h">24h</button></th>
+                <th scope="col" class="num"><button type="button" data-sort="market_cap">Market cap</button></th>
+                <th scope="col" class="num hide-sm"><button type="button" data-sort="volume_24h">Volume</button></th>
+                <th scope="col" class="hide-sm"><button type="button" data-sort="trending_rank">Signal</button></th>
+              </tr>
+            </thead>
+            <tbody id="coin-rows"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="empty-state" hidden>
+          <strong>No coins match this filter</strong>
+          <p>Clear the search or switch back to All.</p>
+          <button class="btn-primary" type="button" id="btn-empty-reset">Reset filters</button>
+        </div>
+      </section>
+
+      <footer class="site-foot">
+        <p>CoinGecko public API → Kafka <code>crypto-market</code> → Databricks Delta → GitHub Pages. No API key, no Databricks token in the browser.</p>
+        <p class="muted">Crypto prices are informational, not investment advice. Data may lag the live exchange tick by a few minutes.</p>
+      </footer>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="help-dialog" id="help-dialog">
+    <form method="dialog" class="help-head">
+      <div>
+        <h2>VoltScope Crypto</h2>
+        <p>Live 3D crypto market intelligence</p>
+      </div>
+      <button class="icon-btn" value="close" aria-label="Close help">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </form>
+    <div class="help-body">
+      <div class="help-grid">
+        <div>
+          <h3>Read the scene</h3>
+          <ul>
+            <li><b>Height</b> is the selected metric. Market cap and volume use a square-root scale; price uses a log scale.</li>
+            <li><b>Colour</b> follows 24h change by default: green gains, red losses, gold trending.</li>
+            <li><b>Labels</b> show the ticker and 24h change. The gold ring marks a trending coin.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Interact</h3>
+          <ul>
+            <li>Drag to orbit, scroll to zoom, right-drag to pan.</li>
+            <li>Click a column, table row, or trending coin to focus it.</li>
+            <li>Use the metric switch to re-scale every column.</li>
+            <li>Search and the All / Gainers / Losers / Trending filters narrow the market board.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Shortcuts</h3>
+          <ul class="shortcuts">
+            <li><kbd>/</kbd> Search</li>
+            <li><span class="keys"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span> Cameras</li>
+            <li><kbd>R</kbd> Refresh</li>
+            <li><kbd>L</kbd> Auto refresh</li>
+            <li><kbd>T</kbd> Theme</li>
+            <li><kbd>Esc</kbd> Clear focus</li>
+            <li><kbd>?</kbd> This panel</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Data path</h3>
+          <p>CoinGecko public API → <code>producer_crypto.py</code> → Kafka → Databricks stream → Delta table → SQL Statement API → static JSON on Pages.</p>
+          <p class="help-small">The keyless CoinGecko endpoints supply top coins by market cap and the trending list. The page falls back to a clearly labelled demo snapshot when no export exists.</p>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="boot" id="boot">
+    <div class="boot-inner">
+      <span class="boot-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="34" height="34"><path d="M18 3 8 18h7l-2 11 11-16h-7z" fill="currentColor"/></svg>
+      </span>
+      <p class="boot-title">VoltScope Crypto</p>
+      <p class="boot-sub" id="boot-sub">Loading market snapshot…</p>
+      <span class="boot-bar"><i></i></span>
+    </div>
+  </div>
+
+  <noscript>
+    <div class="noscript">VoltScope Crypto needs JavaScript and WebGL. The market board still needs JavaScript to render.</div>
+  </noscript>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./assets/vendor/three/three.module.js",
+      "three/addons/": "./assets/vendor/three/addons/"
+    }
+  }
+  </script>
+  <script type="module" src="assets/js/crypto.js?v=20261031-1"></script>
+  <script>
+    setTimeout(function () {
+      var boot = document.getElementById('boot');
+      if (boot && !boot.classList.contains('is-done')) {
+        boot.dataset.state = 'error';
+        var sub = document.getElementById('boot-sub');
+        if (sub) sub.textContent = 'Dashboard assets did not load. Check the console and reload.';
+      }
+    }, 15000);
+  </script>
+</body>
+</html>
