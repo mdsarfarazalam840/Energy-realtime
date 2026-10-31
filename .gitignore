@@ -13,3 +13,4 @@ opencode.json
 .dev.vars
 .dev.vars.*
 .wrangler/
+node_modules/
