@@ -136,7 +136,7 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 
 ## Architecture
 
-The system has four boundaries: market data sources, GitHub Actions automation, the Databricks lakehouse, and the public static site. An optional Cloudflare Worker adds shared presence outside those boundaries. The primary path runs left to right; the live lane adds freshness, and the serving path wraps back to the browser.
+The system has four boundaries: market data sources, GitHub Actions automation, the Databricks lakehouse, and the public static site. An optional Cloudflare Worker adds shared presence outside those boundaries. The primary path runs left to right; the live lane adds freshness, and the serving path wraps back to the browser. Alongside the energy dashboard, Pages also serves the Crypto, Finance, and Tech Pulse dashboards from the same static JSON model.
 
 ```mermaid
 flowchart LR
@@ -205,6 +205,9 @@ The interactive diagram is generated from [`docs/diagrams/specs/architecture.jso
 | Live exporter | `scripts/export_live_data.py` | Publish the newest six hours as `docs/data/live.json` |
 | Static site | `docs/` | GitHub Pages dashboard, diagram gallery, and JSON artifacts |
 | Browser app | `docs/assets/js/` | Three.js scene, date picker, filters, charts, replay, live merge, URL state |
+| Crypto dashboard | `producer_crypto.py`, `scripts/export_crypto_data.py` | CoinGecko public API → Kafka → Databricks → `docs/data/crypto.json` → `crypto.html` |
+| Finance dashboard | `scripts/export_edgar_data.py` | SEC EDGAR company facts and submissions → `docs/data/finance.json` → `finance.html` |
+| Tech Pulse | `scripts/cache_hn.mjs` | Hacker News top stories → `docs/data/tech-news.json` → `tech.html` |
 | Presence relay | `workers/live/` | Optional Cloudflare Worker for shared viewer count and an optional `/api/live` path |
 | Secrets | GitHub Actions + Databricks secret scope | Keep Kafka and Databricks credentials outside the browser |
 
@@ -241,7 +244,7 @@ node archify/bin/archify.mjs finalize dataflow docs/diagrams/specs/dataflow.json
 
 ## Data flow
 
-The exporter is the hinge between the private lakehouse and the public web. It does not expose the warehouse; it materializes a small, versioned artifact.
+The exporter is the hinge between the private lakehouse and the public web. It does not expose the warehouse; it materializes a small, versioned artifact. The same static-publication model is used by the Crypto, Finance, and Tech Pulse dashboards, each writing its own JSON to `docs/data/` for GitHub Pages to serve.
 
 ```mermaid
 sequenceDiagram

@@ -6,7 +6,7 @@
     "subtitle": "Market feeds to a public 3D dashboard, with a five-minute live tail and a presence relay",
     "output": "docs/diagrams/architecture.html",
     "quality_profile": "showcase",
-    "viewBox": [1240, 720],
+    "viewBox": [1240, 740],
     "views": [
       {
         "id": "ingest-path",
@@ -56,7 +56,10 @@
     { "id": "relay", "type": "cloud", "label": "Presence relay", "sublabel": "Cloudflare Worker · per-room", "pos": [270, 520], "size": [180, 64], "tag": "/ws?room=<page>" },
 
     { "id": "pages", "type": "cloud", "label": "GitHub Pages", "sublabel": "static hosting", "pos": [270, 400], "size": [180, 64], "tag": "main · /docs" },
-    { "id": "browser", "type": "frontend", "label": "VoltScope", "sublabel": "Three.js dashboard", "pos": [40, 480], "size": [170, 80], "tag": "polls 60 s" }
+    { "id": "browser", "type": "frontend", "label": "VoltScope", "sublabel": "Three.js dashboard", "pos": [40, 480], "size": [170, 80], "tag": "polls 60 s" },
+    { "id": "crypto-dash", "type": "frontend", "label": "Crypto dashboard", "sublabel": "CoinGecko → crypto.json", "pos": [1040, 560], "size": [170, 48], "tag": "crypto.html" },
+    { "id": "finance-dash", "type": "frontend", "label": "Finance dashboard", "sublabel": "SEC EDGAR → finance.json", "pos": [1040, 620], "size": [170, 48], "tag": "finance.html" },
+    { "id": "tech-dash", "type": "frontend", "label": "Tech Pulse", "sublabel": "Hacker News → tech-news.json", "pos": [1040, 680], "size": [170, 48], "tag": "tech.html" }
   ],
   "boundaries": [
     { "kind": "region", "label": "GitHub Actions", "wraps": ["producer", "live-producer"], "pad": 24 },
@@ -77,6 +80,9 @@
     { "id": "exporter-to-shards", "from": "exporter", "to": "shards", "label": "commit", "variant": "emphasis" },
     { "id": "shards-to-pages", "from": "shards", "to": "pages", "label": "build", "variant": "default" },
     { "id": "pages-to-browser", "from": "pages", "to": "browser", "label": "HTTPS", "variant": "default" },
+    { "id": "pages-to-crypto", "from": "pages", "to": "crypto-dash", "label": "static JSON", "variant": "default" },
+    { "id": "pages-to-finance", "from": "pages", "to": "finance-dash", "label": "static JSON", "variant": "default" },
+    { "id": "pages-to-tech", "from": "pages", "to": "tech-dash", "label": "static JSON", "variant": "default" },
 
     { "id": "warehouse-to-live-export", "from": "warehouse", "to": "live-export", "label": "statement", "variant": "default", "fromSide": "bottom", "toSide": "top" },
     { "id": "live-export-to-live-json", "from": "live-export", "to": "live-json", "label": "commit", "variant": "emphasis" },

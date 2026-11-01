@@ -152,9 +152,9 @@
   <div class="rule"></div>
 
   <div class="diagram-wrap">
-    <svg viewBox="0 0 1440 360" role="img" aria-labelledby="pipeline-title pipeline-desc" xmlns="http://www.w3.org/2000/svg">
-      <title id="pipeline-title">VoltScope energy price pipeline</title>
-      <desc id="pipeline-desc">AEMO, ENTSO-E, and Elecz feed a GitHub Actions producer, which publishes to Aiven Kafka. A Databricks stream appends to a Delta table. A SQL exporter commits schema v2 day shards, which GitHub Pages serves to the VoltScope browser. A second five-minute lane writes a small live.json tail, and an optional relay carries shared presence.</desc>
+    <svg viewBox="0 0 1440 420" role="img" aria-labelledby="pipeline-title pipeline-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="pipeline-title">VoltScope data pipeline</title>
+      <desc id="pipeline-desc">AEMO, ENTSO-E, and Elecz feed a GitHub Actions producer, which publishes to Aiven Kafka. A Databricks stream appends to a Delta table. A SQL exporter commits schema v2 day shards, which GitHub Pages serves to the VoltScope browser. A second five-minute lane writes a small live.json tail, and an optional relay carries shared presence. CoinGecko crypto, SEC EDGAR finance, and Hacker News tech are additional dashboards served from the same static JSON on Pages.</desc>
       <defs>
         <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#62676f"/>
@@ -243,14 +243,31 @@
         <text x="1286" y="196" font-family="Geist Mono, Consolas, monospace" font-size="8" fill="#62676f">merges live points</text>
       </g>
 
+      <!-- additional dashboards served from the same static JSON on Pages -->
+      <text x="40" y="256" font-family="Geist Mono, Consolas, monospace" font-size="7" fill="#9a9ea6" letter-spacing="0.14em">ADDITIONAL DASHBOARDS</text>
+      <rect x="40" y="268" width="400" height="44" rx="6" fill="#fffdf8" stroke="#d9d4ca" stroke-width="1"/>
+      <text x="54" y="286" font-family="Geist Mono, Consolas, monospace" font-size="7" fill="#9a9ea6" letter-spacing="0.12em">CRYPTO DASHBOARD</text>
+      <text x="54" y="298" font-size="12" font-weight="600" fill="#22262e">CoinGecko → crypto.json</text>
+      <text x="54" y="310" font-family="Geist Mono, Consolas, monospace" font-size="6.5" fill="#62676f">crypto.html · per-room presence</text>
+
+      <rect x="460" y="268" width="420" height="44" rx="6" fill="#fffdf8" stroke="#d9d4ca" stroke-width="1"/>
+      <text x="474" y="286" font-family="Geist Mono, Consolas, monospace" font-size="7" fill="#9a9ea6" letter-spacing="0.12em">FINANCE DASHBOARD</text>
+      <text x="474" y="298" font-size="12" font-weight="600" fill="#22262e">SEC EDGAR → finance.json</text>
+      <text x="474" y="310" font-family="Geist Mono, Consolas, monospace" font-size="6.5" fill="#62676f">finance.html · per-room presence</text>
+
+      <rect x="900" y="268" width="440" height="44" rx="6" fill="#fffdf8" stroke="#d9d4ca" stroke-width="1"/>
+      <text x="914" y="286" font-family="Geist Mono, Consolas, monospace" font-size="7" fill="#9a9ea6" letter-spacing="0.12em">TECH PULSE</text>
+      <text x="914" y="298" font-size="12" font-weight="600" fill="#22262e">Hacker News → tech-news.json</text>
+      <text x="914" y="310" font-family="Geist Mono, Consolas, monospace" font-size="6.5" fill="#62676f">tech.html · per-room presence</text>
+
       <!-- secondary freshness rail -->
-      <line x1="40" y1="264" x2="1400" y2="264" stroke="#d9d4ca" stroke-width="1"/>
-      <text x="40" y="288" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#9a9ea6" letter-spacing="0.12em">FAST LANE</text>
-      <text x="112" y="288" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#62676f">5-MIN PRODUCER &rarr; KAFKA &rarr; DATABRICKS &rarr; live.json &rarr; 12-SECOND MERGE</text>
-      <text x="40" y="310" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#9a9ea6" letter-spacing="0.12em">PRESENCE</text>
-      <text x="112" y="310" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#62676f">OPTIONAL CLOUDFLARE WORKER &middot; WEBSOCKET /ws &middot; STATIC FALLBACK LABELS THIS TAB ONLY</text>
-      <text x="40" y="332" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#9a9ea6" letter-spacing="0.12em">TRUST</text>
-      <text x="112" y="332" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#62676f">KAFKA AND DATABRICKS CREDENTIALS NEVER ENTER THE BROWSER &middot; PAGES SERVES STATIC FILES ONLY</text>
+      <line x1="40" y1="330" x2="1400" y2="330" stroke="#d9d4ca" stroke-width="1"/>
+      <text x="40" y="350" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#9a9ea6" letter-spacing="0.12em">FAST LANE</text>
+      <text x="112" y="350" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#62676f">5-MIN PRODUCER &rarr; KAFKA &rarr; DATABRICKS &rarr; live.json &rarr; 12-SECOND MERGE</text>
+      <text x="40" y="368" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#9a9ea6" letter-spacing="0.12em">PRESENCE</text>
+      <text x="112" y="368" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#62676f">OPTIONAL CLOUDFLARE WORKER &middot; WEBSOCKET /ws &middot; STATIC FALLBACK LABELS THIS TAB ONLY</text>
+      <text x="40" y="386" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#9a9ea6" letter-spacing="0.12em">TRUST</text>
+      <text x="112" y="386" font-family="Geist Mono, Consolas, monospace" font-size="7.5" fill="#62676f">KAFKA AND DATABRICKS CREDENTIALS NEVER ENTER THE BROWSER &middot; PAGES SERVES STATIC FILES ONLY</text>
 
       <line x1="40" y1="248" x2="40" y2="256" stroke="#d9d4ca" stroke-width="1"/>
       <line x1="1400" y1="248" x2="1400" y2="256" stroke="#d9d4ca" stroke-width="1"/>

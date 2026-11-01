@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "receiptId": "3ff1358a-259b-412c-a8e2-bfbc8c1bfcf9",
+  "receiptId": "11f03687-b30f-4eaa-b486-0008329fb761",
   "status": "current",
   "command": "deliver",
   "type": "architecture",
   "input": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\specs\\architecture.json",
   "output": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\architecture.html",
   "specification": {
-    "sha256": "553f8108822ea28927d0b3d74ec5379e5494532c9341c8d0213a53c64d72acda",
-    "bytes": 7412
+    "sha256": "3ef3aadb49c8ec2622829e2907dd15cf12321973f5012bccba972aa1885bea44",
+    "bytes": 8400
   },
   "artifact": {
-    "sha256": "cc251126b3f27717e1ff4b9a9dc89a3c2e241c1cba65a4d897cad28a00baec1a",
-    "bytes": 870064
+    "sha256": "c1dae78d1c7c4ac89d998e8233600a4c180448f62848f3631ac52b7ff37a3a15",
+    "bytes": 875195
   }
 }

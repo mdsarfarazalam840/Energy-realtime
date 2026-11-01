@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "architecture",
   "quality": "showcase",
-  "startedAt": "2026-11-01T14:29:11.213Z",
+  "startedAt": "2026-11-01T17:01:32.581Z",
   "specification": {
     "path": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\specs\\architecture.json",
-    "sha256": "553f8108822ea28927d0b3d74ec5379e5494532c9341c8d0213a53c64d72acda",
-    "bytes": 7412
+    "sha256": "3ef3aadb49c8ec2622829e2907dd15cf12321973f5012bccba972aa1885bea44",
+    "bytes": 8400
   },
   "artifact": {
     "path": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\architecture.html",
-    "sha256": "cc251126b3f27717e1ff4b9a9dc89a3c2e241c1cba65a4d897cad28a00baec1a",
-    "bytes": 870064
+    "sha256": "c1dae78d1c7c4ac89d998e8233600a4c180448f62848f3631ac52b7ff37a3a15",
+    "bytes": 875195
   },
   "stages": {
     "validate": {
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "553f8108822ea28927d0b3d74ec5379e5494532c9341c8d0213a53c64d72acda",
-          "bytes": 7412
+          "sha256": "3ef3aadb49c8ec2622829e2907dd15cf12321973f5012bccba972aa1885bea44",
+          "bytes": 8400
         },
         "validation": {
           "checksPassed": 9,
@@ -54,7 +54,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1612,
+      "durationMs": 1739,
       "command": [
         "C:\\nvm4w\\nodejs\\node.exe",
         "C:\\Users\\kekeb\\AppData\\Local\\Temp\\archify\\archify\\bin\\archify.mjs",
@@ -68,19 +68,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "3ff1358a-259b-412c-a8e2-bfbc8c1bfcf9",
+        "receiptId": "11f03687-b30f-4eaa-b486-0008329fb761",
         "ok": true,
         "command": "deliver",
         "type": "architecture",
         "input": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\specs\\architecture.json",
         "output": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\architecture.html",
         "specification": {
-          "sha256": "553f8108822ea28927d0b3d74ec5379e5494532c9341c8d0213a53c64d72acda",
-          "bytes": 7412
+          "sha256": "3ef3aadb49c8ec2622829e2907dd15cf12321973f5012bccba972aa1885bea44",
+          "bytes": 8400
         },
         "artifact": {
-          "sha256": "cc251126b3f27717e1ff4b9a9dc89a3c2e241c1cba65a4d897cad28a00baec1a",
-          "bytes": 870064
+          "sha256": "c1dae78d1c7c4ac89d998e8233600a4c180448f62848f3631ac52b7ff37a3a15",
+          "bytes": 875195
         },
         "validation": {
           "checksPassed": 9,
@@ -106,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 656,
+      "durationMs": 668,
       "command": [
         "C:\\nvm4w\\nodejs\\node.exe",
         "C:\\Users\\kekeb\\AppData\\Local\\Temp\\archify\\archify\\bin\\archify.mjs",
@@ -118,8 +118,8 @@
         "ok": true,
         "file": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\architecture.html",
         "artifact": {
-          "sha256": "cc251126b3f27717e1ff4b9a9dc89a3c2e241c1cba65a4d897cad28a00baec1a",
-          "bytes": 870064
+          "sha256": "c1dae78d1c7c4ac89d998e8233600a4c180448f62848f3631ac52b7ff37a3a15",
+          "bytes": 875195
         },
         "checks": [
           {
@@ -180,22 +180,22 @@
           },
           "metrics": {
             "properCrossings": 0,
-            "resolvedCrossovers": 0,
+            "resolvedCrossovers": 4,
             "ambiguousCorridors": 0,
             "arrowheadCollisions": 0,
             "containerBorderRuns": 0,
             "labelRouteClearanceIssues": 0,
             "labelCanvasOverflowIssues": 0,
-            "minLabelRouteClearance": 14,
+            "minLabelRouteClearance": 5,
             "desktopReadabilityIssues": 0,
             "viewportHeightIssues": 0,
             "minProjectedNodeTextPx": 6,
-            "maxBends": 4,
+            "maxBends": 3,
             "routesOverSuggestedBends": 1,
             "maxStretch": 1.229,
             "routesOverSuggestedStretch": 0,
             "minSegmentPx": 16,
-            "minInteriorSegmentPx": 16,
+            "minInteriorSegmentPx": 33,
             "shortSegmentCount": 0,
             "shortEndpointSegmentCount": 0,
             "shortInteriorSegmentCount": 0,
@@ -208,19 +208,119 @@
             "microSegmentPx": 8
           },
           "routeReview": {
-            "crossings": [],
-            "detours": [
+            "crossings": [
               {
-                "relationship": {
+                "left": {
+                  "id": "pages-to-crypto",
+                  "from": "pages",
+                  "to": "crypto-dash",
+                  "label": "static JSON",
+                  "collectionIndex": 12,
+                  "artifactIndex": 13
+                },
+                "right": {
+                  "id": "warehouse-to-live-export",
+                  "from": "warehouse",
+                  "to": "live-export",
+                  "label": "statement",
+                  "collectionIndex": 15,
+                  "artifactIndex": 16
+                },
+                "point": [
+                  1010,
+                  416
+                ]
+              },
+              {
+                "left": {
+                  "id": "pages-to-finance",
+                  "from": "pages",
+                  "to": "finance-dash",
+                  "label": "static JSON",
+                  "collectionIndex": 13,
+                  "artifactIndex": 14
+                },
+                "right": {
+                  "id": "pages-to-tech",
+                  "from": "pages",
+                  "to": "tech-dash",
+                  "label": "static JSON",
+                  "collectionIndex": 14,
+                  "artifactIndex": 15
+                },
+                "point": [
+                  474,
+                  488
+                ],
+                "sharedNode": "pages"
+              },
+              {
+                "left": {
+                  "id": "pages-to-finance",
+                  "from": "pages",
+                  "to": "finance-dash",
+                  "label": "static JSON",
+                  "collectionIndex": 13,
+                  "artifactIndex": 14
+                },
+                "right": {
+                  "id": "warehouse-to-live-export",
+                  "from": "warehouse",
+                  "to": "live-export",
+                  "label": "statement",
+                  "collectionIndex": 15,
+                  "artifactIndex": 16
+                },
+                "point": [
+                  785,
+                  488
+                ]
+              },
+              {
+                "left": {
+                  "id": "pages-to-tech",
+                  "from": "pages",
+                  "to": "tech-dash",
+                  "label": "static JSON",
+                  "collectionIndex": 14,
+                  "artifactIndex": 15
+                },
+                "right": {
                   "id": "live-json-to-browser",
                   "from": "live-json",
                   "to": "browser",
                   "label": "newest points",
-                  "collectionIndex": 14,
-                  "artifactIndex": 15
+                  "collectionIndex": 17,
+                  "artifactIndex": 18
                 },
-                "bends": 4,
-                "stretch": 1.106
+                "point": [
+                  474,
+                  588
+                ]
+              }
+            ],
+            "crowdedSides": [
+              {
+                "node": "pages",
+                "label": "GitHub Pages",
+                "side": "right",
+                "relationships": 4,
+                "sidePx": 64,
+                "neededPx": 74
+              }
+            ],
+            "detours": [
+              {
+                "relationship": {
+                  "id": "pages-to-finance",
+                  "from": "pages",
+                  "to": "finance-dash",
+                  "label": "static JSON",
+                  "collectionIndex": 13,
+                  "artifactIndex": 14
+                },
+                "bends": 3,
+                "stretch": 1
               }
             ]
           },
@@ -246,18 +346,18 @@
             },
             "minimumSourceTextPx": 8,
             "minimumProjectedTextPx": 6,
-            "semanticTextCount": 54
+            "semanticTextCount": 63
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "3ff1358a-259b-412c-a8e2-bfbc8c1bfcf9"
+        "deliveryReceiptId": "11f03687-b30f-4eaa-b486-0008329fb761"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 9380,
+      "durationMs": 5906,
       "command": [
         "C:\\nvm4w\\nodejs\\node.exe",
         "C:\\Users\\kekeb\\AppData\\Local\\Temp\\archify\\archify\\bin\\archify.mjs",
@@ -275,11 +375,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "3ff1358a-259b-412c-a8e2-bfbc8c1bfcf9",
+        "deliveryReceiptId": "11f03687-b30f-4eaa-b486-0008329fb761",
         "artifact": {
           "path": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\architecture.html",
-          "sha256": "cc251126b3f27717e1ff4b9a9dc89a3c2e241c1cba65a4d897cad28a00baec1a",
-          "bytes": 870064
+          "sha256": "c1dae78d1c7c4ac89d998e8233600a4c180448f62848f3631ac52b7ff37a3a15",
+          "bytes": 875195
         },
         "state": {
           "detail": "read",
@@ -312,20 +412,20 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1271,
-              "diagramWidth": 1241,
+              "readerWidth": 1237,
+              "diagramWidth": 1207,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 78,
                 "diagramChromePx": 78,
-                "svgPx": 721,
+                "svgPx": 720,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
-              "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
-              "minimumProjectedEdgeTextPx": 8,
+              "minimumProjectedNodeTextPx": 7.787096774193548,
+              "minimumProjectedNonEdgeTextPx": 8.760483870967741,
+              "minimumProjectedEdgeTextPx": 7.787096774193548,
               "minimumProjectedNodeText": "dispatch",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
@@ -336,7 +436,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -366,15 +466,15 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1329,
-              "diagramWidth": 1299,
+              "readerWidth": 1294,
+              "diagramWidth": 1264,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
                 "svgPx": 754,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
               "minimumProjectedNodeTextPx": 8,
@@ -390,7 +490,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -420,15 +520,15 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1467,
-              "diagramWidth": 1437,
+              "readerWidth": 1428,
+              "diagramWidth": 1398,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
                 "svgPx": 834,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
               "minimumProjectedNodeTextPx": 8,
@@ -444,7 +544,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -474,15 +574,15 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1869,
-              "diagramWidth": 1819,
+              "readerWidth": 1820,
+              "diagramWidth": 1770,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 94,
                 "diagramChromePx": 94,
                 "svgPx": 1056,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
               "minimumProjectedNodeTextPx": 8,
@@ -498,7 +598,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -581,20 +681,20 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1271,
-              "diagramWidth": 1241,
+              "readerWidth": 1237,
+              "diagramWidth": 1207,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 78,
                 "diagramChromePx": 78,
-                "svgPx": 721,
+                "svgPx": 720,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
-              "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
-              "minimumProjectedEdgeTextPx": 8,
+              "minimumProjectedNodeTextPx": 7.787096774193548,
+              "minimumProjectedNonEdgeTextPx": 8.760483870967741,
+              "minimumProjectedEdgeTextPx": 7.787096774193548,
               "minimumProjectedNodeText": "dispatch",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
@@ -605,7 +705,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -635,15 +735,15 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1329,
-              "diagramWidth": 1299,
+              "readerWidth": 1294,
+              "diagramWidth": 1264,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
                 "svgPx": 754,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
               "minimumProjectedNodeTextPx": 8,
@@ -659,7 +759,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -689,15 +789,15 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1467,
-              "diagramWidth": 1437,
+              "readerWidth": 1428,
+              "diagramWidth": 1398,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
                 "svgPx": 834,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
               "minimumProjectedNodeTextPx": 8,
@@ -713,7 +813,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -743,15 +843,15 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1869,
-              "diagramWidth": 1819,
+              "readerWidth": 1820,
+              "diagramWidth": 1770,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 94,
                 "diagramChromePx": 94,
                 "svgPx": 1056,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
               "minimumProjectedNodeTextPx": 8,
@@ -767,7 +867,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -802,20 +902,20 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1271,
-              "diagramWidth": 1241,
+              "readerWidth": 1237,
+              "diagramWidth": 1207,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 78,
                 "diagramChromePx": 78,
-                "svgPx": 721,
+                "svgPx": 720,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
-              "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
-              "minimumProjectedEdgeTextPx": 8,
+              "minimumProjectedNodeTextPx": 7.787096774193548,
+              "minimumProjectedNonEdgeTextPx": 8.760483870967741,
+              "minimumProjectedEdgeTextPx": 7.787096774193548,
               "minimumProjectedNodeText": "dispatch",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
@@ -826,7 +926,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -856,15 +956,15 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1329,
-              "diagramWidth": 1299,
+              "readerWidth": 1294,
+              "diagramWidth": 1264,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
                 "svgPx": 754,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
               "minimumProjectedNodeTextPx": 8,
@@ -880,7 +980,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -910,15 +1010,15 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1467,
-              "diagramWidth": 1437,
+              "readerWidth": 1428,
+              "diagramWidth": 1398,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
                 "svgPx": 834,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
               "minimumProjectedNodeTextPx": 8,
@@ -934,7 +1034,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -964,15 +1064,15 @@
               "diagramType": "architecture",
               "documentScrollUnclipped": true,
               "ok": true,
-              "readerWidth": 1869,
-              "diagramWidth": 1819,
+              "readerWidth": 1820,
+              "diagramWidth": 1770,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 94,
                 "diagramChromePx": 94,
                 "svgPx": 1056,
                 "cardsPx": 0,
-                "viewBoxHeight": 720
+                "viewBoxHeight": 740
               },
               "viewBoxWidth": 1240,
               "minimumProjectedNodeTextPx": 8,
@@ -988,7 +1088,7 @@
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
-              "hasLegend": true,
+              "hasLegend": false,
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
@@ -1025,15 +1125,15 @@
     "browserCheckReceipt": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\architecture.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-01T14:29:25.323Z",
-  "durationMs": 14109,
+  "finishedAt": "2026-11-01T17:01:42.548Z",
+  "durationMs": 9967,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
     "checkedAt": "2026-11-01T14:29:11.920Z",
-    "source": "network",
+    "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   }
