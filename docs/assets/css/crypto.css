@@ -177,6 +177,16 @@ button { cursor: pointer; }
   font-size: 0.78rem;
   color: var(--muted);
   white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 1;
+  max-width: 46%;
+}
+.status-text,
+.status-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .status-dot {
