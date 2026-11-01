@@ -67,6 +67,8 @@ function initScene() {
     });
     const loading = $("scene-loading");
     if (loading) loading.classList.add("is-done");
+    const fallback = $("scene-fallback");
+    if (fallback) fallback.hidden = true;
   } catch (error) {
     console.warn("3D scene unavailable", error);
     const loading = $("scene-loading");
