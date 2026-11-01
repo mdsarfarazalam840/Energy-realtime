@@ -1,0 +1,24 @@
+{
+  "cik": "1",
+  "name": "ALPHA CORP",
+  "sic": "3571",
+  "sicDescription": "Electronic Computers",
+  "exchanges": ["Nasdaq"],
+  "stateOfIncorporation": "DE",
+  "fiscalYearEnd": "1231",
+  "filings": {
+    "recent": {
+      "accessionNumber": [
+        "0000000001-26-000001",
+        "0000000001-26-000002",
+        "0000000001-26-000003",
+        "0000000001-26-000004"
+      ],
+      "form": ["10-K", "4", "8-K", "10-Q"],
+      "filingDate": ["2026-02-10", "2026-01-02", "2026-03-01", "2026-05-04"],
+      "reportDate": ["2025-12-31", "2026-01-02", "2026-02-28", "2026-03-31"],
+      "primaryDocument": ["aaa-20251231.htm", "form4.xml", "aaa-8k.htm", "aaa-10q.htm"],
+      "items": ["", "", "2.02,9.01", ""]
+    }
+  }
+}

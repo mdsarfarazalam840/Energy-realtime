@@ -9,6 +9,8 @@ on:
       - "docs/**"
       - "scripts/dashboard_shards.py"
       - "scripts/export_dashboard_data.py"
+      - "scripts/export_edgar_data.py"
+      - "fixtures/edgar/**"
       - "tests/load/**"
       - ".github/workflows/dashboard-quality.yml"
   # No push trigger: merging to main must not start the load and user tests.
@@ -84,6 +86,20 @@ jobs:
       - name: Generate 80k stress snapshot
         run: python tests/load/generate_snapshot.py --points 80000 --zones 49 --out tests/load/data/energy-80k.json
 
+      - name: Validate the SEC EDGAR snapshot contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("docs/data/finance.json").read_text())
+          assert data["schema_version"] == 1
+          assert data["meta"]["company_count"] == len(data["companies"]) >= 10
+          assert data["meta"]["filing_count"] == len(data["filings"]) >= 50
+          tickers = {company["ticker"] for company in data["companies"]}
+          assert all(filing["ticker"] in tickers for filing in data["filings"])
+          print(f"finance snapshot ok: {len(tickers)} filers, {len(data['filings'])} filings")
+          PY
+
       - name: Start local origin
         run: |
           node tests/load/serve_docs.mjs --root docs --port 8000 --workers 2 &
@@ -98,6 +114,9 @@ jobs:
 
       - name: User journey and 80k stress audit
         run: python tests/load/ui_audit.py --snapshot tests/load/data/energy-80k.json --label ci-80k --soak 3 --out tests/load/results/ui-ci.json
+
+      - name: SEC EDGAR finance page end-to-end test
+        run: python tests/load/finance_ui.py
 
       - name: Upload reports
         if: always()

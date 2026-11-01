@@ -1,0 +1,262 @@
+{
+  "generated_at": "2026-11-01T07:29:53Z",
+  "checks": [
+    {
+      "name": "page title mentions EDGAR",
+      "ok": true,
+      "detail": "VoltScope Finance \u2014 SEC EDGAR Deep Dive"
+    },
+    {
+      "name": "status reports a live snapshot",
+      "ok": true,
+      "detail": "Live SEC snapshot"
+    },
+    {
+      "name": "snapshot KPIs are populated",
+      "ok": true,
+      "detail": "24 | 237 | $5.0T | +23.4%"
+    },
+    {
+      "name": "company KPI matches the export",
+      "ok": true,
+      "detail": "24"
+    },
+    {
+      "name": "every company renders in the board",
+      "ok": true,
+      "detail": "24 rows"
+    },
+    {
+      "name": "board count summarises the snapshot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "filing stream renders rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "focus chart paints bars",
+      "ok": true,
+      "detail": "26750 painted pixels"
+    },
+    {
+      "name": "chart exposes an accessible summary",
+      "ok": true,
+      "detail": "Amazon.com, Inc. revenue and net income, 8 periods. Latest FY2025: revenue $717B, net inco"
+    },
+    {
+      "name": "focus panel renders eight facts",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "focus panel names a company",
+      "ok": true,
+      "detail": "AMZN \u00b7 Amazon.com, Inc."
+    },
+    {
+      "name": "focus filings list is populated",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "search narrows the board",
+      "ok": true,
+      "detail": "['AAPL']"
+    },
+    {
+      "name": "clearing search restores every row",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "revenue header toggles sort direction",
+      "ok": true,
+      "detail": "descending -> ascending"
+    },
+    {
+      "name": "sector filter narrows to one sector",
+      "ok": true,
+      "detail": "Retail: 4 rows"
+    },
+    {
+      "name": "clear filters restores the board",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "10-K filter keeps only 10-K filings",
+      "ok": true,
+      "detail": "10-K"
+    },
+    {
+      "name": "10-K filter still shows eligible companies",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "row click focuses the company",
+      "ok": true,
+      "detail": "XOM"
+    },
+    {
+      "name": "selection writes the ticker to the URL",
+      "ok": true,
+      "detail": "http://127.0.0.1:55369/finance.html?ticker=XOM"
+    },
+    {
+      "name": "selected row is marked",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "focus filings belong to the selected company",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "quarterly toggle updates the chart note",
+      "ok": true,
+      "detail": "latest quarters \u00b7 USD"
+    },
+    {
+      "name": "quarterly chart still paints or explains its gap",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "theme button flips the theme",
+      "ok": true,
+      "detail": "dark -> light"
+    },
+    {
+      "name": "T shortcut flips the theme back",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "help dialog opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Escape closes the help dialog",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Escape clears the selection",
+      "ok": true,
+      "detail": "http://127.0.0.1:55369/finance.html"
+    },
+    {
+      "name": "share copies or shows a link",
+      "ok": true,
+      "detail": "Link copied to clipboard"
+    },
+    {
+      "name": "refresh completes without leaving the live state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console or page errors on the live page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "direct ticker link focuses that company",
+      "ok": true,
+      "detail": "MSFT"
+    },
+    {
+      "name": "direct link loads the right company name",
+      "ok": true,
+      "detail": "Microsoft Corp."
+    },
+    {
+      "name": "mobile board renders every company",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile layout has no horizontal overflow",
+      "ok": true,
+      "detail": "0px"
+    },
+    {
+      "name": "mobile chart still paints",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console or page errors on mobile",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo: status switches to demo",
+      "ok": true,
+      "detail": "demo"
+    },
+    {
+      "name": "demo: demo company board renders",
+      "ok": true,
+      "detail": "10 rows"
+    },
+    {
+      "name": "demo: demo chart paints",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo: no console or page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo fallback uses its own company set",
+      "ok": true,
+      "detail": "10 vs 24"
+    },
+    {
+      "name": "corrupt: status switches to demo",
+      "ok": true,
+      "detail": "demo"
+    },
+    {
+      "name": "corrupt: demo company board renders",
+      "ok": true,
+      "detail": "10 rows"
+    },
+    {
+      "name": "corrupt: demo chart paints",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "corrupt: no console or page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "energy page links to finance",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "crypto page links to finance",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finance page links back to energy",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "passed": 51,
+  "failed": 0
+}

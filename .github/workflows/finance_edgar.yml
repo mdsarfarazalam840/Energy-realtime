@@ -1,0 +1,115 @@
+name: Publish SEC EDGAR Snapshot
+
+# EDGAR needs no API key. The exporter identifies itself in the User-Agent and
+# reads the public submissions and company-facts endpoints below 10 requests
+# per second, so the job stays a polite scheduled client.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-finance-edgar
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SEC_USER_AGENT: ${{ vars.SEC_USER_AGENT || 'VoltScope Research voltscope@example.com' }}
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Export SEC EDGAR snapshot
+        run: python scripts/export_edgar_data.py --out docs/data/finance.json
+
+      - name: Validate the finance snapshot contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(Path("docs/data/finance.json").read_text())
+          assert data["schema_version"] == 1
+          assert len(data["companies"]) >= 10, "too few companies"
+          assert len(data["filings"]) >= 50, "too few filings"
+          tickers = {company["ticker"] for company in data["companies"]}
+          assert all(filing["ticker"] in tickers for filing in data["filings"])
+          assert data["meta"]["company_count"] == len(data["companies"])
+          assert data["meta"]["filing_count"] == len(data["filings"])
+          print(f"finance snapshot ok: {len(tickers)} filers, {len(data['filings'])} filings")
+          PY
+
+      - name: Commit snapshot when the payload changed
+        id: commit
+        run: |
+          set -euo pipefail
+          # generated_at moves on every run. Compare the payload only so an
+          # unchanged EDGAR history does not trigger a Pages rebuild.
+          changed=$(python - <<'PY'
+          import json, subprocess
+
+          PATH = "docs/data/finance.json"
+
+          def normalize(doc):
+              doc = dict(doc)
+              doc.pop("generated_at", None)
+              return doc
+
+          try:
+              old = json.loads(subprocess.check_output(["git", "show", f"HEAD:{PATH}"], stderr=subprocess.DEVNULL))
+          except Exception:
+              old = None
+          new = json.load(open(PATH, encoding="utf-8"))
+          print("true" if old is None or normalize(old) != normalize(new) else "false")
+          PY
+          )
+          if [ "$changed" != "true" ]; then
+            git checkout -- docs/data/finance.json 2>/dev/null || true
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "SEC snapshot is unchanged."
+            exit 0
+          fi
+          git add docs/data/finance.json
+          companies=$(python -c "import json;print(json.load(open('docs/data/finance.json'))['meta']['company_count'])")
+          filings=$(python -c "import json;print(json.load(open('docs/data/finance.json'))['meta']['filing_count'])")
+          git config user.name "voltscope-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): publish SEC EDGAR snapshot (${companies} filers, ${filings} filings) [skip ci]"
+          for attempt in 1 2 3; do
+            git pull --rebase --autostash origin main && git push origin HEAD:main && break
+            echo "push attempt ${attempt} failed; retrying"
+            sleep 5
+          done
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## VoltScope Finance snapshot"
+            echo ""
+            if [ -f docs/data/finance.json ]; then
+              echo "- Filers: **$(jq -r '.meta.company_count' docs/data/finance.json)**"
+              echo "- Filings: **$(jq -r '.meta.filing_count' docs/data/finance.json)**"
+              echo "- Latest filing: \`$(jq -r '.meta.latest_filed' docs/data/finance.json)\`"
+              echo "- Published: \`$(jq -r '.generated_at' docs/data/finance.json)\`"
+            else
+              echo "No snapshot was written."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

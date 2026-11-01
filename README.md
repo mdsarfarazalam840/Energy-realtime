@@ -72,6 +72,8 @@ The repository started from the Databricks **default-python** Declarative Automa
 | Surface | URL | What it shows |
 |---|---|---|
 | Dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/> | Live 3D price surface, filters, replay, distribution |
+| Crypto dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/crypto.html> | Live 3D crypto market board, trending, focus chart |
+| Finance dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/finance.html> | SEC EDGAR filings, annual and quarterly financial facts, sector exposure |
 | Diagram gallery | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/> | All system diagrams in one place |
 | System architecture | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html> | Interactive runtime topology and trust boundary |
 | Energy data flow | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html> | Interactive lineage from feeds to browser |
