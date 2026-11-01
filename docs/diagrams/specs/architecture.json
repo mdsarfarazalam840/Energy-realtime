@@ -24,7 +24,7 @@
         "id": "live-path",
         "label": "Live path",
         "focus": ["live-producer", "kafka", "warehouse", "live-export", "live-json", "relay", "browser"],
-        "note": "A five-minute lane appends live.json, and the relay supplies shared presence over a WebSocket."
+        "note": "A five-minute lane appends live.json, and the relay supplies shared per-page presence over WebSocket; each page joins its own room."
       },
       {
         "id": "trust-boundary",
@@ -53,7 +53,7 @@
 
     { "id": "live-export", "type": "backend", "label": "Live export", "sublabel": "live.json tail", "pos": [700, 500], "size": [170, 64], "tag": "6 h · 2k rows" },
     { "id": "live-json", "type": "database", "label": "live.json", "sublabel": "newest readings", "pos": [500, 500], "size": [150, 64], "tag": "polled every 12 s" },
-    { "id": "relay", "type": "cloud", "label": "Presence relay", "sublabel": "Cloudflare Worker", "pos": [270, 520], "size": [180, 64], "tag": "WebSocket /ws" },
+    { "id": "relay", "type": "cloud", "label": "Presence relay", "sublabel": "Cloudflare Worker · per-room", "pos": [270, 520], "size": [180, 64], "tag": "/ws?room=<page>" },
 
     { "id": "pages", "type": "cloud", "label": "GitHub Pages", "sublabel": "static hosting", "pos": [270, 400], "size": [180, 64], "tag": "main · /docs" },
     { "id": "browser", "type": "frontend", "label": "VoltScope", "sublabel": "Three.js dashboard", "pos": [40, 480], "size": [170, 80], "tag": "polls 60 s" }

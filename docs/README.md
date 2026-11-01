@@ -99,8 +99,10 @@ hours (2000 rows max) and is committed only when it changes.
 
 For true realtime, deploy the optional relay in `../workers/live`. It adds a
 WebSocket presence count and a `/api/live` endpoint backed by a 20-second cache.
-Set its URL in `data/live-config.json`; with an empty URL the page stays on the
-static path and labels presence as this tab only.
+Each page joins its own presence room (`energy`, `crypto`, `finance`, `tech`),
+so the live counter is unique to the page you are on. Set the relay URL in
+`data/live-config.json`; with an empty URL the page stays on the static path and
+labels presence as this tab only.
 
 The exporter publishes the manifest and the day shards together. The manifest
 is small (dates, row counts, time bounds) and is revalidated every 60 seconds;
@@ -233,8 +235,8 @@ manifest and the newest day are revalidated.
 - Replay animates the session; `Space` toggles it.
 - Camera presets: `1` overview, `2` profile, `3` top.
 - `F` focuses a pinned column, `R` refreshes, `L` toggles auto refresh.
-- **Live now** counts people on the dashboard (relay) and shows the last live
-  push. Without a relay it counts this tab and says so.
+- **Live now** counts people on this dashboard (relay, per-room) and shows the
+  last live push. Without a relay it counts this tab and says so.
 - The live lane merges the newest Databricks readings every 12 seconds without
   resetting filters, the brush, or the replay playhead.
 - Window baseline trims the vertical axis to the session range; Zero baseline

@@ -10,6 +10,7 @@ import {
   relativeAge,
   storyTone,
 } from "./tech-data.js?v=20261104-1";
+import { initLiveCounter } from "./live-counter.js?v=20261105-1";
 
 const REFRESH_MS = 300000;
 const SEARCH_RADIX = 36;
@@ -486,6 +487,7 @@ function init() {
   applyTheme(saved);
   initScene();
   bindEvents();
+  initLiveCounter({ room: "tech" });
   loadStories();
 }
 

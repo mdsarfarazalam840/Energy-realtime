@@ -37,7 +37,7 @@ import {
 } from "./data.js?v=20261029-5";
 import { createDemoSnapshot } from "./demo.js?v=20261029-5";
 import { TimelineChart, DistributionChart } from "./charts.js?v=20261029-5";
-import { loadLiveConfig, createLiveFeed, createPresence } from "./live.js?v=20261029-8";
+import { loadLiveConfig, createLiveFeed, createPresence } from "./live.js?v=20261105-1";
 
 const RANGES = {
   "6h": 6 * 3600 * 1000,
@@ -365,6 +365,7 @@ async function initLive() {
   const config = await loadLiveConfig();
   state.liveConfig = config;
   state.presenceFeed = createPresence(config, {
+    room: "energy",
     onUpdate: (presence) => {
       state.presence = presence;
       updateLiveUi();

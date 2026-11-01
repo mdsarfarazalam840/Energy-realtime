@@ -74,6 +74,7 @@ The repository started from the Databricks **default-python** Declarative Automa
 | Dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/> | Live 3D price surface, filters, replay, distribution |
 | Crypto dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/crypto.html> | Live 3D crypto market board, trending, focus chart |
 | Finance dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/finance.html> | SEC EDGAR filings, annual and quarterly financial facts, sector exposure |
+| Tech Pulse | <https://mdsaifedu.eu.cc/Energy-realtime/tech.html> | Hacker News top headlines in a 3D hologram feed |
 | Diagram gallery | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/> | All system diagrams in one place |
 | System architecture | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html> | Interactive runtime topology and trust boundary |
 | Energy data flow | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html> | Interactive lineage from feeds to browser |
@@ -107,7 +108,7 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 - **Raw vs indexed mode** so feeds with different price levels can be compared by shape.
 - **Shareable URL hash** captures filters, country, zone, date range, baseline, series mode, and camera.
 - **Auto refresh** every 60 seconds; `L` toggles it.
-- **Live now presence**: a real count of people viewing the dashboard, pushed over a WebSocket by the optional relay. Without a relay the card says the count is this tab only.
+- **Live now presence** on every dashboard: a real count of people viewing *that page* right now, scoped per page by a relay room. Each page joins its own room (energy, crypto, finance, tech), so the counter it shows is unique to that page; without a relay the chip says "1 here" — this tab only.
 - **Realtime live lane**: a five-minute GitHub Action publishes the newest Databricks rows to `docs/data/live.json`; the scene merges them into the current view without reloading history. With the optional relay the same data arrives in about 15 seconds.
 - **Live freshness labels**: the live card shows transport (`realtime` or `5-min lane`), newest push, and the age of the newest Databricks reading.
 - **Theme toggle** with a persisted dark/light preference.
@@ -1033,7 +1034,7 @@ The dashboard is a single static page. All state lives in the browser and, when 
 | Exporter logs `table returned no usable price rows` | Empty table or all rows invalid | Run the producer and Databricks job; inspect the table |
 | Snapshot unchanged | Payload identical after normalization | Expected; the workflow skips the commit |
 | Dashboard shows demo data | Snapshot missing, empty, or invalid JSON | Run the exporter; validate the JSON |
-| Live card says `1 here` | No relay URL in `docs/data/live-config.json` | Expected without the Worker; deploy `workers/live` for shared presence |
+| Live card says `1 here` | Relay not reachable or `live-config.json` has `enabled: false` | The Worker is deployed at `https://voltscope-live.md-sarfarazalam840.workers.dev`; each page joins its own room (`energy`, `crypto`, `finance`, `tech`) so the counter is per-page. Without a relay the chip counts this tab only. |
 | Live card says `warming` | `live_feed.yml` has not published `live.json` yet | Run **Live Databricks Feed** manually once |
 | Live card data is minutes old | GitHub cron drift or a slow Databricks run | Check the live workflow; deploy the relay for a 20-second path |
 | Dashboard is stale | Pages build pending or browser cache | Wait for Pages, hard reload, check the workflow |
@@ -1187,6 +1188,22 @@ Repeat for `dataflow.html` and, with `--window-size=1440,1000`, `pipeline.html`.
 
 The publish workflow commits `docs/data/energy.json`, `docs/data/index.json`, the day shards, and `docs/data/live.json` with `[skip ci]`, which prevents an artifact commit from retriggering the workflow. It compares the normalized payload and skips the commit when only timestamps or query timings changed.
 
+### Live relay (Cloudflare Worker)
+
+The shared presence counter runs as a Cloudflare Worker (`workers/live`). Every page joins its own presence room — `energy`, `crypto`, `finance`, `tech` — through `/ws?room=...` and `/api/presence?room=...`, and the worker gives each room its own Durable Object so the live counters are independent.
+
+```bash
+cd workers/live
+wrangler login                       # one-time, OAuth
+wrangler kv namespace create LIVE_CACHE   # one-time; copy the id into wrangler.toml
+wrangler secret put DATABRICKS_HOST       # optional, for /api/live
+wrangler secret put DATABRICKS_TOKEN      # optional, dedicated read-only token
+wrangler secret put DATABRICKS_WAREHOUSE_ID
+wrangler deploy
+```
+
+The current deployment is `https://voltscope-live.md-sarfarazalam840.workers.dev`. Per-page presence is active: each page joins its own room (`energy`, `crypto`, `finance`, `tech`) through `/ws?room=...` and `/api/presence?room=...`, backed by a separate Durable Object per room. `/api/live` returns `502` until the three `DATABRICKS_*` Worker secrets are set; until then the page reads points from `data/live.json` (the `live_url` fallback), which is the documented configuration in `docs/data/live-config.json`.
+
 ### Databricks bundle
 
 ```bash
@@ -1222,7 +1239,7 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 - **Delta writes are append-only.** There is no `MERGE` deduplication in the table; duplicates are removed only when the snapshot is built.
 - **The public history is capped.** The exporter defaults to 30 days and 80,000 rows. Older rows remain in Delta but are not published.
 - **Realtime is layered, not absolute.** The static path polls a committed `live.json`; freshness depends on a five-minute GitHub cron that can drift. The relay can add a 20-second `/api/live` cache, but the current deployment serves presence only and reads points from `data/live.json`.
-- **Presence needs the relay.** GitHub Pages cannot count visitors. Without `workers/live`, the card counts this tab only and says so. Do not read that number as an audience metric.
+- **Presence needs the relay.** GitHub Pages cannot count visitors. The relay is deployed at `https://voltscope-live.md-sarfarazalam840.workers.dev`, so each page now keeps its own room-based counter (`energy`, `crypto`, `finance`, `tech`); do not read one page's number as a site-wide audience metric. Without the relay the chip counts this tab only and says so.
 - **Only the newest day changes.** Completed UTC-day shards are immutable, so a late-arriving row for a past day needs a full shard rebuild, not an in-place merge.
 - **The live lane runs the Databricks job every five minutes.** That increases warehouse and job cost versus the 30-minute path. Lower the cron or disable `live_feed.yml` if the budget is tight; the site falls back to the 60-second snapshot.
 - **The template tests are not pipeline tests.** `sample_taxis_test.py` exercises Databricks Connect, not the energy contract.

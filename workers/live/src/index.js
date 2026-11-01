@@ -408,7 +408,10 @@ export default {
       }
 
       if (url.pathname === "/ws" || url.pathname === "/api/presence") {
-        const stub = env.PRESENCE.get(env.PRESENCE.idFromName("global"));
+        const room = (url.searchParams.get("room") || "global").replace(/[^a-zA-Z0-9_-]/g, "") || "global";
+        // Each room (page) gets its own Durable Object, so the live counter is
+        // unique per page rather than global across every dashboard.
+        const stub = env.PRESENCE.get(env.PRESENCE.idFromName(room));
         const target = new URL(request.url);
         if (url.pathname === "/api/presence") target.pathname = "/snapshot";
         return stub.fetch(new Request(target, request));
