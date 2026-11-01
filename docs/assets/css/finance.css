@@ -282,3 +282,9 @@ body {
   letter-spacing: 0.04em;
   font-family: var(--mono);
 }
+
+/* ---------- Finance 3D stage ---------- */
+.fin-stage { grid-area: auto; margin-bottom: 14px; }
+.finance-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.fin-stage .coin-tooltip .tt-row { display: flex; justify-content: space-between; gap: 14px; margin-top: 3px; color: var(--muted); }
+.fin-stage .coin-tooltip .tt-price { margin-top: 4px; font-family: var(--mono); font-size: 0.9rem; }

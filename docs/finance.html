@@ -115,6 +115,46 @@
       </aside>
 
       <div class="fin-col fin-center">
+        <section class="stage-panel fin-stage" aria-label="3D financial scene">
+          <div class="scene" id="scene">
+            <div class="scene-loading" id="scene-loading">
+              <span class="loader" aria-hidden="true"></span>
+              <p>Building the 3D scene…</p>
+            </div>
+            <div class="scene-fallback" id="scene-fallback" hidden>
+              <strong>3D view unavailable</strong>
+              <p>WebGL is blocked in this browser. The company board and deep-dive chart below still work.</p>
+            </div>
+            <div class="coin-tooltip" id="fin-tooltip" hidden></div>
+          </div>
+
+          <div class="scene-tools">
+            <div class="segmented" id="metric-group" role="group" aria-label="Column height metric">
+              <button type="button" data-metric="revenue" class="is-active">Revenue</button>
+              <button type="button" data-metric="net_income">Net income</button>
+              <button type="button" data-metric="net_margin">Margin</button>
+              <button type="button" data-metric="return_on_equity">ROE</button>
+              <button type="button" data-metric="revenue_growth">Growth</button>
+            </div>
+          </div>
+
+          <div class="camera-tools" role="group" aria-label="Camera presets">
+            <button type="button" data-cam="overview" class="is-active" title="Overview camera (1)">Overview</button>
+            <button type="button" data-cam="close" title="Close camera (2)">Close</button>
+            <button type="button" data-cam="top" title="Top camera (3)">Top</button>
+            <button type="button" id="btn-spin" class="spin-btn" aria-pressed="true" title="Toggle auto orbit">Orbit</button>
+          </div>
+
+          <div class="scene-legend">
+            <span class="legend-label" id="legend-label">Height: revenue · colour: sector</span>
+            <div class="legend-row">
+              <i class="legend-swatch hot"></i><span>Sector colour</span>
+            </div>
+          </div>
+
+          <p class="scene-hint" id="scene-hint">Drag to orbit · Scroll to zoom · Click a column to inspect</p>
+        </section>
+
         <section class="card focus-card" id="focus-card">
           <div class="fin-focus-head">
             <span class="coin-avatar fin-ticker" id="focus-ticker" aria-hidden="true">—</span>
@@ -277,7 +317,15 @@
     <div class="noscript">VoltScope Finance needs JavaScript to render filings and financial facts.</div>
   </noscript>
 
-  <script type="module" src="assets/js/finance.js?v=20261101-3"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "./assets/vendor/three/three.module.js",
+        "three/addons/": "./assets/vendor/three/addons/"
+      }
+    }
+  </script>
+<script type="module" src="assets/js/finance.js?v=20261101-3"></script>
   <script>
     setTimeout(function () {
       var boot = document.getElementById('boot');

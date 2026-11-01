@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-01T07:29:53Z",
+  "generated_at": "2026-11-01T12:19:39Z",
   "checks": [
     {
       "name": "page title mentions EDGAR",
@@ -14,17 +14,17 @@
     {
       "name": "snapshot KPIs are populated",
       "ok": true,
-      "detail": "24 | 237 | $5.0T | +23.4%"
+      "detail": "27 | 267 | $5.1T | +22.8%"
     },
     {
       "name": "company KPI matches the export",
       "ok": true,
-      "detail": "24"
+      "detail": "27"
     },
     {
       "name": "every company renders in the board",
       "ok": true,
-      "detail": "24 rows"
+      "detail": "27 rows"
     },
     {
       "name": "board count summarises the snapshot",
@@ -104,7 +104,7 @@
     {
       "name": "selection writes the ticker to the URL",
       "ok": true,
-      "detail": "http://127.0.0.1:55369/finance.html?ticker=XOM"
+      "detail": "http://127.0.0.1:50854/finance.html?ticker=XOM"
     },
     {
       "name": "selected row is marked",
@@ -123,6 +123,41 @@
     },
     {
       "name": "quarterly chart still paints or explains its gap",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "3D scene creates a WebGL canvas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "3D scene canvas has size",
+      "ok": true,
+      "detail": "{'w': 794, 'h': 574, 'cw': 794, 'ch': 574}"
+    },
+    {
+      "name": "scene loading overlay clears",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "scene legend defaults to revenue height",
+      "ok": true,
+      "detail": "HEIGHT: REVENUE \u00b7 COLOUR: SECTOR"
+    },
+    {
+      "name": "metric switch updates scene legend",
+      "ok": true,
+      "detail": "HEIGHT: NET INCOME \u00b7 COLOUR: SECTOR"
+    },
+    {
+      "name": "metric button shows active state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "scene camera presets keep the canvas alive",
       "ok": true,
       "detail": ""
     },
@@ -149,7 +184,7 @@
     {
       "name": "Escape clears the selection",
       "ok": true,
-      "detail": "http://127.0.0.1:55369/finance.html"
+      "detail": "http://127.0.0.1:50854/finance.html"
     },
     {
       "name": "share copies or shows a link",
@@ -219,7 +254,7 @@
     {
       "name": "demo fallback uses its own company set",
       "ok": true,
-      "detail": "10 vs 24"
+      "detail": "10 vs 27"
     },
     {
       "name": "corrupt: status switches to demo",
@@ -257,6 +292,6 @@
       "detail": ""
     }
   ],
-  "passed": 51,
+  "passed": 58,
   "failed": 0
 }

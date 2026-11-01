@@ -139,6 +139,32 @@ def collect_errors(page: Page, *, ignore_network: bool = False) -> list[str]:
     return errors
 
 
+
+def run_scene_checks(page: Page) -> None:
+    canvas = page.locator("#scene canvas.finance-canvas")
+    check("3D scene creates a WebGL canvas", canvas.count() == 1)
+    if canvas.count():
+        size = canvas.first.evaluate("(c) => ({ w: c.width, h: c.height, cw: c.clientWidth, ch: c.clientHeight })")
+        check("3D scene canvas has size", size['w'] > 0 and size['h'] > 0 and size['cw'] > 0 and size['ch'] > 0, str(size))
+    check("scene loading overlay clears", page.locator("#scene-loading").count() == 0 or page.locator("#scene-loading.is-done").count() == 1)
+    legend = page.locator("#legend-label").inner_text()
+    check("scene legend defaults to revenue height", "revenue" in legend.lower(), legend)
+
+    page.click("#metric-group button[data-metric='net_income']")
+    page.wait_for_timeout(200)
+    legend2 = page.locator("#legend-label").inner_text()
+    check("metric switch updates scene legend", "net income" in legend2.lower(), legend2)
+    check("metric button shows active state", page.locator("#metric-group button[data-metric='net_income']").evaluate("(el) => el.classList.contains('is-active')"))
+
+    page.click("#metric-group button[data-metric='revenue']")
+    page.wait_for_timeout(150)
+    page.click(".camera-tools button[data-cam='overview']")
+    page.wait_for_timeout(150)
+    page.click(".camera-tools button[data-cam='top']")
+    page.wait_for_timeout(200)
+    page.click(".camera-tools button[data-cam='overview']")
+    page.wait_for_timeout(150)
+    check("scene camera presets keep the canvas alive", canvas.count() == 1)
 def run_desktop(browser, url: str, expected_companies: int) -> None:
     print("\n[desktop] live snapshot")
     context = browser.new_context(viewport=DESKTOP, permissions=["clipboard-read", "clipboard-write"])
@@ -225,6 +251,8 @@ def run_desktop(browser, url: str, expected_companies: int) -> None:
     check("quarterly chart still paints or explains its gap", canvas_pixels(page) > 100 or "No annual" in page.locator("#fin-chart").get_attribute("aria-label"))
     page.click("#series-group button[data-series='annual']")
     page.wait_for_timeout(120)
+
+    run_scene_checks(page)
 
     print("\n[desktop] chrome and shortcuts")
     theme_before = page.evaluate("() => document.documentElement.dataset.theme")
