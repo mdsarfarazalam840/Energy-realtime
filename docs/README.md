@@ -20,6 +20,39 @@ The interactive diagrams are generated from `diagrams/specs/*.json` with
 Archify. See [`diagrams/README.md`](diagrams/README.md) for regeneration and
 screenshot commands.
 
+## Finance page (SEC EDGAR)
+
+`finance.html` is a deep-dive panel over U.S. SEC EDGAR filings and XBRL
+company facts. It needs no API key: the exporter reads the public
+`company_tickers.json`, `submissions`, and `companyfacts` endpoints, identifies
+itself in the User-Agent, and stays below SEC's 10 requests per second.
+
+```bash
+export SEC_USER_AGENT="Your app name contact@example.com"
+python scripts/export_edgar_data.py --out docs/data/finance.json
+```
+
+Useful flags: `--tickers AAPL,MSFT,NVDA` limits the universe, `--years 8`
+sets the annual history depth, and `--dry-run` prints the summary without
+writing. `.github/workflows/finance_edgar.yml` refreshes the snapshot every six
+hours and commits it only when the payload changes.
+
+`data/finance.json` (schema 1) holds `companies`, `filings`, and `meta`.
+Each company carries `series` (`revenue`, `net_income`, `assets`, `equity`,
+`eps`, `cash`, `operating_cash_flow`) as `[fiscal_year, value]` rows, the
+latest annual `latest` facts, `ratios` (`net_margin`, `return_on_equity`,
+`liability_ratio`, `revenue_growth`), and recent `quarterly_revenue` /
+`quarterly_net_income`. Each filing carries `form`, `filed`, `accession`,
+`document`, and the `sec.gov` archive `url`. Filers with no XBRL facts yet
+render dashes instead of guessed numbers.
+
+Tests:
+
+```bash
+uv run pytest tests/test_edgar_export.py   # exporter, fixtures, published contract
+python tests/load/finance_ui.py            # Playwright end-to-end page test
+```
+
 ## How the data reaches the page
 
 ```

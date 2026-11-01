@@ -1,0 +1,19 @@
+{
+  "cik": "2",
+  "name": "BETA INDUSTRIES INC",
+  "sic": "2080",
+  "sicDescription": "Beverages",
+  "exchanges": ["NYSE"],
+  "stateOfIncorporation": "NJ",
+  "fiscalYearEnd": "1231",
+  "filings": {
+    "recent": {
+      "accessionNumber": ["0000000002-26-000001", "0000000002-26-000002"],
+      "form": ["10-Q", "DEF 14A"],
+      "filingDate": ["2026-04-20", "2026-03-15"],
+      "reportDate": ["2026-03-31", "2026-03-15"],
+      "primaryDocument": ["bbb-10q.htm", "bbb-proxy.htm"],
+      "items": ["", ""]
+    }
+  }
+}

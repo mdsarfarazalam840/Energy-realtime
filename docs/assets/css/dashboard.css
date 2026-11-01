@@ -1511,6 +1511,34 @@ kbd {
   .icon-btn { width: 30px; }
 }
 
+/* Below ~500px the header controls cannot share one row with the brand, so
+   the actions wrap to a second row instead of widening the page. */
+@media (max-width: 520px) {
+  :root { --header-h: 78px; }
+  .topbar {
+    flex-wrap: wrap;
+    align-content: center;
+    row-gap: 4px;
+    padding: 4px 8px;
+  }
+  .topbar-actions {
+    flex: 1 0 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 420px) {
+  .topbar-actions { gap: 2px; }
+  #live-chip { display: none; }
+}
+
+@media (max-width: 340px) {
+  .chip-link { padding: 0 7px; }
+  .icon-btn { width: 28px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .001ms !important;

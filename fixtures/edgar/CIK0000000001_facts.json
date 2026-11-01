@@ -1,0 +1,162 @@
+{
+  "cik": 1,
+  "entityName": "ALPHA CORP",
+  "facts": {
+    "us-gaap": {
+      "Revenues": {
+        "label": "Revenues",
+        "units": {
+          "USD": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 100000000000,
+              "accn": "0000000001-25-000001",
+              "fy": 2024,
+              "fp": "FY",
+              "form": "10-K",
+              "filed": "2025-02-10",
+              "frame": "CY2024"
+            },
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 101000000000,
+              "accn": "0000000001-26-000001",
+              "fy": 2025,
+              "fp": "FY",
+              "form": "10-K",
+              "filed": "2026-02-10",
+              "frame": "CY2024"
+            },
+            {
+              "start": "2025-01-01",
+              "end": "2025-12-31",
+              "val": 120000000000,
+              "accn": "0000000001-26-000001",
+              "fy": 2025,
+              "fp": "FY",
+              "form": "10-K",
+              "filed": "2026-02-10",
+              "frame": "CY2025"
+            },
+            {
+              "start": "2025-01-01",
+              "end": "2025-03-31",
+              "val": 20000000000,
+              "accn": "0000000001-26-000001",
+              "fy": 2025,
+              "fp": "FY",
+              "form": "10-K",
+              "filed": "2026-02-10",
+              "frame": "CY2025Q1"
+            },
+            {
+              "start": "2026-01-01",
+              "end": "2026-03-31",
+              "val": 26000000000,
+              "accn": "0000000001-26-000004",
+              "fy": 2026,
+              "fp": "Q1",
+              "form": "10-Q",
+              "filed": "2026-05-04",
+              "frame": "CY2026Q1"
+            }
+          ]
+        }
+      },
+      "RevenueFromContractWithCustomerExcludingAssessedTax": {
+        "label": "Revenue from contract with customer",
+        "units": {
+          "USD": [
+            {
+              "start": "2023-01-01",
+              "end": "2023-12-31",
+              "val": 90000000000,
+              "accn": "0000000001-25-000001",
+              "fy": 2024,
+              "fp": "FY",
+              "form": "10-K",
+              "filed": "2025-02-10",
+              "frame": "CY2023"
+            }
+          ]
+        }
+      },
+      "NetIncomeLoss": {
+        "label": "Net income",
+        "units": {
+          "USD": [
+            {
+              "start": "2024-01-01",
+              "end": "2024-12-31",
+              "val": 10000000000,
+              "fy": 2024,
+              "fp": "FY",
+              "form": "10-K",
+              "filed": "2025-02-10"
+            },
+            {
+              "start": "2025-01-01",
+              "end": "2025-12-31",
+              "val": 12000000000,
+              "fy": 2025,
+              "fp": "FY",
+              "form": "10-K",
+              "filed": "2026-02-10"
+            }
+          ]
+        }
+      },
+      "Assets": {
+        "label": "Assets",
+        "units": {
+          "USD": [
+            { "end": "2024-12-31", "val": 200000000000, "fy": 2024, "fp": "FY", "form": "10-K", "filed": "2025-02-10" },
+            { "end": "2025-12-31", "val": 210000000000, "fy": 2025, "fp": "FY", "form": "10-K", "filed": "2026-02-10" }
+          ]
+        }
+      },
+      "StockholdersEquity": {
+        "label": "Stockholders equity",
+        "units": {
+          "USD": [
+            { "end": "2025-12-31", "val": 55000000000, "fy": 2025, "fp": "FY", "form": "10-K", "filed": "2026-02-10" }
+          ]
+        }
+      },
+      "EarningsPerShareDiluted": {
+        "label": "Diluted EPS",
+        "units": {
+          "USD/shares": [
+            {
+              "start": "2025-01-01",
+              "end": "2025-12-31",
+              "val": 4.0,
+              "fy": 2025,
+              "fp": "FY",
+              "form": "10-K",
+              "filed": "2026-02-10"
+            }
+          ]
+        }
+      },
+      "NetCashProvidedByUsedInOperatingActivities": {
+        "label": "Operating cash flow",
+        "units": {
+          "USD": [
+            {
+              "start": "2025-01-01",
+              "end": "2025-12-31",
+              "val": 15000000000,
+              "fy": 2025,
+              "fp": "FY",
+              "form": "10-K",
+              "filed": "2026-02-10"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
