@@ -1,0 +1,43 @@
+name: Cache Hacker News Snapshot
+
+# Fail-Safe Cache for the Tech Pulse widget: periodically fetch the latest
+# Hacker News top stories and commit a compact snapshot to
+# docs/data/tech-news.json. The static page falls back to this committed cache
+# if the live API is unreachable, so the widget keeps showing real (not demo)
+# headlines.
+
+on:
+  schedule:
+    # Every 30 minutes, offset from the energy/crypto publish jobs.
+    - cron: "19,49 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch and write Hacker News cache
+        run: node scripts/cache_hn.mjs
+
+      - name: Commit changed cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet docs/data/tech-news.json; then
+            echo "Hacker News cache unchanged; skipping commit."
+          else
+            git add docs/data/tech-news.json
+            git commit -m "chore: update Hacker News cache [skip ci]"
+            git push
+          fi

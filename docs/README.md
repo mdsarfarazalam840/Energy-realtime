@@ -20,6 +20,14 @@ The interactive diagrams are generated from `diagrams/specs/*.json` with
 Archify. See [`diagrams/README.md`](diagrams/README.md) for regeneration and
 screenshot commands.
 
+## Tech Pulse page (Hacker News)
+
+`tech.html` is a futuristic 3D "hacker screen" feed of the latest Hacker News
+headlines. It pulls top stories at runtime from the public Hacker News Firebase
+API (no key needed). If the network is unreachable it falls back to a bundled
+demo headline set so the dashboard never stalls. The page is tested end-to-end
+by `tests/load/tech_ui.py`.
+
 ## Finance page (SEC EDGAR)
 
 `finance.html` is a deep-dive panel over U.S. SEC EDGAR filings and XBRL

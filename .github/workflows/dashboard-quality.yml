@@ -117,6 +117,8 @@ jobs:
 
       - name: SEC EDGAR finance page end-to-end test
         run: python tests/load/finance_ui.py
+      - name: Hacker News tech pulse page end-to-end test
+        run: python tests/load/tech_ui.py
 
       - name: Upload reports
         if: always()
