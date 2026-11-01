@@ -1,0 +1,177 @@
+{
+  "generated_at": "2026-11-01T13:41:58Z",
+  "checks": [
+    {
+      "name": "page title mentions Tech Pulse",
+      "ok": true,
+      "detail": "VoltScope Tech Pulse \u2014 Hacker News Headlines"
+    },
+    {
+      "name": "status reports a live feed",
+      "ok": true,
+      "detail": "Hacker News live"
+    },
+    {
+      "name": "feed KPIs are populated",
+      "ok": true,
+      "detail": "10 | 482 | example.com | 1.1k"
+    },
+    {
+      "name": "stories KPI matches the stub",
+      "ok": true,
+      "detail": "10"
+    },
+    {
+      "name": "every story renders in the board",
+      "ok": true,
+      "detail": "10 rows"
+    },
+    {
+      "name": "board count summarises the feed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "3D scene creates a WebGL canvas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "clicking a story selects it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "focus panel shows the selected story",
+      "ok": true,
+      "detail": "Diffusion LLMs are very fast\nexample.com \u2197\n\nby mdsaif \u00b7 5m ago\n\nSCORE\n\u25b2 1.2k\nCOM"
+    },
+    {
+      "name": "camera preset keeps the canvas alive",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console or page errors on the live page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "score sort renders score badges",
+      "ok": true,
+      "detail": "10 badges"
+    },
+    {
+      "name": "theme shortcut toggles theme",
+      "ok": true,
+      "detail": "light"
+    },
+    {
+      "name": "theme toggles back to dark",
+      "ok": true,
+      "detail": "dark"
+    },
+    {
+      "name": "mobile board renders every story",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile layout has no horizontal overflow",
+      "ok": true,
+      "detail": "0px"
+    },
+    {
+      "name": "no console or page errors on mobile",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo: demo headline board renders",
+      "ok": true,
+      "detail": "32 rows"
+    },
+    {
+      "name": "demo: status reports demo",
+      "ok": true,
+      "detail": "Demo Hacker News feed"
+    },
+    {
+      "name": "demo: demo KPIs populated",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo: 3D scene still boots on demo data",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo: no console or page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo fallback renders a full board",
+      "ok": true,
+      "detail": "32 rows"
+    },
+    {
+      "name": "cache: headline board renders from cache",
+      "ok": true,
+      "detail": "60 rows"
+    },
+    {
+      "name": "cache: status reports cached",
+      "ok": true,
+      "detail": "hacker news cached"
+    },
+    {
+      "name": "cache: status is not demo",
+      "ok": true,
+      "detail": "hacker news cached"
+    },
+    {
+      "name": "cache: KPIs populated",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cache: 3D scene boots on cached data",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cache: no console or page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cache fallback renders a full board",
+      "ok": true,
+      "detail": "60 rows"
+    },
+    {
+      "name": "energy page links to tech",
+      "ok": true,
+      "detail": "index.html"
+    },
+    {
+      "name": "crypto page links to tech",
+      "ok": true,
+      "detail": "crypto.html"
+    },
+    {
+      "name": "finance page links to tech",
+      "ok": true,
+      "detail": "finance.html"
+    },
+    {
+      "name": "tech page links back to energy",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "passed": 34,
+  "failed": 0
+}
