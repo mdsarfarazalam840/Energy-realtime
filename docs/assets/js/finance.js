@@ -45,7 +45,19 @@ let toastTimer = 0;
 /* ---------- 3D scene ---------- */
 function initScene() {
   const container = $("scene");
-  if (!container) return;
+  if (!container) {
+    const loading = $("scene-loading");
+    if (loading) loading.classList.add("is-done");
+    return;
+  }
+  // Safety net: never leave the "Building the 3D scene" overlay up,
+  // even if WebGL context creation hangs or the scene throws late.
+  window.setTimeout(() => {
+    const loading = $("scene-loading");
+    if (loading && !loading.classList.contains("is-done")) {
+      loading.classList.add("is-done");
+    }
+  }, 8000);
   try {
     state.scene = new FinanceScene(container, {
       onHover: (company, event) => {

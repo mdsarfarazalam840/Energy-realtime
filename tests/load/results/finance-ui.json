@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-01T12:19:39Z",
+  "generated_at": "2026-11-01T12:32:18Z",
   "checks": [
     {
       "name": "page title mentions EDGAR",
@@ -104,7 +104,7 @@
     {
       "name": "selection writes the ticker to the URL",
       "ok": true,
-      "detail": "http://127.0.0.1:50854/finance.html?ticker=XOM"
+      "detail": "http://127.0.0.1:51013/finance.html?ticker=XOM"
     },
     {
       "name": "selected row is marked",
@@ -184,7 +184,7 @@
     {
       "name": "Escape clears the selection",
       "ok": true,
-      "detail": "http://127.0.0.1:50854/finance.html"
+      "detail": "http://127.0.0.1:51013/finance.html"
     },
     {
       "name": "share copies or shows a link",
