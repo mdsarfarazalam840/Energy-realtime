@@ -12,6 +12,7 @@ import {
   sectorColor,
   fiscalYearLabel,
 } from "./finance-data.js?v=20261101-3";
+import { FinanceScene } from "./finance-scene.js?v=20261101-3";
 
 const REFRESH_MS = 5 * 60 * 1000;
 const $ = (id) => document.getElementById(id);
@@ -35,9 +36,79 @@ const state = {
   chartIndex: -1,
   chartPeriods: [],
   demoNoticeShown: false,
+  scene: null,
+  sceneMetric: "revenue",
 };
 
 let toastTimer = 0;
+
+/* ---------- 3D scene ---------- */
+function initScene() {
+  const container = $("scene");
+  if (!container) return;
+  try {
+    state.scene = new FinanceScene(container, {
+      onHover: (company, event) => {
+        if (!company) { hideTooltip(); return; }
+        const tip = $("fin-tooltip");
+        tip.textContent = '';
+        const strong = document.createElement("strong");
+        strong.textContent = `${company.ticker} · ${company.name}`;
+        const price = document.createElement("div");
+        price.className = "tt-price";
+        price.textContent = metricLabel(company);
+        const row = document.createElement("div");
+        row.className = "tt-row";
+        const sectorSpan = document.createElement("span");
+        sectorSpan.textContent = company.sector;
+        row.append(sectorSpan);
+        tip.append(strong, price, row);
+        tip.hidden = false;
+        if (event) {
+          tip.style.left = `${Math.min(window.innerWidth - 190, event.clientX + 12)}px`;
+          tip.style.top = `${event.clientY + 12}px`;
+        }
+      },
+      onSelect: (id) => {
+        if (!id) { clearSelection(); return; }
+        selectCompany(id, { focus: false });
+      },
+      onCamera: () => {},
+    });
+    const loading = $("scene-loading");
+    if (loading) loading.classList.add("is-done");
+  } catch (error) {
+    console.warn("3D scene unavailable", error);
+    const loading = $("scene-loading");
+    if (loading) loading.classList.add("is-done");
+    const fallback = $("scene-fallback");
+    if (fallback) fallback.hidden = false;
+  }
+}
+
+function hideTooltip() {
+  const tip = $("fin-tooltip");
+  if (tip) tip.hidden = true;
+}
+
+function metricLabel(company) {
+  const latest = company.latest || {};
+  const ratios = company.ratios || {};
+  switch (state.sceneMetric) {
+    case "net_income": return formatMoney(latest.net_income);
+    case "net_margin": return `${formatPercent(ratios.net_margin)} margin`;
+    case "return_on_equity": return `${formatPercent(ratios.return_on_equity)} ROE`;
+    case "revenue_growth": return `${formatPercent(ratios.revenue_growth)} growth`;
+    default: return formatMoney(latest.revenue);
+  }
+}
+
+function syncLegend() {
+  const el = $("legend-label");
+  if (!el) return;
+  const names = { revenue: 'Revenue', net_income: 'Net income', net_margin: 'Margin', return_on_equity: 'ROE', revenue_growth: 'Growth' };
+  el.textContent = `Height: ${names[state.sceneMetric] || 'Revenue'} · colour: sector`;
+}
 
 /* ---------- Chrome ---------- */
 
@@ -58,6 +129,7 @@ function showToast(message) {
 function applyTheme(theme) {
   state.theme = theme === "light" ? "light" : "dark";
   document.documentElement.dataset.theme = state.theme;
+  if (state.scene) state.scene.setTheme(state.theme);
   try {
     localStorage.setItem("voltscope-finance-theme", state.theme);
   } catch {
@@ -148,6 +220,11 @@ function render() {
   renderSectors();
   renderTable();
   renderFocus();
+  if (state.scene) {
+    state.scene.setData(state.companies);
+    state.scene.setSelected(state.selected);
+  }
+  syncLegend();
   renderStatus();
 }
 
@@ -738,6 +815,36 @@ function bindEvents() {
   });
 
   $("btn-help").addEventListener("click", () => $("help-dialog").showModal());
+  const metricGroup = $("metric-group");
+  if (metricGroup) {
+    metricGroup.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-metric]");
+      if (!button) return;
+      state.sceneMetric = button.dataset.metric;
+      for (const item of metricGroup.querySelectorAll("button")) item.classList.toggle("is-active", item === button);
+      state.scene?.setMetric(state.sceneMetric);
+      syncLegend();
+    });
+  }
+
+  const camTools = document.querySelector(".camera-tools");
+  if (camTools) {
+    camTools.addEventListener("click", (event) => {
+      const camButton = event.target.closest("button[data-cam]");
+      if (camButton) {
+        for (const item of camTools.querySelectorAll("button[data-cam]")) item.classList.toggle("is-active", item === camButton);
+        state.scene?.cameraPreset(camButton.dataset.cam);
+        return;
+      }
+      if (event.target.closest("#btn-spin")) {
+        const spin = $("btn-spin");
+        const next = !state.scene?.controls.autoRotate;
+        state.scene?.setAutoRotate(next);
+        spin?.setAttribute("aria-pressed", String(Boolean(next)));
+      }
+    });
+  }
+
 
   $("form-group").addEventListener("click", (event) => {
     const button = event.target.closest("button[data-form]");
@@ -835,6 +942,7 @@ function init() {
     saved = "dark";
   }
   applyTheme(saved);
+  initScene();
   bindEvents();
   loadSnapshot();
 }
