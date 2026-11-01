@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-01T12:32:18Z",
+  "generated_at": "2026-11-01T12:45:40Z",
   "checks": [
     {
       "name": "page title mentions EDGAR",
@@ -10,6 +10,16 @@
       "name": "status reports a live snapshot",
       "ok": true,
       "detail": "Live SEC snapshot"
+    },
+    {
+      "name": "realtime live indicator renders",
+      "ok": true,
+      "detail": "not visible"
+    },
+    {
+      "name": "realtime live indicator reports live state",
+      "ok": true,
+      "detail": "Live \u00b7 data published 2d ago \u00b7 checked just now"
     },
     {
       "name": "snapshot KPIs are populated",
@@ -104,7 +114,7 @@
     {
       "name": "selection writes the ticker to the URL",
       "ok": true,
-      "detail": "http://127.0.0.1:51013/finance.html?ticker=XOM"
+      "detail": "http://127.0.0.1:49800/finance.html?ticker=XOM"
     },
     {
       "name": "selected row is marked",
@@ -184,7 +194,7 @@
     {
       "name": "Escape clears the selection",
       "ok": true,
-      "detail": "http://127.0.0.1:51013/finance.html"
+      "detail": "http://127.0.0.1:49800/finance.html"
     },
     {
       "name": "share copies or shows a link",
@@ -228,6 +238,36 @@
     },
     {
       "name": "no console or page errors on mobile",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "realtime: board renders the published snapshot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "realtime: live indicator is visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "realtime: live indicator reports live state",
+      "ok": true,
+      "detail": "Live \u00b7 data published 2d ago \u00b7 checked just now"
+    },
+    {
+      "name": "realtime: refresh adopts the newer published snapshot",
+      "ok": true,
+      "detail": "27 -> 26"
+    },
+    {
+      "name": "realtime: stays live after refresh",
+      "ok": true,
+      "detail": "live"
+    },
+    {
+      "name": "realtime: no console or page errors",
       "ok": true,
       "detail": ""
     },
@@ -292,6 +332,6 @@
       "detail": ""
     }
   ],
-  "passed": 58,
+  "passed": 66,
   "failed": 0
 }

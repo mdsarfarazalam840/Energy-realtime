@@ -15,6 +15,7 @@ import {
 import { FinanceScene } from "./finance-scene.js?v=20261101-3";
 
 const REFRESH_MS = 5 * 60 * 1000;
+const LIVE_TICK_MS = 30 * 1000;
 const $ = (id) => document.getElementById(id);
 
 const state = {
@@ -38,9 +39,12 @@ const state = {
   demoNoticeShown: false,
   scene: null,
   sceneMetric: "revenue",
+  liveCheckedAt: 0,
+  liveGeneratedAt: 0,
 };
 
 let toastTimer = 0;
+let liveTicker = 0;
 
 /* ---------- 3D scene ---------- */
 function initScene() {
@@ -159,6 +163,54 @@ function hideBoot() {
 
 /* ---------- Data lifecycle ---------- */
 
+function snapshotGeneratedTs() {
+  const meta = state.snapshot?.meta || {};
+  const raw = meta.generated_at || meta.latest_filed || "";
+  const ts = raw ? Date.parse(raw) : NaN;
+  return Number.isFinite(ts) ? ts : 0;
+}
+
+function relativeAge(ts) {
+  if (!ts) return "";
+  const diff = Math.max(0, Date.now() - ts);
+  if (diff < 60000) return "just now";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return `${Math.floor(diff / 86400000)}d ago`;
+}
+
+/* Realtime live indicator: surfaces how fresh the published SEC snapshot is
+   and when the page last fetched it. Runs on a lightweight ticker so the
+   dashboard reads live even between 5-minute snapshot polls. */
+function updateLiveUi() {
+  const el = $("snapshot-live");
+  if (!el) return;
+  const checked = state.liveCheckedAt || Date.now();
+  const generated = state.liveGeneratedAt || snapshotGeneratedTs();
+  const asOfEl = $("snapshot-asof");
+  if (state.demo) {
+    el.dataset.state = "demo";
+    el.textContent = checked ? `Demo · checked ${relativeAge(checked)}` : "Demo snapshot";
+  } else if (generated) {
+    el.dataset.state = "live";
+    el.textContent = `Live · data published ${relativeAge(generated)} · checked ${relativeAge(checked)}`;
+    if (asOfEl && !asOfEl.textContent.trim()) {
+      const meta = state.snapshot?.meta || {};
+      asOfEl.textContent = meta.latest_filed ? `As of ${meta.latest_filed}` : "";
+    }
+  } else {
+    el.dataset.state = "live";
+    el.textContent = `Live · checked ${relativeAge(checked)}`;
+  }
+}
+
+function startLiveTicker() {
+  window.clearInterval(liveTicker);
+  liveTicker = window.setInterval(() => {
+    if (document.visibilityState === "visible") updateLiveUi();
+  }, LIVE_TICK_MS);
+}
+
 async function loadSnapshot({ silent = false } = {}) {
   if (state.loading) return;
   state.loading = true;
@@ -176,6 +228,8 @@ async function loadSnapshot({ silent = false } = {}) {
     }
     state.snapshot = snapshot;
     state.demo = false;
+    state.liveCheckedAt = Date.now();
+    state.liveGeneratedAt = snapshotGeneratedTs();
   } catch (error) {
     console.warn("Finance snapshot unavailable", error);
     if (!state.snapshot) {
@@ -195,6 +249,7 @@ async function loadSnapshot({ silent = false } = {}) {
 
   render();
   hideBoot();
+  updateLiveUi();
   if (state.auto) startTimer();
 }
 
@@ -956,6 +1011,7 @@ function init() {
   applyTheme(saved);
   initScene();
   bindEvents();
+  startLiveTicker();
   loadSnapshot();
 }
 

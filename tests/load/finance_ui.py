@@ -14,6 +14,7 @@ Exit code 1 when an assertion fails.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import shutil
 import socket
@@ -176,6 +177,15 @@ def run_desktop(browser, url: str, expected_companies: int) -> None:
     check("page title mentions EDGAR", "SEC EDGAR" in page.title(), page.title())
     status = page.locator("#status-text").inner_text()
     check("status reports a live snapshot", "Live" in status and page.locator("#status").get_attribute("data-state") == "live", status)
+
+    live_ind = page.locator("#snapshot-live")
+    check("realtime live indicator renders", live_ind.is_visible(), "not visible")
+    live_text = live_ind.inner_text()
+    check(
+        "realtime live indicator reports live state",
+        live_ind.get_attribute("data-state") == "live" and "Live" in live_text,
+        live_text,
+    )
 
     kpis = [page.locator(selector).inner_text() for selector in ("#kpi-companies", "#kpi-filings", "#kpi-revenue", "#kpi-margin")]
     check("snapshot KPIs are populated", all(value not in ("", "—") for value in kpis), " | ".join(kpis))
@@ -346,6 +356,56 @@ def run_navigation(browser, url: str) -> None:
     context.close()
 
 
+def run_realtime(browser, url: str, expected: int) -> None:
+    print("\n[realtime] published snapshot propagates to the UI")
+    context = browser.new_context(viewport=DESKTOP)
+    page = context.new_page()
+    errors = collect_errors(page)
+
+    original = json.loads(DATA.read_text(encoding="utf-8"))
+    updated = copy.deepcopy(original)
+    updated["companies"] = updated["companies"][:-1]
+    updated.setdefault("meta", {})["company_count"] = len(updated["companies"])
+    updated["meta"]["generated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + 60))
+    original_body = json.dumps(original)
+    updated_body = json.dumps(updated)
+
+    serve_original = {"value": True}
+
+    def handle(route):
+        body = original_body if serve_original["value"] else updated_body
+        route.fulfill(status=200, content_type="application/json", body=body)
+
+    page.route("**/data/finance.json*", handle)
+
+    page.goto(f"{url}/finance.html", wait_until="networkidle")
+    wait_loaded(page)
+    check("realtime: board renders the published snapshot", len(rows(page)) == expected)
+
+    live = page.locator("#snapshot-live")
+    check("realtime: live indicator is visible", live.is_visible())
+    check(
+        "realtime: live indicator reports live state",
+        live.get_attribute("data-state") == "live" and "Live" in live.inner_text(),
+        live.inner_text(),
+    )
+
+    before = len(rows(page))
+    serve_original["value"] = False
+    page.click("#btn-refresh")
+    page.wait_for_timeout(800)
+    after = len(rows(page))
+    check("realtime: refresh adopts the newer published snapshot", after == before - 1, f"{before} -> {after}")
+    check(
+        "realtime: stays live after refresh",
+        page.locator("#status").get_attribute("data-state") == "live",
+        page.locator("#status").get_attribute("data-state") or "",
+    )
+    check("realtime: no console or page errors", not errors, "; ".join(errors[:3]))
+    page.screenshot(path=str(RESULTS / "finance-realtime.png"), full_page=True)
+    context.close()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--keep", action="store_true", help="keep temporary sites for inspection")
@@ -369,6 +429,7 @@ def main() -> int:
                     run_desktop(browser, url, expected)
                     run_direct_link(browser, url)
                     run_mobile(browser, url, expected)
+                    run_realtime(browser, url, expected)
                 with origin(demo_site) as url:
                     demo_count = run_fallback(browser, url, label="demo")
                     check("demo fallback uses its own company set", demo_count != expected, f"{demo_count} vs {expected}")
