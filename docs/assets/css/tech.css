@@ -131,6 +131,10 @@
   padding: 20px;
 }
 
+/* Author display rules above beat the UA [hidden] rule, so the fallback would
+   stay painted over a healthy canvas. Keep the hidden attribute authoritative. */
+.scene-fallback[hidden] { display: none; }
+
 .scene-loading.is-done { opacity: 0; pointer-events: none; }
 .scene-loading p { margin: 0; color: var(--muted); font-size: 0.85rem; font-family: var(--mono); }
 
