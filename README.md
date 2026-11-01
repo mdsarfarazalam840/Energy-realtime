@@ -108,7 +108,7 @@ The status chip reads `Live snapshot` when the published JSON is fresh, shows th
 - **Raw vs indexed mode** so feeds with different price levels can be compared by shape.
 - **Shareable URL hash** captures filters, country, zone, date range, baseline, series mode, and camera.
 - **Auto refresh** every 60 seconds; `L` toggles it.
-- **Live now presence** on every dashboard: a real count of people viewing *that page* right now, scoped per page by a relay room. Each page joins its own room (energy, crypto, finance, tech), so the counter it shows is unique to that page; without a relay the chip says "1 here" — this tab only.
+- **Live now presence** on every dashboard: a real count of people viewing *that page* right now, scoped per page by a relay room. Each page joins its own room (energy, crypto, finance, tech) through the deployed Cloudflare Worker, so the counter it shows is unique to that page; without a relay the chip says "1 here" — this tab only.
 - **Realtime live lane**: a five-minute GitHub Action publishes the newest Databricks rows to `docs/data/live.json`; the scene merges them into the current view without reloading history. With the optional relay the same data arrives in about 15 seconds.
 - **Live freshness labels**: the live card shows transport (`realtime` or `5-min lane`), newest push, and the age of the newest Databricks reading.
 - **Theme toggle** with a persisted dark/light preference.
@@ -160,7 +160,7 @@ flowchart LR
   T[("Delta Lake<br/>energy_prices_realtime")]
   S[("docs/data/index.json<br/>+ days/*.json<br/>schema v2")]
   V[("docs/data/live.json<br/>6 h · 2k rows")]
-  R["Cloudflare Worker<br/>presence relay"]
+  R["Cloudflare Worker<br/>presence relay · per-room<br/>voltscope-live.workers.dev"]
   PAGES["GitHub Pages<br/>main /docs"]
   UI["VoltScope<br/>Three.js dashboard"]
 
@@ -181,14 +181,14 @@ flowchart LR
   V -->|"Pages build"| PAGES
   PAGES -->|"manifest + selected day files"| UI
   V -->|"poll 12 s"| UI
-  R -->|"WebSocket presence"| UI
+  R -->|"WebSocket /ws?room=<page>"| UI
 ```
 
 **Open the interactive version:** [System architecture](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html)
 
 [![Interactive system architecture diagram](docs/assets/diagrams/architecture-preview.png)](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html)
 
-The interactive diagram is generated from [`docs/diagrams/specs/architecture.json`](docs/diagrams/specs/architecture.json) with [Archify](https://github.com/tt-a1i/archify) 3.2. The editorial overview is hand-authored inline SVG and follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules.
+The interactive diagram is generated from [`docs/diagrams/specs/architecture.json`](docs/diagrams/specs/architecture.json) with [Archify](https://github.com/tt-a1i/archify) 3.2. The relay is modeled per room: each page (`energy`, `crypto`, `finance`, `tech`) joins its own Durable Object through `/ws?room=<page>`, so the live counter is unique per page rather than global. The editorial overview (`docs/diagrams/pipeline.html`) is hand-authored inline SVG following the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules — one primary path, 4px grid, hairline rules, one accent family.
 
 ### Components
 
@@ -217,6 +217,25 @@ The interactive diagram is generated from [`docs/diagrams/specs/architecture.jso
 - **Databricks → Delta**: Unity Catalog permissions; the bundle deploys to `workspace.default`.
 - **Exporter → Pages**: the exporter only writes static JSON files; the browser never receives a token.
 - **Browser → relay**: the optional Worker sees a presence WebSocket only; it does not receive Kafka or Databricks credentials from the page.
+
+### Diagrams & system design
+
+Three diagram artifacts live in `docs/diagrams/`, two generated with [Archify](https://github.com/tt-a1i/archify) 3.2 from JSON specs and one hand-authored editorial diagram following the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules:
+
+| Diagram | Tool | Source | Purpose |
+|---|---|---|---|
+| [System architecture](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html) | Archify 3.2 | `docs/diagrams/specs/architecture.json` | Runtime components, live lane, guided views, trust boundary; per-room presence relay |
+| [Energy data flow](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html) | Archify 3.2 | `docs/diagrams/specs/dataflow.json` | Lineage from feeds through Kafka and Delta to the shard and live-tail artifacts |
+| [Editorial pipeline](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/pipeline.html) | diagram-design 2.6 | `docs/diagrams/pipeline.html` (inline SVG) | One primary path left-to-right: feeds to public dashboard |
+
+Regenerate the Archify artifacts after editing a spec:
+
+```bash
+node archify/bin/archify.mjs finalize architecture docs/diagrams/specs/architecture.json docs/diagrams/architecture.html --quality showcase --json
+node archify/bin/archify.mjs finalize dataflow docs/diagrams/specs/dataflow.json docs/diagrams/dataflow.html --quality showcase --json
+```
+
+`finalize` runs validate, deliver, strict provenance check, and the browser gate, then writes a self-contained HTML file checked into `docs/` so GitHub Pages needs no build step. The editorial pipeline diagram is hand-authored inline SVG (4px grid, hairline rules, one accent family, mono sublabels) and needs no generator.
 
 ---
 
@@ -255,13 +274,15 @@ sequenceDiagram
   PGS-->>UI: only those readings
   UI->>PGS: GET live.json every 12 s
   PGS-->>UI: newest tail, merged by source, zone, and time
+  UI->>R: WebSocket /ws?room=energy (presence join)
+  R-->>UI: online + peak per room (Durable Object)
 ```
 
 **Open the interactive version:** [Energy data flow](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html)
 
 [![Interactive energy data flow diagram](docs/assets/diagrams/dataflow-preview.png)](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html)
 
-The data flow is generated from [`docs/diagrams/specs/dataflow.json`](docs/diagrams/specs/dataflow.json) with Archify 3.2. It keeps the five stages and the two publication lanes visible without adding a second main path.
+The data flow is generated from [`docs/diagrams/specs/dataflow.json`](docs/diagrams/specs/dataflow.json) with [Archify](https://github.com/tt-a1i/archify) 3.2. It keeps the five stages and the two publication lanes visible without adding a second main path. The relay lane carries per-page presence (`/ws?room=<page>`) alongside the static `live.json` tail; the editorial overview (`docs/diagrams/pipeline.html`) follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules.
 
 ### Stage contract
 
@@ -319,10 +340,10 @@ flowchart LR
   J --> T[("Delta table")]
   T --> E["export_live_data.py"]
   E --> F[("docs/data/live.json")]
-  R["Optional Worker<br/>workers/live"] --> T
+  R["Worker<br/>voltscope-live.workers.dev<br/>per-room"] --> T
   F --> U["Dashboard merge"]
   R --> U
-  W["WebSocket /ws"] --> P["Live now presence"]
+  W["WebSocket /ws?room=<page>"] --> P["Live now presence · per room"]
   P --> U
 ```
 
@@ -330,7 +351,7 @@ flowchart LR
 |---|---|---|---|
 | Live GitHub lane | `docs/data/live.json` polled every 12 s | One workflow run (target 5 min, GitHub best effort) plus Pages publication | Existing Actions secrets only |
 | Relay live data | `GET /api/live` every 15 s | 20-second KV cache over the SQL Statement API | Cloudflare Worker + Databricks token as a Worker secret |
-| Relay presence | WebSocket `/ws`, HTTP fallback `/api/presence` | Immediate on join/leave, 30-second heartbeat | Cloudflare Worker |
+| Relay presence | WebSocket `/ws?room=<page>`, HTTP fallback `/api/presence?room=<page>` | Immediate on join/leave, 30-second heartbeat, one Durable Object per room | Cloudflare Worker at `voltscope-live.workers.dev` (deployed) |
 | Local presence fallback | none | This tab only, clearly labelled | Nothing |
 
 The dashboard never reloads history for a live point. It keeps the published
@@ -1234,6 +1255,10 @@ The production target deploys one copy under `/Workspace/Users/ajaysin840@gmail.
 ---
 
 ## Known limitations
+
+**Fixed since last publish**
+
+- **Finance live status overlapping the search ticker.** The `.status` chip in the shared shell (`docs/assets/css/crypto.css`) had `white-space: nowrap` with no width bound, so a long status-sub line such as `27 filers · filed 2026-10-30 (2 days ago)` spilled over the topbar search box. The chip now caps at 46% of the topbar and ellipses `status-text` / `status-sub`, so the per-page presence relay and search stay readable on crypto, finance, and tech pages.
 
 - **`startingOffsets=latest` can skip data.** If the Databricks job is down while the producer writes, those offsets are not replayed. Use `earliest` or a stored offset policy if exact-once ingest matters.
 - **Delta writes are append-only.** There is no `MERGE` deduplication in the table; duplicates are removed only when the snapshot is built.
