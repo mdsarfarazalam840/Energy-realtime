@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0d9d694a-2df6-49ff-830c-d7dfd2b92c9f",
+  "status": "current",
+  "command": "deliver",
+  "type": "dataflow",
+  "input": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\specs\\dataflow.json",
+  "output": "F:\\Pro\\DABActionEnergyPrices\\energy_realtime\\docs\\diagrams\\dataflow.html",
+  "specification": {
+    "sha256": "289581c57e1d9e9b5fd4402c71bf99944a7f9b38c1367b4bb55758bf4d441e14",
+    "bytes": 5212
+  },
+  "artifact": {
+    "sha256": "26632ac4aa30f87d8804da6fa53081f2b1cb37a518702f318e0962dadd84c8d5",
+    "bytes": 846166
+  }
+}

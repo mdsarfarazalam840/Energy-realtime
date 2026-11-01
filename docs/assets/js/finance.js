@@ -13,6 +13,7 @@ import {
   fiscalYearLabel,
 } from "./finance-data.js?v=20261101-3";
 import { FinanceScene } from "./finance-scene.js?v=20261101-3";
+import { initLiveCounter } from "./live-counter.js?v=20261105-1";
 
 const REFRESH_MS = 5 * 60 * 1000;
 const LIVE_TICK_MS = 30 * 1000;
@@ -1011,6 +1012,7 @@ function init() {
   applyTheme(saved);
   initScene();
   bindEvents();
+  initLiveCounter({ room: "finance" });
   startLiveTicker();
   loadSnapshot();
 }

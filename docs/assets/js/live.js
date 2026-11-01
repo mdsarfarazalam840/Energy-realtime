@@ -88,7 +88,7 @@ export function normaliseConfig(raw) {
  * WebSocket. Without one, the count is this tab only (`mode: "local"`) and the
  * UI says so instead of inventing a number.
  */
-export function createPresence(config, { onUpdate } = {}) {
+export function createPresence(config, { room = "global", onUpdate } = {}) {
   const local = { online: 1, peak: 1, ts: Date.now(), mode: "local" };
   let stopped = false;
   let socket = null;
@@ -139,7 +139,7 @@ export function createPresence(config, { onUpdate } = {}) {
   function connect() {
     if (stopped || !config.presenceUrl) return;
     const base = config.presenceUrl.replace(/^http/i, "ws");
-    const url = `${base}/ws?v=${encodeURIComponent(visitorId())}`;
+    const url = `${base}/ws?v=${encodeURIComponent(visitorId())}&room=${encodeURIComponent(room)}`;
     try {
       socket = new WebSocket(url);
     } catch {
@@ -188,7 +188,7 @@ export function createPresence(config, { onUpdate } = {}) {
   async function pollHttp() {
     if (stopped || !config.presenceUrl || socket?.readyState === WebSocket.OPEN) return;
     try {
-      const response = await fetch(`${config.presenceUrl}/api/presence`, {
+      const response = await fetch(`${config.presenceUrl}/api/presence?room=${encodeURIComponent(room)}`, {
         cache: "no-store",
         headers: { Accept: "application/json" },
       });

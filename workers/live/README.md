@@ -39,6 +39,8 @@ wrangler secret put DATABRICKS_WAREHOUSE_ID
 wrangler deploy
 ```
 
+Each page joins its own presence room (`energy`, `crypto`, `finance`, `tech`) via `/ws?room=...` and `/api/presence?room=...`. The Worker creates a separate Durable Object per room, so every page's live counter is independent rather than one global count. Clients pass `?room=<page>` automatically from `docs/assets/js/live-counter.js`.
+
 Then enable the relay in the static site config:
 
 ```json
@@ -63,7 +65,7 @@ relay, and `/api/live` stays unused instead of returning 502.
 |---|---|
 | URL | `https://voltscope-live.md-sarfarazalam840.workers.dev` |
 | KV binding | `LIVE_CACHE`, id `d659208acf384ac19e09613a6a081af8` |
-| State | Presence live. `/api/live` returns 502 until the three `DATABRICKS_*` secrets are set. |
+| State | Per-room presence live (energy/crypto/finance/tech). `/api/live` returns 502 until the three `DATABRICKS_*` secrets are set. |
 
 ## Optional: let the Worker trigger GitHub Actions
 

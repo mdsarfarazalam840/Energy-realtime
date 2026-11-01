@@ -16,6 +16,7 @@ import {
   mergeLiveCoins,
 } from "./crypto-data.js?v=20261031-1";
 import { CryptoScene } from "./crypto-scene.js?v=20261031-1";
+import { initLiveCounter } from "./live-counter.js?v=20261105-1";
 
 const REFRESH_MS = 60 * 1000;
 const LIVE_POLL_MS = 12 * 1000;
@@ -805,6 +806,7 @@ function init() {
   applyTheme(saved);
   initScene();
   bindEvents();
+  initLiveCounter({ room: "crypto" });
   loadSnapshot();
 }
 
