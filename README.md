@@ -16,6 +16,8 @@ VoltScope collects AEMO five-minute dispatch prices for Australia's five Nationa
 
 [![VoltScope pipeline: market signal to public dashboard](docs/assets/diagrams/pipeline.png)](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/pipeline.html)
 
+![VoltScope repository map](docs/assets/diagrams/repository-map.svg)
+
 ---
 
 ## Table of contents
@@ -24,6 +26,7 @@ VoltScope collects AEMO five-minute dispatch prices for Australia's five Nationa
 - [Live surfaces](#live-surfaces)
 - [Features](#features)
 - [Architecture](#architecture)
+- [Repository map](#repository-map)
 - [Data flow](#data-flow)
 - [Data contract](#data-contract)
 - [Tech stack](#tech-stack)
@@ -171,6 +174,8 @@ flowchart LR
   Z -->|"spot"| L
   P -->|"SASL_SSL produce"| K
   L -->|"SASL_SSL produce"| K
+  P -.->|"POST jobs/run-now"| D
+  L -.->|"POST jobs/run-now"| D
   K -->|"readStream"| D
   D -->|"append"| T
   T -->|"SQL Statement API"| X
@@ -188,7 +193,13 @@ flowchart LR
 
 [![Interactive system architecture diagram](docs/assets/diagrams/architecture-preview.png)](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html)
 
-The interactive diagram is generated from [`docs/diagrams/specs/architecture.json`](docs/diagrams/specs/architecture.json) with [Archify](https://github.com/tt-a1i/archify) 3.2. The relay is modeled per room: each page (`energy`, `crypto`, `finance`, `tech`) joins its own Durable Object through `/ws?room=<page>`, so the live counter is unique per page rather than global. The editorial overview (`docs/diagrams/pipeline.html`) is hand-authored inline SVG following the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules — one primary path, 4px grid, hairline rules, one accent family.
+The interactive diagram is generated from [`docs/diagrams/specs/architecture.json`](docs/diagrams/specs/architecture.json) with [Archify](https://github.com/tt-a1i/archify). It now makes the control path explicit: both scheduled Actions lanes trigger the `availableNow` ingest job after producing to Kafka. The relay is modeled per room: each page (`energy`, `crypto`, `finance`, `tech`) joins its own Durable Object through `/ws?room=<page>`, so the live counter is unique per page rather than global. The editorial overview (`docs/diagrams/pipeline.html`) is hand-authored inline SVG following the [diagram-design](https://github.com/cathrynlavery/diagram-design) rules — one primary path, 4px grid, hairline rules, one accent family.
+
+## Repository map
+
+The runtime diagram shows where data moves; this map shows where that behavior lives in the repository. `producer_*.py` and workflow YAML collect and schedule work, `src/` and `resources/` define the Databricks ingestion job, `scripts/` materializes browser-safe snapshots, `docs/` contains the Pages application and data artifacts, and `workers/live/` provides the optional presence relay. Contract, browser, and load checks remain isolated under `tests/`, with deterministic inputs in `fixtures/`.
+
+[![VoltScope repository map](docs/assets/diagrams/repository-map.svg)](docs/assets/diagrams/repository-map.svg)
 
 ### Components
 
@@ -223,7 +234,7 @@ The interactive diagram is generated from [`docs/diagrams/specs/architecture.jso
 
 ### Diagrams & system design
 
-Three diagram artifacts live in `docs/diagrams/`, two generated with [Archify](https://github.com/tt-a1i/archify) 3.2 from JSON specs and one hand-authored editorial diagram following the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules:
+Three diagram artifacts live in `docs/diagrams/`, two generated with [Archify](https://github.com/tt-a1i/archify) from JSON specs and one hand-authored editorial diagram following the [diagram-design](https://github.com/cathrynlavery/diagram-design) rules:
 
 | Diagram | Tool | Source | Purpose |
 |---|---|---|---|
@@ -285,7 +296,7 @@ sequenceDiagram
 
 [![Interactive energy data flow diagram](docs/assets/diagrams/dataflow-preview.png)](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html)
 
-The data flow is generated from [`docs/diagrams/specs/dataflow.json`](docs/diagrams/specs/dataflow.json) with [Archify](https://github.com/tt-a1i/archify) 3.2. It keeps the five stages and the two publication lanes visible without adding a second main path. The relay lane carries per-page presence (`/ws?room=<page>`) alongside the static `live.json` tail; the editorial overview (`docs/diagrams/pipeline.html`) follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules.
+The data flow is generated from [`docs/diagrams/specs/dataflow.json`](docs/diagrams/specs/dataflow.json) with [Archify](https://github.com/tt-a1i/archify). It keeps the five stages and the two publication lanes visible without adding a second main path. The relay lane carries per-page presence (`/ws?room=<page>`) alongside the static `live.json` tail; the editorial overview (`docs/diagrams/pipeline.html`) follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) rules.
 
 ### Stage contract
 
@@ -654,7 +665,7 @@ python scripts/dashboard_shards.py docs/data/energy.json --out docs/data
 | Charts | Canvas 2D | Timeline and distribution |
 | Realtime relay | Cloudflare Workers, Durable Objects, KV | WebSocket presence and optional `/api/live` cache |
 | Hosting | GitHub Pages, `main` / `docs`, `.nojekyll` | Static site and diagram gallery |
-| Diagrams | [Archify](https://github.com/tt-a1i/archify) 3.2, [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 | Interactive architecture/dataflow artifacts and the editorial pipeline overview |
+| Diagrams | [Archify](https://github.com/tt-a1i/archify), [diagram-design](https://github.com/cathrynlavery/diagram-design) | Interactive architecture/dataflow artifacts and the editorial pipeline overview |
 | Deployment | [Declarative Automation Bundles](https://docs.databricks.com/dev-tools/bundles/), `uv`, Hatchling | Job deployment and wheel artifact |
 | Quality | pytest, Ruff, Playwright, k6-style load harness, Databricks Connect | Template tests, lint, browser audit, snapshot load tests |
 
@@ -1172,7 +1183,7 @@ scenarios, budgets, and results.
 
 ### Diagram validation
 
-The interactive diagrams are generated from JSON specifications with [Archify](https://github.com/tt-a1i/archify) 3.2. `finalize` runs validation, delivery, strict provenance, and the browser gate in one pass:
+The interactive diagrams are generated from JSON specifications with [Archify](https://github.com/tt-a1i/archify). `finalize` runs validation, delivery, strict provenance, and the browser gate in one pass:
 
 ```bash
 ARCHIFY=/path/to/archify/archify/bin/archify.mjs
@@ -1182,7 +1193,7 @@ node "$ARCHIFY" finalize dataflow docs/diagrams/specs/dataflow.json docs/diagram
 
 A passing receipt writes the self-contained HTML artifact plus a delivery receipt beside it. If a gate fails, edit the spec and rerun the same command; do not hand-edit the generated HTML.
 
-The editorial pipeline follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) 2.6 rules: 4px grid, 1px hairlines, 6px radius, one accent family, one primary path, mono only for technical sublabels, and no shadows. It is hand-authored inline SVG, so it needs no generator at runtime and stays readable offline.
+The editorial pipeline follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) rules: 4px grid, 1px hairlines, 6px radius, one accent family, one primary path, mono only for technical sublabels, and no shadows. It is hand-authored inline SVG, so it needs no generator at runtime and stays readable offline.
 
 After a diagram change, refresh the preview images used by this README and the gallery:
 

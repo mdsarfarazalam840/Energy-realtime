@@ -3,7 +3,7 @@
   "diagram_type": "dataflow",
   "meta": {
     "title": "VoltScope Energy Data Flow",
-    "subtitle": "Three market feeds become a small, versioned artifact the browser can cache",
+    "subtitle": "Three market feeds become versioned static artifacts the browser can cache safely",
     "output": "docs/diagrams/dataflow.html",
     "quality_profile": "showcase",
     "viewBox": [1075, 620],
@@ -12,7 +12,7 @@
         "id": "market-feeds",
         "label": "Market feeds",
         "focus": ["aemo", "entsoe", "elecz", "producer", "live-producer"],
-        "note": "AEMO dispatch, ENTSO-E day-ahead, and Elecz spot normalize into one EUR/MWh message."
+        "note": "The 30-minute lane covers all feeds; the five-minute lane refreshes AEMO and Elecz without spending ENTSO-E quota."
       },
       {
         "id": "durable-state",

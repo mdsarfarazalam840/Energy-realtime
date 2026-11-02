@@ -14,3 +14,5 @@ opencode.json
 .dev.vars.*
 .wrangler/
 node_modules/
+.deno/
+graphify-out/

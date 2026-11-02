@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "VoltScope System Architecture",
-    "subtitle": "Market feeds to a public 3D dashboard, with a five-minute live tail and a presence relay",
+    "subtitle": "Market feeds to a public 3D dashboard, with scheduled ingestion, a five-minute live tail, and a presence relay",
     "output": "docs/diagrams/architecture.html",
     "quality_profile": "showcase",
     "viewBox": [1240, 740],
@@ -12,7 +12,7 @@
         "id": "ingest-path",
         "label": "Ingest path",
         "focus": ["aemo", "entsoe", "elecz", "producer", "live-producer", "kafka", "databricks", "delta"],
-        "note": "AEMO, ENTSO-E, and Elecz normalize into one Kafka topic and land in Delta Lake."
+        "note": "Scheduled Actions collect the feeds, trigger the ingest job, and normalize every energy reading into one Kafka topic."
       },
       {
         "id": "serving-path",
@@ -67,11 +67,14 @@
   ],
   "connections": [
     { "id": "aemo-to-producer", "from": "aemo", "to": "producer", "label": "dispatch", "variant": "default" },
+    { "id": "aemo-to-live", "from": "aemo", "to": "live-producer", "label": "dispatch", "variant": "default" },
     { "id": "entsoe-to-producer", "from": "entsoe", "to": "producer", "label": "day-ahead", "variant": "default" },
     { "id": "elecz-to-live", "from": "elecz", "to": "live-producer", "label": "spot", "variant": "default" },
 
     { "id": "producer-to-kafka", "from": "producer", "to": "kafka", "label": "produce", "variant": "emphasis" },
     { "id": "live-producer-to-kafka", "from": "live-producer", "to": "kafka", "label": "produce", "variant": "emphasis" },
+    { "id": "producer-runs-ingest", "from": "producer", "to": "databricks", "label": "run-now", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "live-runs-ingest", "from": "live-producer", "to": "databricks", "label": "run-now", "variant": "dashed", "fromSide": "right", "toSide": "bottom", "via": [[605, 302], [605, 260], [785, 260]] },
     { "id": "kafka-to-databricks", "from": "kafka", "to": "databricks", "label": "readStream", "variant": "emphasis" },
     { "id": "databricks-to-delta", "from": "databricks", "to": "delta", "label": "append", "variant": "emphasis" },
 
