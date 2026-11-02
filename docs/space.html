@@ -7,7 +7,10 @@
   <meta name="description" content="VoltScope Space — NASA's Astronomy Picture of the Day in a full-screen 3D observatory.">
   <title>VoltScope Space — NASA Astronomy Picture of the Day</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2304060f'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%239d8cff' stroke-width='2'/%3E%3Ccircle cx='23' cy='10' r='2' fill='%23ffd479'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="assets/css/space.css?v=20261106-1">
+  <link rel="preconnect" href="https://api.nasa.gov" crossorigin>
+  <link rel="preconnect" href="https://assets.science.nasa.gov" crossorigin>
+  <link rel="dns-prefetch" href="https://apod.nasa.gov">
+  <link rel="stylesheet" href="assets/css/space.css?v=20261107-1">
 </head>
 <body>
   <div class="app space-app" id="app">
@@ -187,7 +190,7 @@
       }
     }
   </script>
-  <script type="module" src="assets/js/space.js?v=20261106-1"></script>
+  <script type="module" src="assets/js/space.js?v=20261107-1"></script>
   <script>
     setTimeout(function () {
       var boot = document.getElementById('boot');

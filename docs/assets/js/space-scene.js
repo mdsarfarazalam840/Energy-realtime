@@ -13,7 +13,7 @@
 
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { formatShortDate, formatDate, mediaLabel } from "./space-data.js?v=20261106-1";
+import { formatShortDate, formatDate, mediaLabel } from "./space-data.js?v=20261107-1";
 
 const PLATE_WIDTH = 1.62;
 const PLATE_HEIGHT = 1.01;
@@ -40,6 +40,32 @@ const CAMERAS = {
     narrow: { pos: [0, 4.8, 12], target: [0, 4.4, 0] },
   },
 };
+
+/* Texture budget.
+ *
+ * APOD originals are routinely 3000-6000 px wide. Uploaded as-is they cost tens
+ * of megabytes of GPU memory each, which is enough to lose the WebGL context on
+ * phones and low-end laptops. Every photo is therefore decoded once, resized to
+ * the largest size it is actually drawn at, and cached: the hero plane is the
+ * only texture that needs real resolution, the orbit plates are 1.6 world units
+ * across. Decoding happens off the main thread through `createImageBitmap` when
+ * the browser supports it, with a canvas-draw fallback. */
+const HERO_TEXTURE_WIDTH = 1500;
+const HERO_TEXTURE_MAX = 1600;
+const PLATE_TEXTURE_WIDTH = 460;
+const PLATE_TEXTURE_MAX = 520;
+/* Keep a few previously viewed heroes warm for instant back-and-forth, but not
+ * all fourteen: each one costs several megabytes of GPU memory. */
+const HERO_TEXTURE_CACHE = 5;
+
+/* NASA's dynamic-image host can render a smaller rendition on request, which
+ * saves the download as well as the decode. Other hosts are left untouched. */
+const RENDITION_HOST = /^assets\.science\.nasa\.gov$/i;
+
+/* Backing-store budget: ~5.6 megapixels keeps a 1080p-class canvas at 2x while
+ * stopping ultra-wide 4K windows from quadrupling the fragment work. */
+const PIXEL_BUDGET = 5600000;
+const MAX_DEVICE_RATIO = 2;
 
 const CONTENT = {
   dark: {
@@ -97,6 +123,111 @@ function hashText(text) {
     hash = Math.imul(hash, 16777619);
   }
   return hash >>> 0;
+}
+
+function scaledSize(width, height, maxWidth) {
+  if (!width || !height || !maxWidth || width <= maxWidth) return { width, height };
+  const ratio = maxWidth / width;
+  return { width: Math.max(1, Math.round(width * ratio)), height: Math.max(1, Math.round(height * ratio)) };
+}
+
+/** Ask NASA's dynamic-image host for a smaller rendition (same picture, less bytes). */
+function renditionUrl(url, width) {
+  if (!width) return url;
+  try {
+    const parsed = new URL(url, window.location.href);
+    if (!RENDITION_HOST.test(parsed.hostname) || !/\/dynamicimage\//.test(parsed.pathname)) return url;
+    parsed.searchParams.set("w", String(Math.round(width)));
+    // Drop the crop box: keeping `h` with `fit=clip` pads the picture with black
+    // bars when the requested aspect does not match the original.
+    for (const param of ["h", "fit", "crop"]) parsed.searchParams.delete(param);
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+/** Canvas fallback for browsers without `createImageBitmap` (or after a failed fetch). */
+function decodeWithElement(url, maxWidth) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.decoding = "async";
+    image.onload = () => {
+      const natural = { width: image.naturalWidth, height: image.naturalHeight };
+      const size = scaledSize(natural.width, natural.height, maxWidth);
+      if (size.width === natural.width || !size.width) {
+        resolve({ source: image, width: natural.width, height: natural.height });
+        return;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = size.width;
+      canvas.height = size.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve({ source: image, width: natural.width, height: natural.height });
+        return;
+      }
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(image, 0, 0, size.width, size.height);
+      resolve({ source: canvas, width: size.width, height: size.height });
+    };
+    image.onerror = () => resolve(null);
+    image.src = url;
+  });
+}
+
+/**
+ * Copy a decoded bitmap into a canvas.
+ *
+ * WebGL ignores UNPACK_FLIP_Y for ImageBitmap uploads, so an ImageBitmap used
+ * directly as a texture renders upside down. Canvas sources honour the flag on
+ * every browser, so the bitmap is normalised through one canvas draw.
+ */
+function canvasFromBitmap(bitmap) {
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return { source: bitmap, width: bitmap.width, height: bitmap.height };
+  ctx.drawImage(bitmap, 0, 0);
+  bitmap.close?.();
+  return { source: canvas, width: canvas.width, height: canvas.height };
+}
+
+/**
+ * Decode a photo to at most `maxWidth` pixels wide. Returns
+ * `{ source, width, height }` or null. Never throws: a blocked or broken image
+ * keeps the drawn title card instead of breaking the observatory.
+ */
+async function decodePhoto(url, maxWidth) {
+  if (typeof fetch === "function" && typeof createImageBitmap === "function") {
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit", cache: "force-cache" });
+      if (response.ok) {
+        const blob = await response.blob();
+        let bitmap = await createImageBitmap(blob);
+        const size = scaledSize(bitmap.width, bitmap.height, maxWidth);
+        if (size.width !== bitmap.width) {
+          try {
+            const small = await createImageBitmap(blob, {
+              resizeWidth: size.width,
+              resizeHeight: size.height,
+              resizeQuality: "high",
+            });
+            bitmap.close?.();
+            bitmap = small;
+          } catch {
+            /* Resize options unsupported: keep the full bitmap. */
+          }
+        }
+        return canvasFromBitmap(bitmap);
+      }
+    } catch {
+      /* CORS or offline: try a plain <img>, which also covers older servers. */
+    }
+  }
+  return decodeWithElement(url, maxWidth);
 }
 
 function makeGlowTexture() {
@@ -328,11 +459,13 @@ function cropTexture(source, aspect) {
 }
 
 export class SpaceScene {
-  constructor(container, { onHover, onSelect, onOpen } = {}) {
+  constructor(container, { onHover, onSelect, onOpen, onContextLost, onContextRestored } = {}) {
     this.container = container;
     this.onHover = onHover || (() => {});
     this.onSelect = onSelect || (() => {});
     this.onOpen = onOpen || (() => {});
+    this.onContextLost = onContextLost || (() => {});
+    this.onContextRestored = onContextRestored || (() => {});
 
     this.theme = "dark";
     this.mode = "wide";
@@ -352,6 +485,13 @@ export class SpaceScene {
     this.raycaster = new THREE.Raycaster();
     this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.glowTexture = makeGlowTexture();
+    this.dpr = 1;
+    this.frame = 0;
+    this.frameCount = 0;
+    this.frameTime = 0;
+    this.paused = false;
+    this.visible = true;
+    this.contextLost = false;
 
     this.initRenderer();
     this.initScene();
@@ -369,12 +509,13 @@ export class SpaceScene {
 
   initRenderer() {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(this.container.clientWidth || 1, this.container.clientHeight || 1);
-    renderer.setClearColor(CONTENT.dark.bg, 1);
     renderer.domElement.classList.add("scene-canvas");
     this.container.appendChild(renderer.domElement);
     this.renderer = renderer;
+    this.dpr = this.initialPixelRatio();
+    renderer.setPixelRatio(this.dpr);
+    renderer.setSize(this.container.clientWidth || 1, this.container.clientHeight || 1);
+    renderer.setClearColor(CONTENT.dark.bg, 1);
 
     this.camera = new THREE.PerspectiveCamera(48, (this.container.clientWidth || 1) / (this.container.clientHeight || 1), 0.1, 400);
     this.camera.position.set(0, 2.6, 16.5);
@@ -398,7 +539,84 @@ export class SpaceScene {
     renderer.domElement.addEventListener("pointermove", this.onPointerMove.bind(this));
     renderer.domElement.addEventListener("pointerleave", this.onPointerLeave.bind(this));
 
-    this.frame = requestAnimationFrame(this.loop.bind(this));
+    // A lost context (driver reset, GPU memory pressure) is recoverable: stop
+    // drawing, tell the page, and start again if the browser restores it.
+    renderer.domElement.addEventListener("webglcontextlost", (event) => {
+      event.preventDefault();
+      this.contextLost = true;
+      this.pause();
+      this.onContextLost();
+    });
+    renderer.domElement.addEventListener("webglcontextrestored", () => {
+      this.contextLost = false;
+      this.onContextRestored();
+      this.resume();
+    });
+
+    // Do not burn a GPU frame budget on a hidden tab or a scrolled-away stage.
+    this.boundLoop = this.loop.bind(this);
+    this.handleVisibility = () => (document.hidden ? this.pause() : this.resume());
+    document.addEventListener("visibilitychange", this.handleVisibility);
+    if (typeof IntersectionObserver === "function") {
+      this.intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          this.visible = entries.some((entry) => entry.isIntersecting);
+          if (this.visible) this.resume();
+          else this.pause();
+        },
+        { threshold: 0.01 }
+      );
+      this.intersectionObserver.observe(this.container);
+    }
+
+    this.resume();
+  }
+
+  initialPixelRatio() {
+    const width = this.container.clientWidth || window.innerWidth || 1;
+    const height = this.container.clientHeight || window.innerHeight || 1;
+    const device = Math.min(window.devicePixelRatio || 1, MAX_DEVICE_RATIO);
+    const fit = Math.sqrt(PIXEL_BUDGET / Math.max(1, width * height));
+    return Math.min(device, Math.max(1, fit));
+  }
+
+  /* ---------- Rendering budget ---------- */
+
+  pause() {
+    this.paused = true;
+    if (this.frame) {
+      cancelAnimationFrame(this.frame);
+      this.frame = 0;
+    }
+    if (this.plateTimer) {
+      window.clearTimeout(this.plateTimer);
+      this.plateTimer = 0;
+    }
+  }
+
+  resume() {
+    if (this.disposed || this.contextLost) return;
+    if (document.hidden || !this.visible) return;
+    this.paused = false;
+    if (this.frame) return;
+    this.clock.getDelta();
+    this.frame = requestAnimationFrame(this.boundLoop);
+    // Deferred work (plate photos) is cancelled by pause(); pick it back up.
+    if (this.entries.length) this.prefetchPlates();
+  }
+
+  /** Step the pixel ratio down once the measured frame time is clearly over budget. */
+  trackPerformance(delta) {
+    this.frameCount += 1;
+    this.frameTime += delta;
+    if (this.frameCount < 90) return;
+    const average = this.frameTime / this.frameCount;
+    this.frameCount = 0;
+    this.frameTime = 0;
+    if (average <= 0.026 || this.dpr <= 1) return;
+    this.dpr = Math.max(1, Math.round((this.dpr - 0.5) * 2) / 2);
+    this.renderer.setPixelRatio(this.dpr);
+    this.resize();
   }
 
   initScene() {
@@ -654,7 +872,7 @@ export class SpaceScene {
     this.plateCards.clear();
     this.rebuildPlates();
     if (this.currentEntry) {
-      const loaded = this.currentEntry.imageUrl ? this.textures.get(this.currentEntry.imageUrl) : null;
+      const loaded = this.currentEntry.imageUrl ? this.cachedTexture(this.currentEntry.imageUrl, HERO_TEXTURE_MAX) : null;
       const texture = loaded && loaded.isTexture ? loaded : this.cardFor(this.currentEntry);
       this.heroImage.material.map = texture;
       this.heroImage.material.needsUpdate = true;
@@ -683,7 +901,7 @@ export class SpaceScene {
     this.selectedDate = entry.date;
     this.currentEntry = entry;
 
-    const cached = this.textures.get(entry.imageUrl);
+    const cached = this.cachedTexture(entry.imageUrl, HERO_TEXTURE_MAX);
     if (cached) {
       this.currentTexture = cached;
       this.heroImage.material.map = cached;
@@ -703,7 +921,7 @@ export class SpaceScene {
 
   loadHero(entry) {
     const token = ++this.heroToken;
-    this.loadTexture(entry.imageUrl).then((texture) => {
+    this.loadTexture(entry.imageUrl, { max: HERO_TEXTURE_MAX, width: HERO_TEXTURE_WIDTH }).then((texture) => {
       if (this.disposed || token !== this.heroToken || !texture) return;
       if (this.currentEntry?.date !== entry.date) return;
       this.currentTexture = texture;
@@ -802,49 +1020,95 @@ export class SpaceScene {
     const token = ++this.plateToken;
     const pending = this.plates
       .map((plate) => plate.userData.entry)
-      .filter((entry) => entry && entry.imageUrl && !this.textures.has(entry.imageUrl));
+      .filter(
+        (entry) => entry && entry.imageUrl && !this.cachedTexture(entry.imageUrl, PLATE_TEXTURE_MAX)
+      );
+    if (!pending.length) return;
+    // The fanned rail only exists on wide screens; below that the orbit index is
+    // the selector, so the plate photos are never downloaded at all.
+    if (!this.railGroup.visible) return;
     const run = async () => {
       for (const entry of pending) {
         if (this.disposed || token !== this.plateToken) return;
-        const texture = await this.loadTexture(entry.imageUrl);
+        if (document.hidden) return;
+        const texture = await this.loadTexture(entry.imageUrl, {
+          max: PLATE_TEXTURE_MAX,
+          width: PLATE_TEXTURE_WIDTH,
+        });
         if (!texture || this.disposed || token !== this.plateToken) continue;
         const plate = this.plates.find((item) => item.userData.date === entry.date);
         if (!plate) continue;
         const cropped = cropTexture(texture, PLATE_WIDTH / PLATE_HEIGHT);
+        plate.userData.croppedMap?.dispose();
         plate.userData.croppedMap = cropped;
         plate.material.map = cropped;
         plate.material.needsUpdate = true;
       }
     };
-    run();
+    // Let the hero picture and the panel paint first. A plain timer beats
+    // requestIdleCallback here: the animation loop keeps the main thread busy,
+    // so idle callbacks can be starved indefinitely.
+    this.plateTimer = window.setTimeout(run, 600);
   }
 
   /* ---------- Textures ---------- */
 
-  loadTexture(url) {
+  textureKey(url, max) {
+    return max ? `${url}|${max}` : String(url || "");
+  }
+
+  cachedTexture(url, max) {
+    if (!url) return null;
+    return this.textures.get(this.textureKey(url, max)) || null;
+  }
+
+  /**
+   * Load a photo as a GPU texture, resized to at most `max` pixels wide.
+   * `width` is the rendition to request from hosts that support one. Cached by
+   * (url, size), so switching back to a day is instant and costs no bandwidth.
+   */
+  loadTexture(url, { max = 0, width = 0 } = {}) {
     if (!url) return Promise.resolve(null);
-    if (this.textures.has(url)) return Promise.resolve(this.textures.get(url));
-    if (this.pending.has(url)) return this.pending.get(url);
-    const promise = new Promise((resolve) => {
-      const loader = new THREE.TextureLoader();
-      loader.setCrossOrigin("anonymous");
-      loader.load(
-        url,
-        (texture) => {
-          texture.colorSpace = THREE.SRGBColorSpace;
-          texture.anisotropy = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
-          resolve(texture);
-        },
-        undefined,
-        () => resolve(null)
-      );
-    }).then((texture) => {
-      this.textures.set(url, texture);
-      this.pending.delete(url);
-      return texture;
-    });
-    this.pending.set(url, promise);
+    const key = this.textureKey(url, max);
+    if (this.textures.has(key)) return Promise.resolve(this.textures.get(key));
+    if (this.pending.has(key)) return this.pending.get(key);
+
+    const rendition = renditionUrl(url, width);
+    const decode = () => (rendition !== url ? decodePhoto(rendition, max).then((photo) => photo || decodePhoto(url, max)) : decodePhoto(url, max));
+    const promise = decode()
+      .then((photo) => {
+        this.pending.delete(key);
+        if (!photo || !photo.source || this.disposed) return null;
+        const texture = new THREE.Texture(photo.source);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
+        texture.needsUpdate = true;
+        this.textures.set(key, texture);
+        if (max === HERO_TEXTURE_MAX) this.trimHeroTextures(key);
+        return texture;
+      })
+      .catch(() => {
+        this.pending.delete(key);
+        return null;
+      });
+    this.pending.set(key, promise);
     return promise;
+  }
+
+  /** Bound the hero texture cache, oldest first, never evicting the live one. */
+  trimHeroTextures(keepKey) {
+    const suffix = `|${HERO_TEXTURE_MAX}`;
+    const keys = [...this.textures.keys()].filter((key) => key.endsWith(suffix));
+    while (keys.length > HERO_TEXTURE_CACHE) {
+      const key = keys.shift();
+      if (key === keepKey) {
+        keys.push(key);
+        continue;
+      }
+      const texture = this.textures.get(key);
+      this.textures.delete(key);
+      texture?.dispose();
+    }
   }
 
   /* ---------- Interaction ---------- */
@@ -917,14 +1181,18 @@ export class SpaceScene {
 
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
-    this.frame = requestAnimationFrame(this.loop.bind(this));
+    this.trackPerformance(delta);
+    this.frame = requestAnimationFrame(this.boundLoop);
   }
 
   dispose() {
     this.disposed = true;
     this.plateToken += 1;
-    cancelAnimationFrame(this.frame);
+    this.pause();
+    window.clearTimeout(this.plateTimer);
     this.resizeObserver?.disconnect();
+    this.intersectionObserver?.disconnect();
+    document.removeEventListener("visibilitychange", this.handleVisibility);
     this.clearPlates();
     for (const texture of this.fallbackCards.values()) texture.dispose();
     for (const texture of this.plateCards.values()) texture.dispose();

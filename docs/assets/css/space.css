@@ -155,6 +155,10 @@ body {
   animation: spin 0.9s linear infinite;
 }
 
+/* Also used mid-session when the GPU drops the context, where it has to cover
+   a canvas that has gone blank. */
+.scene-fallback { background: var(--bg-2); }
+
 .scene-fallback strong { display: block; margin-bottom: 6px; color: var(--text); font-family: var(--mono); }
 .scene-fallback p { margin: 0 auto; max-width: 380px; color: var(--muted); font-size: 0.85rem; }
 

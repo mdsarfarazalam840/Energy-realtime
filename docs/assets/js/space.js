@@ -2,7 +2,7 @@
    observatory, accessible picture panel, orbit index, and shared dashboard
    chrome. */
 
-import { SpaceScene } from "./space-scene.js?v=20261106-1";
+import { SpaceScene } from "./space-scene.js?v=20261107-1";
 import {
   createDemoSnapshot,
   loadApodWindow,
@@ -16,7 +16,7 @@ import {
   entryUrl,
   resolveApiKey,
   todayUTC,
-} from "./space-data.js?v=20261106-1";
+} from "./space-data.js?v=20261107-1";
 import { initLiveCounter } from "./live-counter.js?v=20261105-1";
 
 const REFRESH_MS = 1800000;
@@ -67,6 +67,16 @@ function currentEntry() {
 
 /* ---------- 3D scene ---------- */
 
+function showSceneFallback(title, message) {
+  const fallback = $("scene-fallback");
+  if (!fallback) return;
+  const heading = fallback.querySelector("strong");
+  const detail = fallback.querySelector("p");
+  if (heading) heading.textContent = title;
+  if (detail) detail.textContent = message;
+  fallback.hidden = false;
+}
+
 function initScene() {
   try {
     state.scene = new SpaceScene($("scene"), {
@@ -75,6 +85,18 @@ function initScene() {
       onOpen: (entry) => {
         const url = entryUrl(entry);
         if (url) window.open(url, "_blank", "noopener,noreferrer");
+      },
+      // The GPU dropped the context (driver reset or memory pressure). Say so
+      // instead of leaving a black stage, and pick up again if it comes back.
+      onContextLost: () => {
+        showSceneFallback(
+          "3D view paused",
+          "The graphics context was lost — usually a driver reset or low memory. The picture details and the orbit index still work."
+        );
+      },
+      onContextRestored: () => {
+        $("scene-fallback").hidden = true;
+        showToast("3D view restored.");
       },
     });
     state.scene.setTheme(state.theme);
@@ -85,13 +107,27 @@ function initScene() {
     console.warn("3D observatory unavailable", error);
     const loading = $("scene-loading");
     if (loading) loading.classList.add("is-done");
-    const fallback = $("scene-fallback");
-    if (fallback) fallback.hidden = false;
+    showSceneFallback(
+      "3D view unavailable",
+      "WebGL is blocked in this browser. The picture details and the orbit index still work."
+    );
     state.scene = null;
   }
 }
 
+let hoverFrame = 0;
+
 function handleHover(entry, event) {
+  // Pointer moves fire far faster than the tooltip needs to follow; coalesce
+  // them into one DOM write per animation frame.
+  if (hoverFrame) return;
+  hoverFrame = window.requestAnimationFrame(() => {
+    hoverFrame = 0;
+    paintHover(entry, event);
+  });
+}
+
+function paintHover(entry, event) {
   const tip = $("hero-tooltip");
   if (!entry || !event) {
     tip.hidden = true;
@@ -134,7 +170,9 @@ function applyTheme(theme) {
 }
 
 function hideBoot() {
-  const boot = $("boot");
+  // Called once at startup and again when the data lands; by then the curtain
+  // may already be gone, so this must not require the node to exist.
+  const boot = document.getElementById("boot");
   if (!boot || boot.classList.contains("is-done")) return;
   boot.classList.add("is-done");
   window.setTimeout(() => boot.remove(), 420);
@@ -461,6 +499,9 @@ function init() {
   bindEvents();
   syncOrbitButton();
   initLiveCounter({ room: "space" });
+  // The observatory is ready before the network is: drop the boot curtain now
+  // and let the panel fill in, instead of blocking the first paint on NASA.
+  hideBoot();
   loadEntries();
 }
 

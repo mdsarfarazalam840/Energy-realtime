@@ -41,6 +41,14 @@ MOBILE = {"width": 390, "height": 844}
 
 API_HOST = "api.nasa.gov"
 IMAGE_HOST = "images.example.com"
+NASA_IMAGE_HOST = "assets.science.nasa.gov"
+
+# One plate points at NASA's dynamic-image host so the test can prove the page
+# asks for a smaller rendition instead of downloading the 1920px original.
+NASA_PLATE_URL = (
+    f"https://{NASA_IMAGE_HOST}/dynamicimage/assets/science/cds/apod/apod/2026/october/OrionSword_2000.jpg"
+    "?w=1920&h=1200&fit=clip"
+)
 
 # 1x1 transparent PNG. Served for every stubbed APOD image so the WebGL texture
 # path runs without touching the network.
@@ -128,6 +136,9 @@ def fake_entries() -> list[dict]:
             "hdurl": f"https://{IMAGE_HOST}/{media_type}-{index}-hd.png",
             "copyright": "Test Astronomy Team",
         }
+        if index == 2:
+            entry["url"] = NASA_PLATE_URL
+            entry["hdurl"] = NASA_PLATE_URL
         if media_type == "video":
             entry["url"] = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
             entry["thumbnail_url"] = f"https://{IMAGE_HOST}/video-{index}.png"
@@ -212,6 +223,7 @@ def stub_apod(page: Page) -> None:
 
     page.route(f"**://{API_HOST}/**", route_api)
     stub_images(page)
+    page.route(f"**://{NASA_IMAGE_HOST}/**", route_image)
     page.route("**://www.youtube.com/**", lambda route: route.abort())
 
 
@@ -289,6 +301,16 @@ def scene_canvas(page: Page) -> int:
     return page.locator("#scene canvas.scene-canvas").count()
 
 
+def wait_for(predicate, timeout_ms: int = 8000, interval: float = 0.1) -> bool:
+    """Poll a Python-side predicate (used for request-recording assertions)."""
+    deadline = time.time() + timeout_ms / 1000
+    while time.time() < deadline:
+        if predicate():
+            return True
+        time.sleep(interval)
+    return predicate()
+
+
 def chips(page: Page) -> list[dict]:
     return page.evaluate(
         """() => [...document.querySelectorAll('#day-strip .day-chip')].map((chip) => ({
@@ -322,6 +344,39 @@ def run_desktop(browser, url: str) -> None:
         "hero picture is loaded as a WebGL texture",
         any(latest_entry()["url"] in requested for requested in image_requests),
         f"{len(image_requests)} image requests",
+    )
+
+    # Performance budget: the orbit plates must not download (or upload) the
+    # full-resolution original. NASA's dynamic-image host honours ?w=.
+    rendition = wait_for(
+        lambda: any(NASA_IMAGE_HOST in url and "w=460" in url for url in image_requests), 6000
+    )
+    check(
+        "orbit plates request a small NASA rendition",
+        rendition,
+        next((url for url in image_requests if NASA_IMAGE_HOST in url), "no NASA image request"),
+    )
+    check(
+        "full-resolution original is never fetched for the rail",
+        not any(NASA_IMAGE_HOST in url and "w=1920" in url for url in image_requests),
+        "; ".join(url for url in image_requests if NASA_IMAGE_HOST in url)[:160],
+    )
+    backing = page.evaluate(
+        """() => {
+            const canvas = document.querySelector('#scene canvas.scene-canvas');
+            const rect = canvas.getBoundingClientRect();
+            return { px: canvas.width * canvas.height, w: canvas.width, css: Math.round(rect.width) };
+        }"""
+    )
+    check(
+        "canvas backing store stays inside the pixel budget",
+        backing["px"] <= 5_600_000 * 1.05,
+        f"{backing['px']} px ({backing['w']} wide)",
+    )
+    check(
+        "pixel ratio is capped at 2x",
+        backing["w"] <= backing["css"] * 2 + 2,
+        f"{backing['w']} backing / {backing['css']} css",
     )
 
     status = page.locator("#status-text").inner_text()
@@ -391,6 +446,18 @@ def run_desktop(browser, url: str) -> None:
 
     check("share hash follows the selection", page.evaluate("() => location.hash") == f"#date={selected_date(page)}")
 
+    # Browse every day: this exercises the bounded hero texture cache and the
+    # per-day texture keys, which must not leak or blank the frame.
+    for chip in chips(page):
+        page.click(f"#day-strip .day-chip[data-date='{chip['date']}']")
+        page.wait_for_timeout(120)
+    page.wait_for_timeout(800)
+    check(
+        "browsing every day keeps the hero and canvas alive",
+        scene_canvas(page) == 1 and page.locator("#space-title").inner_text() != "",
+        page.locator("#space-title").inner_text(),
+    )
+
     page.goto(f"{url}/space.html?api_key=TESTKEY123", wait_until="networkidle")
     wait_loaded(page)
     check(
@@ -409,9 +476,18 @@ def run_mobile(browser, url: str) -> None:
     context = browser.new_context(viewport=MOBILE)
     page = context.new_page()
     errors = collect_errors(page)
+    image_requests.clear()
     stub_apod(page)
     page.goto(f"{url}/space.html", wait_until="networkidle")
     wait_loaded(page)
+
+    # The fanned rail is hidden below 1180px, so phones must not pay for its
+    # photo downloads or GPU textures at all.
+    check(
+        "mobile skips orbit-rail photo downloads",
+        not any("image-0.png" in requested for requested in image_requests),
+        f"{len(image_requests)} image requests",
+    )
 
     check("mobile index renders every frame", len(chips(page)) == len(FAKE_TITLES))
     check("mobile hero panel shows a title", page.locator("#space-title").inner_text() != "")
@@ -453,6 +529,66 @@ def run_tablet(browser, url: str) -> None:
     check("tablet camera preset keeps the canvas alive", scene_canvas(page) == 1)
     page.screenshot(path=str(RESULTS / "space-tablet.png"), full_page=True)
     check("no console or page errors on tablet", not errors, "; ".join(errors[:3]))
+    context.close()
+
+
+def run_resilience(browser, url: str) -> None:
+    """A lost WebGL context must degrade to a notice and recover, not go blank."""
+    print("\n[resilience] WebGL context loss and recovery")
+    context = browser.new_context(viewport=DESKTOP)
+    page = context.new_page()
+    errors = collect_errors(page)
+    stub_apod(page)
+    page.goto(f"{url}/space.html", wait_until="networkidle")
+    wait_loaded(page)
+
+    page.evaluate(
+        """() => document.querySelector('#scene canvas')
+            .dispatchEvent(new Event('webglcontextlost', { cancelable: true }))"""
+    )
+    page.wait_for_timeout(400)
+    fallback = page.locator("#scene-fallback")
+    check(
+        "lost context shows a recoverable notice",
+        fallback.is_visible() and "paused" in fallback.inner_text().lower(),
+        fallback.inner_text().replace("\n", " ")[:80],
+    )
+
+    page.evaluate(
+        "() => document.querySelector('#scene canvas')"
+        ".dispatchEvent(new Event('webglcontextrestored'))"
+    )
+    page.wait_for_timeout(700)
+    check("restored context hides the notice", not page.locator("#scene-fallback").is_visible())
+    check("scene keeps a live canvas after recovery", scene_canvas(page) == 1)
+    check("no console or page errors during recovery", not errors, "; ".join(errors[:3]))
+    context.close()
+
+
+def run_boot(browser, url: str) -> None:
+    """The curtain must lift on the 3D scene, not on NASA's response."""
+    print("\n[boot] first paint does not wait for the network")
+    context = browser.new_context(viewport=DESKTOP)
+    page = context.new_page()
+    errors = collect_errors(page)
+    # Park the API request forever: the page must still become usable.
+    page.route(f"**://{API_HOST}/**", lambda route: None)
+    page.route(f"**://{IMAGE_HOST}/**", route_image)
+    page.goto(f"{url}/space.html", wait_until="domcontentloaded")
+
+    lifted = True
+    try:
+        page.wait_for_function("() => document.querySelector('#boot') === null", timeout=4000)
+    except Exception:  # noqa: BLE001 - the assertion below records the failure
+        lifted = False
+    check("boot curtain lifts while the API is still pending", lifted)
+    check("3D stage is live before the data arrives", scene_canvas(page) == 1)
+    check(
+        "panel shows its loading state instead of stalling",
+        "Loading the sky" in page.locator("#space-title").inner_text(),
+        page.locator("#space-title").inner_text(),
+    )
+    check("no console or page errors while the API hangs", not errors, "; ".join(errors[:3]))
     context.close()
 
 
@@ -569,6 +705,8 @@ def main() -> int:
                     run_desktop(browser, url)
                     run_tablet(browser, url)
                     run_mobile(browser, url)
+                    run_resilience(browser, url)
+                    run_boot(browser, url)
                     demo_count = run_fallback(browser, url, label="demo")
                     check("demo fallback renders a full gallery", demo_count >= 10, f"{demo_count} chips")
                     cache_count = run_cache_fallback(browser, url)

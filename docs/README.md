@@ -53,6 +53,18 @@ page uses the snapshot, then a labelled demo gallery. Demo frames link to the
 official APOD archive page for their date, so a click never dead-ends on a
 missing source link.
 
+Textures are budgeted so the page runs on phones and low-end laptops. APOD
+originals run to 6000 px wide (93 MB as a single GPU texture, enough to lose
+the WebGL context); the scene asks NASA's dynamic-image host for a 1500 px
+hero rendition and 460 px plate renditions, decodes them off the main thread
+with `createImageBitmap`, and downscales anything that arrives oversized. The
+full-resolution link in the panel still points at the original. Plate photos
+are only fetched on the wide layout where the 3D rail is visible, and only
+after the hero has painted. The render loop pauses in a hidden tab or when the
+stage scrolls away, the pixel ratio is capped at 2x (and stepped down when the
+measured frame time overshoots), and a lost WebGL context shows a recoverable
+notice instead of a black stage.
+
 ```bash
 node scripts/cache_apod.mjs          # writes docs/data/apod.json
 python tests/load/space_ui.py        # end-to-end browser test
