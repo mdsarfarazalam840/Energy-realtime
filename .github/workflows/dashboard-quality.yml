@@ -119,6 +119,8 @@ jobs:
         run: python tests/load/finance_ui.py
       - name: Hacker News tech pulse page end-to-end test
         run: python tests/load/tech_ui.py
+      - name: NASA APOD space page end-to-end test
+        run: python tests/load/space_ui.py
 
       - name: Upload reports
         if: always()

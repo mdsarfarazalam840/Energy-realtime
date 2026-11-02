@@ -1,0 +1,49 @@
+name: Cache NASA APOD Snapshot
+
+# Fail-Safe Cache for the Space page: periodically fetch the last 14 days of
+# NASA's Astronomy Picture of the Day and commit a compact snapshot to
+# docs/data/apod.json. The static page falls back to this committed cache when
+# api.nasa.gov is unreachable or rate limited, so it keeps showing real
+# pictures instead of the demo gallery.
+#
+# DEMO_KEY works without signing up (30 requests/hour per IP). Add a free key
+# from https://api.nasa.gov as the repository secret NASA_API_KEY for the
+# higher limit.
+
+on:
+  schedule:
+    # Every six hours, offset from the energy/crypto/HN jobs.
+    - cron: "26 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch and write APOD cache
+        env:
+          NASA_API_KEY: ${{ secrets.NASA_API_KEY }}
+        run: node scripts/cache_apod.mjs
+
+      - name: Commit changed cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet docs/data/apod.json; then
+            echo "APOD cache unchanged; skipping commit."
+          else
+            git add docs/data/apod.json
+            git commit -m "chore: update NASA APOD cache [skip ci]"
+            git push
+          fi

@@ -28,6 +28,33 @@ API (no key needed). If the network is unreachable it falls back to a bundled
 demo headline set so the dashboard never stalls. The page is tested end-to-end
 by `tests/load/tech_ui.py`.
 
+## Space page (NASA APOD)
+
+`space.html` is a full-screen 3D observatory around NASA's Astronomy Picture of
+the Day. The hero frame, the orbit rail, the star field, the nebulae and the
+planet are WebGL (Three.js); the HTML panel and the orbit index are the
+accessible mirror of the selected picture.
+
+The page asks `api.nasa.gov/planetary/apod` for a 14-day UTC window in one
+request, so the public `DEMO_KEY` limit (30 requests/hour per IP) is not spent
+by navigation. Append `?api_key=YOUR_KEY` for a free higher limit; the key is
+remembered in this browser only. NASA's image hosts send
+`Access-Control-Allow-Origin`, so pictures can be used as WebGL textures; if a
+texture cannot be loaded the frame keeps a drawn title card.
+
+The fail-safe cache is `data/apod.json`, written by `scripts/cache_apod.mjs`
+and refreshed by `.github/workflows/apod_cache.yml` every six hours. Set the
+optional `NASA_API_KEY` secret for the higher API limit. If NASA is unreachable
+(or rate limited), the page uses that snapshot, then a labelled demo gallery.
+
+```bash
+node scripts/cache_apod.mjs          # writes docs/data/apod.json
+python tests/load/space_ui.py        # end-to-end browser test
+```
+
+`data/apod.json` (schema 1) holds `entries` (`date`, `title`, `explanation`,
+`media_type`, `url`, `hdurl`, `thumbnail_url`, `copyright`) and `meta` counts.
+
 ## Finance page (SEC EDGAR)
 
 `finance.html` is a deep-dive panel over U.S. SEC EDGAR filings and XBRL

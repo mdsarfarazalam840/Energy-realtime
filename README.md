@@ -78,6 +78,7 @@ The repository started from the Databricks **default-python** Declarative Automa
 | Crypto dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/crypto.html> | Live 3D crypto market board, trending, focus chart |
 | Finance dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/finance.html> | SEC EDGAR filings, annual and quarterly financial facts, sector exposure |
 | Tech Pulse | <https://mdsaifedu.eu.cc/Energy-realtime/tech.html> | Hacker News top headlines in a 3D hologram feed |
+| Space observatory | <https://mdsaifedu.eu.cc/Energy-realtime/space.html> | NASA's Astronomy Picture of the Day in a full-screen 3D observatory |
 | Diagram gallery | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/> | All system diagrams in one place |
 | System architecture | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html> | Interactive runtime topology and trust boundary |
 | Energy data flow | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html> | Interactive lineage from feeds to browser |
@@ -219,6 +220,7 @@ The runtime diagram shows where data moves; this map shows where that behavior l
 | Crypto dashboard | `producer_crypto.py`, `scripts/export_crypto_data.py` | CoinGecko public API → Kafka → Databricks → `docs/data/crypto.json` → `crypto.html` |
 | Finance dashboard | `scripts/export_edgar_data.py` | SEC EDGAR company facts and submissions → `docs/data/finance.json` → `finance.html` |
 | Tech Pulse | `scripts/cache_hn.mjs` | Hacker News top stories → `docs/data/tech-news.json` → `tech.html` |
+| Space observatory | `scripts/cache_apod.mjs`, `docs/assets/js/space*.js` | NASA APOD 14-day window → `docs/data/apod.json` → `space.html` |
 | Presence relay | `workers/live/` | Optional Cloudflare Worker for shared viewer count and an optional `/api/live` path |
 | Secrets | GitHub Actions + Databricks secret scope | Keep Kafka and Databricks credentials outside the browser |
 
