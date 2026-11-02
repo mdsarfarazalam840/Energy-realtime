@@ -159,6 +159,19 @@ export function buildSnapshot(entries, { demo = false, meta = {} } = {}) {
   };
 }
 
+/**
+ * The official API answers with a placeholder "NASA Science" record (the same
+ * logo image) for dates it has no entry for. Those records are not pictures of
+ * the day, so they are dropped in favour of the site-feed cache.
+ */
+export function isPlaceholderEntry(entry) {
+  if (!entry) return true;
+  return (
+    /^NASA Science$/i.test(String(entry.title || "").trim()) ||
+    /nasa-logo@2x\.png/i.test(String(entry.imageUrl || entry.url || ""))
+  );
+}
+
 export function mediaLabel(entry) {
   if (!entry) return "—";
   if (entry.mediaType === "video") return "Video";
@@ -226,12 +239,20 @@ export async function loadApodWindow({ apiKey = DEMO_KEY, days = WINDOW_DAYS, si
       }
       const payload = await response.json();
       const list = Array.isArray(payload) ? payload : [payload];
-      return buildSnapshot(normalizeEntries(list));
+      const entries = normalizeEntries(list);
+      const usable = entries.filter((entry) => !isPlaceholderEntry(entry));
+      if (!usable.length) {
+        const error = new Error("NASA APOD returned placeholder records");
+        error.placeholder = true;
+        throw error;
+      }
+      return buildSnapshot(usable);
     } catch (error) {
       lastError = error;
       if (error instanceof DOMException && error.name === "AbortError") throw error;
-      // A rate limit or a bad key will not fix itself in 400 ms.
-      if (error.status === 429 || error.status === 403) throw error;
+      // A rate limit, a bad key, or placeholder records will not fix
+      // themselves in 400 ms.
+      if (error.status === 429 || error.status === 403 || error.placeholder) throw error;
       if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
     }
   }
@@ -252,7 +273,8 @@ export async function loadApodCache({ signal } = {}) {
   if (!response.ok) throw new Error(`APOD cache HTTP ${response.status}`);
   const doc = await response.json();
   if (!doc || !Array.isArray(doc.entries)) throw new Error("APOD cache has no entries");
-  const entries = normalizeEntries(doc.entries);
+  const entries = normalizeEntries(doc.entries).filter((entry) => !isPlaceholderEntry(entry));
+  if (!entries.length) throw new Error("APOD cache has only placeholder records");
   return buildSnapshot(entries, {
     meta: {
       source: "nasa-apod-cache",

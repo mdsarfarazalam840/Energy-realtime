@@ -183,6 +183,20 @@ def prepare_site() -> Path:
     return site
 
 
+def route_image(route) -> None:
+    image_requests.append(route.request.url)
+    route.fulfill(
+        status=200,
+        content_type="image/png",
+        headers={"Access-Control-Allow-Origin": "*"},
+        body=PNG,
+    )
+
+
+def stub_images(page: Page) -> None:
+    page.route(f"**://{IMAGE_HOST}/**", route_image)
+
+
 def stub_apod(page: Page) -> None:
     """Intercept the NASA API and its image hosts (live path)."""
     payload = fake_entries()
@@ -196,18 +210,42 @@ def stub_apod(page: Page) -> None:
             body=json.dumps(payload),
         )
 
-    def route_image(route) -> None:
-        image_requests.append(route.request.url)
+    page.route(f"**://{API_HOST}/**", route_api)
+    stub_images(page)
+    page.route("**://www.youtube.com/**", lambda route: route.abort())
+
+
+def placeholder_entries() -> list[dict]:
+    """Exactly what the upstream API returns when it has no real entry."""
+    today = date.today()
+    return [
+        {
+            "date": (today - timedelta(days=offset)).isoformat(),
+            "title": "NASA Science",
+            "explanation": "Discover the cosmos! Each day a different image or photograph of our fascinating universe is featured.",
+            "media_type": "image",
+            "service_version": "v1",
+            "url": "https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png",
+            "hdurl": "https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png",
+        }
+        for offset in range(8)
+    ]
+
+
+def stub_placeholder_api(page: Page) -> None:
+    payload = placeholder_entries()
+
+    def route_api(route) -> None:
+        api_requests.append(route.request.url)
         route.fulfill(
             status=200,
-            content_type="image/png",
+            content_type="application/json",
             headers={"Access-Control-Allow-Origin": "*"},
-            body=PNG,
+            body=json.dumps(payload),
         )
 
     page.route(f"**://{API_HOST}/**", route_api)
-    page.route(f"**://{IMAGE_HOST}/**", route_image)
-    page.route("**://www.youtube.com/**", lambda route: route.abort())
+    stub_images(page)
 
 
 def block_apod(page: Page) -> None:
@@ -478,6 +516,29 @@ def run_cache_fallback(browser, url: str) -> int:
     return count
 
 
+def run_placeholder_fallback(browser, url: str) -> int:
+    """The API is up but only returns placeholder "NASA Science" records."""
+    print("\n[fallback] placeholder API records (real cache)")
+    context = browser.new_context(viewport=DESKTOP)
+    page = context.new_page()
+    errors = collect_errors(page)
+    api_requests.clear()
+    stub_placeholder_api(page)
+    page.goto(f"{url}/space.html", wait_until="networkidle")
+    wait_loaded(page)
+
+    count = len(chips(page))
+    status = page.locator("#status-text").inner_text().lower()
+    title = page.locator("#space-title").inner_text()
+    check("placeholder: API was called", len(api_requests) >= 1, f"{len(api_requests)} calls")
+    check("placeholder: page falls back to the cache", count == 6 and "cached" in status, f"{count} chips / {status}")
+    check("placeholder: logo record is not shown", title != "NASA Science" and "Cached Cassiopeia" in title, title)
+    check("placeholder: scene boots on cached data", scene_canvas(page) == 1)
+    check("placeholder: no console or page errors", not errors, "; ".join(errors[:3]))
+    context.close()
+    return count
+
+
 def run_navigation(browser, url: str) -> None:
     print("\n[navigation] links between dashboards")
     context = browser.new_context(viewport=DESKTOP)
@@ -512,6 +573,8 @@ def main() -> int:
                     check("demo fallback renders a full gallery", demo_count >= 10, f"{demo_count} chips")
                     cache_count = run_cache_fallback(browser, url)
                     check("cache fallback renders the cached gallery", cache_count == 6, f"{cache_count} chips")
+                    placeholder_count = run_placeholder_fallback(browser, url)
+                    check("placeholder fallback keeps the cached gallery", placeholder_count == 6, f"{placeholder_count} chips")
                 with origin(DOCS) as url:
                     run_navigation(browser, url)
             finally:
