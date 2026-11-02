@@ -1,0 +1,412 @@
+{
+  "generated_at": "2026-11-02T07:49:55Z",
+  "checks": [
+    {
+      "name": "page title mentions Space",
+      "ok": true,
+      "detail": "VoltScope Space \u2014 NASA Astronomy Picture of the Day"
+    },
+    {
+      "name": "hero picture is loaded as a WebGL texture",
+      "ok": true,
+      "detail": "10 image requests"
+    },
+    {
+      "name": "orbit plates request a small NASA rendition",
+      "ok": true,
+      "detail": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/OrionSword_2000.jpg?w=460"
+    },
+    {
+      "name": "full-resolution original is never fetched for the rail",
+      "ok": true,
+      "detail": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/OrionSword_2000.jpg?w=460"
+    },
+    {
+      "name": "canvas backing store stays inside the pixel budget",
+      "ok": true,
+      "detail": "1200960 px (1440 wide)"
+    },
+    {
+      "name": "pixel ratio is capped at 2x",
+      "ok": true,
+      "detail": "1440 backing / 1440 css"
+    },
+    {
+      "name": "status reports a live APOD feed",
+      "ok": true,
+      "detail": "NASA APOD live"
+    },
+    {
+      "name": "hero panel shows the latest picture",
+      "ok": true,
+      "detail": "Stub Dust Devil Eight"
+    },
+    {
+      "name": "hero date includes the year",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "explanation renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "media badge reads Image",
+      "ok": true,
+      "detail": "IMAGE"
+    },
+    {
+      "name": "full-resolution link targets the HD url",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "orbit index renders every frame",
+      "ok": true,
+      "detail": "9 chips"
+    },
+    {
+      "name": "latest frame is selected",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rail note summarises the window",
+      "ok": true,
+      "detail": "9 frames \u00b7 8 images \u00b7 1 video \u00b7 25 Oct \u2013 02 Nov 2026"
+    },
+    {
+      "name": "3D scene creates a WebGL canvas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "scene finished booting",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "clicking a chip focuses that frame",
+      "ok": true,
+      "detail": "Stub Voyager Four"
+    },
+    {
+      "name": "video badge switches",
+      "ok": true,
+      "detail": "VIDEO"
+    },
+    {
+      "name": "video link points at the video url",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "video frame shows the watch label",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "arrow key steps to the next frame",
+      "ok": true,
+      "detail": "2026-10-29 -> 2026-10-30"
+    },
+    {
+      "name": "previous button steps back",
+      "ok": true,
+      "detail": "2026-10-29"
+    },
+    {
+      "name": "camera preset keeps the canvas alive",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "orbit toggle flips",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "theme toggles to light",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "scene still renders in light theme",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "resizing to the narrow layout keeps the scene alive",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "resizing back to wide restores the scene",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "share hash follows the selection",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "browsing every day keeps the hero and canvas alive",
+      "ok": true,
+      "detail": "Stub Dust Devil Eight"
+    },
+    {
+      "name": "api_key query parameter is forwarded to NASA",
+      "ok": true,
+      "detail": "https://api.nasa.gov/planetary/apod?api_key=TESTKEY123&start_date=2026-10-20&end_date=2026-11-02&thumbs=true"
+    },
+    {
+      "name": "no console or page errors on the live page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet index renders every frame",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet scene creates a WebGL canvas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tablet layout has no horizontal overflow",
+      "ok": true,
+      "detail": "0px"
+    },
+    {
+      "name": "tablet panel stays inside the viewport",
+      "ok": true,
+      "detail": "{'x': 18, 'y': 131, 'width': 344, 'height': 515}"
+    },
+    {
+      "name": "tablet camera preset keeps the canvas alive",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console or page errors on tablet",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile skips orbit-rail photo downloads",
+      "ok": true,
+      "detail": "1 image requests"
+    },
+    {
+      "name": "mobile index renders every frame",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile hero panel shows a title",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile scene creates a WebGL canvas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile layout has no horizontal overflow",
+      "ok": true,
+      "detail": "0px"
+    },
+    {
+      "name": "mobile panel stays inside the viewport",
+      "ok": true,
+      "detail": "{'x': 10, 'y': 510.515625, 'width': 370, 'height': 221.484375}"
+    },
+    {
+      "name": "no console or page errors on mobile",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "lost context shows a recoverable notice",
+      "ok": true,
+      "detail": "3D view paused  The graphics context was lost \u2014 usually a driver reset or low me"
+    },
+    {
+      "name": "restored context hides the notice",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "scene keeps a live canvas after recovery",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console or page errors during recovery",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "boot curtain lifts while the API is still pending",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "3D stage is live before the data arrives",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "panel shows its loading state instead of stalling",
+      "ok": true,
+      "detail": "Loading the sky\u2026"
+    },
+    {
+      "name": "no console or page errors while the API hangs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo: demo orbit index renders",
+      "ok": true,
+      "detail": "12 chips"
+    },
+    {
+      "name": "demo: status reports demo",
+      "ok": true,
+      "detail": "demo space gallery"
+    },
+    {
+      "name": "demo: demo title is populated",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo: frame links to the real NASA archive",
+      "ok": true,
+      "detail": "https://apod.nasa.gov/apod/ap261102.html"
+    },
+    {
+      "name": "demo: clicking the 3D frame opens the NASA archive",
+      "ok": true,
+      "detail": "https://apod.nasa.gov/apod/ap261102.html"
+    },
+    {
+      "name": "demo: demo scene boots",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo: no console or page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo fallback renders a full gallery",
+      "ok": true,
+      "detail": "12 chips"
+    },
+    {
+      "name": "cache: orbit index renders from cache",
+      "ok": true,
+      "detail": "6 chips"
+    },
+    {
+      "name": "cache: status reports cached",
+      "ok": true,
+      "detail": "nasa apod cached"
+    },
+    {
+      "name": "cache: status is not demo",
+      "ok": true,
+      "detail": "nasa apod cached"
+    },
+    {
+      "name": "cache: cached picture is shown",
+      "ok": true,
+      "detail": "Cached Cassiopeia 0"
+    },
+    {
+      "name": "cache: scene boots on cached data",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cache: no console or page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cache fallback renders the cached gallery",
+      "ok": true,
+      "detail": "6 chips"
+    },
+    {
+      "name": "placeholder: API was called",
+      "ok": true,
+      "detail": "1 calls"
+    },
+    {
+      "name": "placeholder: page falls back to the cache",
+      "ok": true,
+      "detail": "6 chips / nasa apod cached"
+    },
+    {
+      "name": "placeholder: logo record is not shown",
+      "ok": true,
+      "detail": "Cached Cassiopeia 0"
+    },
+    {
+      "name": "placeholder: scene boots on cached data",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "placeholder: no console or page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "placeholder fallback keeps the cached gallery",
+      "ok": true,
+      "detail": "6 chips"
+    },
+    {
+      "name": "energy page links to space",
+      "ok": true,
+      "detail": "index.html"
+    },
+    {
+      "name": "crypto page links to space",
+      "ok": true,
+      "detail": "crypto.html"
+    },
+    {
+      "name": "finance page links to space",
+      "ok": true,
+      "detail": "finance.html"
+    },
+    {
+      "name": "tech page links to space",
+      "ok": true,
+      "detail": "tech.html"
+    },
+    {
+      "name": "space page links back to energy",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "space page links to tech",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "passed": 81,
+  "failed": 0
+}
