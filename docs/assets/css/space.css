@@ -213,6 +213,7 @@ body {
   z-index: 6;
   top: 16px;
   left: 18px;
+  right: 18px;
   bottom: 122px;
   width: min(392px, calc(100% - 36px));
   display: flex;
