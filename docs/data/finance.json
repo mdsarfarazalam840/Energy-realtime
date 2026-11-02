@@ -9381,8 +9381,16 @@
           7082000000.0
         ],
         [
+          "2025-09-30",
+          7548000000.0
+        ],
+        [
           "2026-06-30",
           14525000000.0
+        ],
+        [
+          "2026-09-30",
+          15413000000.0
         ]
       ],
       "quarterly_revenue": [
@@ -9391,8 +9399,16 @@
           81506000000.0
         ],
         [
+          "2025-09-30",
+          85294000000.0
+        ],
+        [
           "2026-06-30",
           116017000000.0
+        ],
+        [
+          "2026-09-30",
+          113164000000.0
         ]
       ],
       "ratios": {
@@ -9411,6 +9427,50 @@
   ],
   "demo": false,
   "filings": [
+    {
+      "accession": "0002115436-26-000020",
+      "cik": "0002115436",
+      "document": "xom-20260930.htm",
+      "filed": "2026-11-02",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "XOM",
+      "url": "https://www.sec.gov/Archives/edgar/data/2115436/000211543626000020/xom-20260930.htm"
+    },
+    {
+      "accession": "0001628280-26-068909",
+      "cik": "0000080424",
+      "document": "pg-20261102.htm",
+      "filed": "2026-11-02",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-11-02",
+      "ticker": "PG",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000162828026068909/pg-20261102.htm"
+    },
+    {
+      "accession": "0001104659-26-121322",
+      "cik": "0001551152",
+      "document": "tm2628215d1_8k.htm",
+      "filed": "2026-11-02",
+      "form": "8-K",
+      "items": "5.02",
+      "period": "2026-10-28",
+      "ticker": "ABBV",
+      "url": "https://www.sec.gov/Archives/edgar/data/1551152/000110465926121322/tm2628215d1_8k.htm"
+    },
+    {
+      "accession": "0000320193-26-000024",
+      "cik": "0000320193",
+      "document": "aapl-20261102.htm",
+      "filed": "2026-11-02",
+      "form": "8-K",
+      "items": "2.02,9.01",
+      "period": "2026-11-02",
+      "ticker": "AAPL",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000024/aapl-20261102.htm"
+    },
     {
       "accession": "0002115436-26-000018",
       "cik": "0002115436",
@@ -10743,17 +10803,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042426000097/pg-20260729.htm"
     },
     {
-      "accession": "0000080424-26-000094",
-      "cik": "0000080424",
-      "document": "pg-20260729.htm",
-      "filed": "2026-07-29",
-      "form": "8-K",
-      "items": "5.02,7.01,9.01",
-      "period": "2026-07-29",
-      "ticker": "PG",
-      "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042426000094/pg-20260729.htm"
-    },
-    {
       "accession": "0001628280-26-049922",
       "cik": "0000021344",
       "document": "ko-20260728.htm",
@@ -11126,17 +11175,6 @@
       "period": "2026-06-24",
       "ticker": "JPM",
       "url": "https://www.sec.gov/Archives/edgar/data/19617/000162828026045169/jpm-20260624.htm"
-    },
-    {
-      "accession": "0001104659-26-076067",
-      "cik": "0001551152",
-      "document": "tm2618365d1_8k.htm",
-      "filed": "2026-06-22",
-      "form": "8-K",
-      "items": "7.01,9.01",
-      "period": "2026-06-18",
-      "ticker": "ABBV",
-      "url": "https://www.sec.gov/Archives/edgar/data/1551152/000110465926076067/tm2618365d1_8k.htm"
     },
     {
       "accession": "0001193125-26-275783",
@@ -12336,32 +12374,21 @@
       "period": "2026-02-24",
       "ticker": "AAPL",
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000130817926000008/aapl014016-def14a.htm"
-    },
-    {
-      "accession": "0001140361-26-000199",
-      "cik": "0000320193",
-      "document": "ef20060722_8k.htm",
-      "filed": "2026-01-02",
-      "form": "8-K",
-      "items": "5.02",
-      "period": "2025-12-30",
-      "ticker": "AAPL",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126000199/ef20060722_8k.htm"
     }
   ],
-  "generated_at": "2026-11-01T11:55:54Z",
+  "generated_at": "2026-11-02T21:44:57Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
     "currency": "USD",
-    "filing_count": 267,
+    "filing_count": 268,
     "form_counts": {
       "10-K": 6,
-      "10-Q": 59,
+      "10-Q": 60,
       "8-K": 188,
       "DEF 14A": 14
     },
-    "latest_filed": "2026-10-30",
+    "latest_filed": "2026-11-02",
     "sectors": [
       "Energy",
       "Financials",
