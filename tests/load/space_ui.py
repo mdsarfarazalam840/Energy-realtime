@@ -1,0 +1,527 @@
+"""End-to-end browser test for the VoltScope Space (NASA APOD) page.
+
+Serves the real `docs/` folder from `tests/load/serve_docs.mjs` and drives it
+with Chromium through Playwright. The page fetches api.nasa.gov at runtime, so
+the live path is exercised with route interception (including the image CORS
+headers NASA sends), and the fallback paths are exercised by aborting the
+upstream API and the fail-safe cache.
+
+Usage:
+    python tests/load/space_ui.py
+    python tests/load/space_ui.py --keep
+
+Exit code 1 when an assertion fails.
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import json
+import shutil
+import socket
+import subprocess
+import tempfile
+import time
+import urllib.request
+from contextlib import contextmanager
+from datetime import date, timedelta
+from pathlib import Path
+
+from playwright.sync_api import Page, sync_playwright
+
+REPO = Path(__file__).resolve().parents[2]
+DOCS = REPO / "docs"
+SERVER = Path(__file__).resolve().with_name("serve_docs.mjs")
+RESULTS = Path(__file__).resolve().with_name("results")
+
+DESKTOP = {"width": 1440, "height": 900}
+TABLET = {"width": 1024, "height": 768}
+MOBILE = {"width": 390, "height": 844}
+
+API_HOST = "api.nasa.gov"
+IMAGE_HOST = "images.example.com"
+
+# 1x1 transparent PNG. Served for every stubbed APOD image so the WebGL texture
+# path runs without touching the network.
+PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+)
+
+VIDEO_INDEX = 4
+
+FAKE_TITLES = [
+    "Stub Nebula Zero",
+    "Stub Aurora One",
+    "Stub Rings Two",
+    "Stub Deep Field Three",
+    "Stub Voyager Four",
+    "Stub Terminator Five",
+    "Stub Prominence Six",
+    "Stub Halo Seven",
+    "Stub Dust Devil Eight",
+]
+
+checks: list[dict] = []
+findings: list[str] = []
+image_requests: list[str] = []
+api_requests: list[str] = []
+
+
+def check(name: str, ok: bool, detail: str = "") -> bool:
+    checks.append({"name": name, "ok": bool(ok), "detail": detail})
+    if not ok:
+        findings.append(f"{name}: {detail}" if detail else name)
+    print(f"  {'PASS' if ok else 'FAIL'}  {name}{(' - ' + detail) if detail else ''}")
+    return ok
+
+
+def free_port() -> int:
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+@contextmanager
+def origin(site: Path):
+    port = free_port()
+    proc = subprocess.Popen(
+        ["node", str(SERVER), "--root", str(site), "--port", str(port), "--workers", "1", "--latency", "0"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    url = f"http://127.0.0.1:{port}"
+    try:
+        deadline = time.time() + 25
+        while time.time() < deadline:
+            try:
+                with urllib.request.urlopen(url + "/", timeout=1) as response:
+                    if response.status == 200:
+                        break
+            except Exception:  # noqa: BLE001 - retry until the origin is up
+                time.sleep(0.15)
+        else:
+            raise RuntimeError("local origin did not start")
+        yield url
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+
+
+def fake_entries() -> list[dict]:
+    """Nine APOD entries ending today, with one video that has a thumbnail."""
+    today = date.today()
+    entries = []
+    for index, title in enumerate(FAKE_TITLES):
+        day = (today - timedelta(days=len(FAKE_TITLES) - 1 - index)).isoformat()
+        media_type = "video" if index == VIDEO_INDEX else "image"
+        entry = {
+            "date": day,
+            "title": title,
+            "explanation": f"{title} is a synthetic APOD record used by the browser test to verify the observatory.",
+            "media_type": media_type,
+            "service_version": "v1",
+            "url": f"https://{IMAGE_HOST}/{media_type}-{index}.png",
+            "hdurl": f"https://{IMAGE_HOST}/{media_type}-{index}-hd.png",
+            "copyright": "Test Astronomy Team",
+        }
+        if media_type == "video":
+            entry["url"] = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+            entry["thumbnail_url"] = f"https://{IMAGE_HOST}/video-{index}.png"
+            entry.pop("hdurl", None)
+        entries.append(entry)
+    return entries
+
+
+def latest_entry() -> dict:
+    return fake_entries()[-1]
+
+
+def video_entry() -> dict:
+    return fake_entries()[VIDEO_INDEX]
+
+
+def cached_entries() -> list[dict]:
+    today = date.today()
+    return [
+        {
+            "date": (today - timedelta(days=offset)).isoformat(),
+            "title": f"Cached Cassiopeia {offset}",
+            "explanation": "A cached APOD record from the last committed snapshot.",
+            "media_type": "image",
+            "url": f"https://{IMAGE_HOST}/cached-{offset}.png",
+            "hdurl": f"https://{IMAGE_HOST}/cached-{offset}-hd.png",
+            "thumbnail_url": "",
+            "copyright": "Cached Team",
+        }
+        for offset in range(5, -1, -1)
+    ]
+
+
+def prepare_site() -> Path:
+    site = Path(tempfile.mkdtemp(prefix="voltscope-space-"))
+    shutil.copytree(DOCS, site, dirs_exist_ok=True)
+    # Synthetic fail-safe cache so the cached path has a deterministic payload.
+    cache = {
+        "schema_version": 1,
+        "meta": {
+            "source": "nasa-apod-cache",
+            "count": 6,
+            "image_count": 6,
+            "video_count": 0,
+            "first_date": cached_entries()[0]["date"],
+            "latest_date": cached_entries()[-1]["date"],
+            "cached_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        },
+        "entries": cached_entries(),
+        "demo": False,
+    }
+    (site / "data" / "apod.json").write_text(json.dumps(cache, indent=2), encoding="utf-8")
+    return site
+
+
+def stub_apod(page: Page) -> None:
+    """Intercept the NASA API and its image hosts (live path)."""
+    payload = fake_entries()
+
+    def route_api(route) -> None:
+        api_requests.append(route.request.url)
+        route.fulfill(
+            status=200,
+            content_type="application/json",
+            headers={"Access-Control-Allow-Origin": "*"},
+            body=json.dumps(payload),
+        )
+
+    def route_image(route) -> None:
+        image_requests.append(route.request.url)
+        route.fulfill(
+            status=200,
+            content_type="image/png",
+            headers={"Access-Control-Allow-Origin": "*"},
+            body=PNG,
+        )
+
+    page.route(f"**://{API_HOST}/**", route_api)
+    page.route(f"**://{IMAGE_HOST}/**", route_image)
+    page.route("**://www.youtube.com/**", lambda route: route.abort())
+
+
+def block_apod(page: Page) -> None:
+    """Abort the upstream NASA API to force a fallback path."""
+    page.route(f"**://{API_HOST}/**", lambda route: route.abort())
+    page.route(f"**://{IMAGE_HOST}/**", lambda route: route.abort())
+
+
+def block_cache(page: Page) -> None:
+    page.route("**/apod.json*", lambda route: route.abort())
+
+
+def wait_loaded(page: Page, timeout: int = 25000) -> None:
+    page.wait_for_selector("#day-strip .day-chip", timeout=timeout)
+    page.wait_for_function("() => document.querySelector('#boot') === null", timeout=timeout)
+    page.wait_for_timeout(500)
+
+
+def collect_errors(page: Page, *, ignore_network: bool = False) -> list[str]:
+    errors: list[str] = []
+    page.on("pageerror", lambda error: errors.append(f"pageerror: {error}"))
+
+    def on_console(message) -> None:
+        if message.type != "error":
+            return
+        text = message.text
+        if ignore_network and (
+            "Failed to load resource" in text
+            or "404" in text
+            or API_HOST in text
+            or "ERR_FAILED" in text
+        ):
+            return
+        errors.append(f"console error: {text}")
+
+    page.on("console", on_console)
+    return errors
+
+
+def scene_canvas(page: Page) -> int:
+    return page.locator("#scene canvas.scene-canvas").count()
+
+
+def chips(page: Page) -> list[dict]:
+    return page.evaluate(
+        """() => [...document.querySelectorAll('#day-strip .day-chip')].map((chip) => ({
+            date: chip.dataset.date,
+            selected: chip.getAttribute('aria-selected') === 'true',
+            text: chip.innerText,
+        }))"""
+    )
+
+
+def selected_date(page: Page) -> str:
+    return page.evaluate(
+        "() => document.querySelector('#day-strip .day-chip[aria-selected=\"true\"]')?.dataset.date || ''"
+    )
+
+
+def run_desktop(browser, url: str) -> None:
+    print("\n[desktop] live APOD window (stubbed NASA API)")
+    context = browser.new_context(viewport=DESKTOP)
+    page = context.new_page()
+    errors = collect_errors(page)
+    image_requests.clear()
+    api_requests.clear()
+    stub_apod(page)
+    page.goto(f"{url}/space.html", wait_until="networkidle")
+    wait_loaded(page)
+    page.wait_for_timeout(1200)
+
+    check("page title mentions Space", "Space" in page.title(), page.title())
+    check(
+        "hero picture is loaded as a WebGL texture",
+        any(latest_entry()["url"] in requested for requested in image_requests),
+        f"{len(image_requests)} image requests",
+    )
+
+    status = page.locator("#status-text").inner_text()
+    check("status reports a live APOD feed", "NASA APOD" in status and "live" in status.lower(), status)
+
+    latest = latest_entry()
+    title = page.locator("#space-title").inner_text()
+    check("hero panel shows the latest picture", title == latest["title"], title)
+    check("hero date includes the year", latest["date"][:4] in page.locator("#space-date").inner_text())
+    check(
+        "explanation renders",
+        "synthetic APOD record" in page.locator("#space-explanation").inner_text(),
+    )
+    check("media badge reads Image", page.locator("#space-media").inner_text().strip().lower() == "image", page.locator("#space-media").inner_text())
+    check("full-resolution link targets the HD url", page.locator("#space-link").get_attribute("href") == latest["hdurl"])
+
+    strip = chips(page)
+    check("orbit index renders every frame", len(strip) == len(FAKE_TITLES), f"{len(strip)} chips")
+    check("latest frame is selected", strip[-1]["selected"] and strip[-1]["date"] == latest["date"])
+    check("rail note summarises the window", "9 frames" in page.locator("#rail-note").inner_text(), page.locator("#rail-note").inner_text())
+
+    check("3D scene creates a WebGL canvas", scene_canvas(page) == 1)
+    check("scene finished booting", page.locator("#scene-loading.is-done").count() == 1)
+
+    # Pick the video entry from the orbit index.
+    video = video_entry()
+    page.click(f"#day-strip .day-chip[data-date='{video['date']}']")
+    page.wait_for_timeout(300)
+    check("clicking a chip focuses that frame", page.locator("#space-title").inner_text() == video["title"], page.locator("#space-title").inner_text())
+    check("video badge switches", page.locator("#space-media").inner_text().strip().lower() == "video", page.locator("#space-media").inner_text())
+    check("video link points at the video url", "youtube.com" in (page.locator("#space-link").get_attribute("href") or ""))
+    check("video frame shows the watch label", "Watch" in page.locator("#space-link").inner_text())
+
+    before = selected_date(page)
+    page.keyboard.press("ArrowRight")
+    page.wait_for_timeout(250)
+    after = selected_date(page)
+    check("arrow key steps to the next frame", after != before and after > before, f"{before} -> {after}")
+
+    page.click("#btn-prev")
+    page.wait_for_timeout(250)
+    check("previous button steps back", selected_date(page) == before, selected_date(page))
+
+    page.click("#camera-group button[data-camera='wide']")
+    page.wait_for_timeout(200)
+    check("camera preset keeps the canvas alive", scene_canvas(page) == 1)
+
+    pressed = page.locator("#btn-orbit").get_attribute("aria-pressed")
+    page.click("#btn-orbit")
+    page.wait_for_timeout(150)
+    check("orbit toggle flips", page.locator("#btn-orbit").get_attribute("aria-pressed") != pressed)
+    page.click("#btn-orbit")
+
+    page.click("#btn-theme")
+    page.wait_for_timeout(250)
+    check("theme toggles to light", page.locator("html").get_attribute("data-theme") == "light")
+    check("scene still renders in light theme", scene_canvas(page) == 1)
+    page.click("#btn-theme")
+    page.wait_for_timeout(250)
+
+    page.set_viewport_size({"width": 720, "height": 900})
+    page.wait_for_timeout(700)
+    check("resizing to the narrow layout keeps the scene alive", scene_canvas(page) == 1)
+    page.set_viewport_size(DESKTOP)
+    page.wait_for_timeout(500)
+    check("resizing back to wide restores the scene", scene_canvas(page) == 1 and len(chips(page)) == len(FAKE_TITLES))
+
+    check("share hash follows the selection", page.evaluate("() => location.hash") == f"#date={selected_date(page)}")
+
+    page.goto(f"{url}/space.html?api_key=TESTKEY123", wait_until="networkidle")
+    wait_loaded(page)
+    check(
+        "api_key query parameter is forwarded to NASA",
+        any("api_key=TESTKEY123" in requested for requested in api_requests),
+        api_requests[-1] if api_requests else "no API request",
+    )
+
+    page.screenshot(path=str(RESULTS / "space-desktop.png"), full_page=True)
+    check("no console or page errors on the live page", not errors, "; ".join(errors[:3]))
+    context.close()
+
+
+def run_mobile(browser, url: str) -> None:
+    print("\n[mobile] responsive observatory")
+    context = browser.new_context(viewport=MOBILE)
+    page = context.new_page()
+    errors = collect_errors(page)
+    stub_apod(page)
+    page.goto(f"{url}/space.html", wait_until="networkidle")
+    wait_loaded(page)
+
+    check("mobile index renders every frame", len(chips(page)) == len(FAKE_TITLES))
+    check("mobile hero panel shows a title", page.locator("#space-title").inner_text() != "")
+    check("mobile scene creates a WebGL canvas", scene_canvas(page) == 1)
+    overflow = page.evaluate("() => document.documentElement.scrollWidth - window.innerWidth")
+    check("mobile layout has no horizontal overflow", overflow <= 2, f"{overflow}px")
+    panel = page.locator("#info-panel").bounding_box()
+    check(
+        "mobile panel stays inside the viewport",
+        bool(panel) and panel["y"] >= 0 and panel["y"] + panel["height"] <= MOBILE["height"] + 1,
+        str(panel),
+    )
+    page.screenshot(path=str(RESULTS / "space-mobile.png"), full_page=True)
+    check("no console or page errors on mobile", not errors, "; ".join(errors[:3]))
+    context.close()
+
+
+def run_tablet(browser, url: str) -> None:
+    print("\n[tablet] medium viewport")
+    context = browser.new_context(viewport=TABLET)
+    page = context.new_page()
+    errors = collect_errors(page)
+    stub_apod(page)
+    page.goto(f"{url}/space.html", wait_until="networkidle")
+    wait_loaded(page)
+
+    check("tablet index renders every frame", len(chips(page)) == len(FAKE_TITLES))
+    check("tablet scene creates a WebGL canvas", scene_canvas(page) == 1)
+    overflow = page.evaluate("() => document.documentElement.scrollWidth - window.innerWidth")
+    check("tablet layout has no horizontal overflow", overflow <= 2, f"{overflow}px")
+    panel = page.locator("#info-panel").bounding_box()
+    check(
+        "tablet panel stays inside the viewport",
+        bool(panel) and panel["y"] >= 0 and panel["x"] >= 0 and panel["x"] + panel["width"] <= TABLET["width"] + 1,
+        str(panel),
+    )
+    page.click("#camera-group button[data-camera='close']")
+    page.wait_for_timeout(200)
+    check("tablet camera preset keeps the canvas alive", scene_canvas(page) == 1)
+    page.screenshot(path=str(RESULTS / "space-tablet.png"), full_page=True)
+    check("no console or page errors on tablet", not errors, "; ".join(errors[:3]))
+    context.close()
+
+
+def run_fallback(browser, url: str, *, label: str) -> int:
+    print(f"\n[fallback] {label}")
+    context = browser.new_context(viewport=DESKTOP)
+    page = context.new_page()
+    errors = collect_errors(page, ignore_network=True)
+    block_apod(page)
+    block_cache(page)
+    page.goto(f"{url}/space.html", wait_until="networkidle")
+    wait_loaded(page)
+
+    count = len(chips(page))
+    check(f"{label}: demo orbit index renders", count >= 10, f"{count} chips")
+    status = page.locator("#status-text").inner_text().lower()
+    check(f"{label}: status reports demo", "demo" in status, status)
+    check(f"{label}: demo title is populated", page.locator("#space-title").inner_text() not in ("", "—"))
+    check(f"{label}: demo scene boots", scene_canvas(page) == 1)
+    check(f"{label}: no console or page errors", not errors, "; ".join(errors[:3]))
+    page.screenshot(path=str(RESULTS / f"space-{label}.png"), full_page=True)
+    context.close()
+    return count
+
+
+def run_cache_fallback(browser, url: str) -> int:
+    """Live API down but the committed fail-safe cache is available."""
+    print("\n[fallback] cache (fail-safe cache)")
+    context = browser.new_context(viewport=DESKTOP)
+    page = context.new_page()
+    errors = collect_errors(page, ignore_network=True)
+    block_apod(page)  # live API down; cache file is left intact
+    page.goto(f"{url}/space.html", wait_until="networkidle")
+    wait_loaded(page)
+
+    count = len(chips(page))
+    status = page.locator("#status-text").inner_text().lower()
+    title = page.locator("#space-title").inner_text()
+    check("cache: orbit index renders from cache", count == 6, f"{count} chips")
+    check("cache: status reports cached", "cached" in status, status)
+    check("cache: status is not demo", "demo" not in status, status)
+    check("cache: cached picture is shown", "Cached Cassiopeia" in title, title)
+    check("cache: scene boots on cached data", scene_canvas(page) == 1)
+    check("cache: no console or page errors", not errors, "; ".join(errors[:3]))
+    page.screenshot(path=str(RESULTS / "space-cache.png"), full_page=True)
+    context.close()
+    return count
+
+
+def run_navigation(browser, url: str) -> None:
+    print("\n[navigation] links between dashboards")
+    context = browser.new_context(viewport=DESKTOP)
+    page = context.new_page()
+    for path, label in (("index.html", "energy"), ("crypto.html", "crypto"), ("finance.html", "finance"), ("tech.html", "tech")):
+        page.goto(f"{url}/{path}", wait_until="domcontentloaded")
+        check(f"{label} page links to space", page.locator("a[href='space.html']").count() >= 1, path)
+    page.goto(f"{url}/space.html", wait_until="domcontentloaded")
+    check("space page links back to energy", page.locator("a[href='index.html']").count() >= 1)
+    check("space page links to tech", page.locator("a[href='tech.html']").count() >= 1)
+    context.close()
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--keep", action="store_true", help="keep temporary sites for inspection")
+    parser.add_argument("--headed", action="store_true", help="run Chromium with a visible window")
+    args = parser.parse_args()
+
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    site = prepare_site()
+
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=not args.headed)
+            try:
+                with origin(site) as url:
+                    run_desktop(browser, url)
+                    run_tablet(browser, url)
+                    run_mobile(browser, url)
+                    demo_count = run_fallback(browser, url, label="demo")
+                    check("demo fallback renders a full gallery", demo_count >= 10, f"{demo_count} chips")
+                    cache_count = run_cache_fallback(browser, url)
+                    check("cache fallback renders the cached gallery", cache_count == 6, f"{cache_count} chips")
+                with origin(DOCS) as url:
+                    run_navigation(browser, url)
+            finally:
+                browser.close()
+    finally:
+        if not args.keep:
+            shutil.rmtree(site, ignore_errors=True)
+
+    payload = {
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "checks": checks,
+        "passed": sum(1 for item in checks if item["ok"]),
+        "failed": len(findings),
+    }
+    (RESULTS / "space-ui.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    print(f"\n{payload['passed']} passed, {payload['failed']} failed")
+    if findings:
+        print("\nFindings:")
+        for finding in findings:
+            print(f"  - {finding}")
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

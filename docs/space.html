@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#04060f">
+  <meta name="description" content="VoltScope Space — NASA's Astronomy Picture of the Day in a full-screen 3D observatory.">
+  <title>VoltScope Space — NASA Astronomy Picture of the Day</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2304060f'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%239d8cff' stroke-width='2'/%3E%3Ccircle cx='23' cy='10' r='2' fill='%23ffd479'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/css/space.css?v=20261106-1">
+</head>
+<body>
+  <div class="app space-app" id="app">
+
+    <header class="topbar">
+      <a class="brand" href="space.html" aria-label="VoltScope Space home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="24" height="24"><circle cx="15" cy="17" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="23" cy="9" r="2.6" fill="currentColor"/></svg>
+        </span>
+        <span class="brand-copy">
+          <strong>VoltScope</strong>
+          <small>Space</small>
+        </span>
+      </a>
+
+      <nav class="site-nav" aria-label="Dashboards">
+        <a href="index.html">Energy</a>
+        <a href="crypto.html">Crypto</a>
+        <a href="finance.html">Finance</a>
+        <a href="tech.html">Tech</a>
+        <a href="space.html" class="is-active" aria-current="page">Space</a>
+        <a href="diagrams/">Architecture</a>
+      </nav>
+
+      <div class="status" id="status" data-state="loading">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-text" id="status-text">Contacting NASA…</span>
+        <span class="status-sub" id="status-sub">fetching the last 14 days</span>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="chip-live" id="live-chip" hidden title="People viewing this page right now">
+          <span class="live-dot" aria-hidden="true"></span><span id="live-chip-text">— live</span>
+        </div>
+        <button class="chip-toggle" id="btn-auto" type="button" aria-pressed="true" title="Toggle automatic refresh (A)">
+          <span class="chip-dot"></span><span>Auto</span>
+        </button>
+        <button class="icon-btn" id="btn-refresh" type="button" title="Refresh the APOD window (R)" aria-label="Refresh the APOD window">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-share" type="button" title="Copy a link to this picture" aria-label="Copy a link to this picture">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-theme" type="button" title="Switch theme (T)" aria-label="Switch theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8Z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-help" type="button" title="Help and shortcuts (?)" aria-label="Help and shortcuts">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.1-2.5 3.8"/><path d="M12 17.2h.01"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="space-main" id="viewport">
+
+      <div class="scene" id="scene" role="img" aria-label="3D space observatory showing NASA's Astronomy Picture of the Day">
+        <div class="scene-loading" id="scene-loading">
+          <span class="loader" aria-hidden="true"></span>
+          <p>Assembling the observatory…</p>
+        </div>
+        <div class="scene-fallback" id="scene-fallback" hidden>
+          <strong>3D view unavailable</strong>
+          <p>WebGL is blocked in this browser. The picture details and the orbit index still work.</p>
+        </div>
+        <div class="hero-tooltip" id="hero-tooltip" hidden></div>
+
+        <div class="stage-tools">
+          <div class="segmented" id="camera-group" role="group" aria-label="Camera preset">
+            <button type="button" data-camera="hero" class="is-active">Hero</button>
+            <button type="button" data-camera="wide">Wide</button>
+            <button type="button" data-camera="close">Close</button>
+          </div>
+          <button class="chip-toggle orbit-chip" id="btn-orbit" type="button" aria-pressed="true" title="Toggle automatic camera orbit (L)">
+            <span class="chip-dot"></span><span>Orbit</span>
+          </button>
+          <span class="scene-hint">Drag to orbit · scroll to zoom · click a plate to switch</span>
+        </div>
+
+        <aside class="info-panel" id="info-panel" aria-live="polite">
+          <div class="info-head">
+            <p class="info-eyebrow">
+              <span class="media-badge" id="space-media" data-media="image">Image</span>
+              <span id="space-window">—</span>
+            </p>
+            <h1 id="space-title">Loading the sky…</h1>
+            <p class="info-date" id="space-date">—</p>
+          </div>
+          <p class="info-explanation" id="space-explanation">Fetching the latest astronomy picture…</p>
+          <div class="info-actions">
+            <a class="chip-link" id="space-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Open full resolution ↗</a>
+            <button class="chip-link" id="btn-prev" type="button">← Previous</button>
+            <button class="chip-link" id="btn-next" type="button">Next →</button>
+          </div>
+          <p class="info-foot" id="feed-note">Source: NASA APOD</p>
+        </aside>
+
+        <div class="day-strip-wrap">
+          <div class="day-strip-head">
+            <strong>Orbit index</strong>
+            <span id="rail-note">—</span>
+          </div>
+          <div class="day-strip" id="day-strip" role="listbox" aria-label="Astronomy pictures in this window"></div>
+        </div>
+      </div>
+
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  </div>
+
+  <dialog class="help-dialog" id="help-dialog">
+    <div class="help-inner">
+      <div class="help-head">
+        <div>
+          <h2>Space observatory</h2>
+          <p>NASA's Astronomy Picture of the Day, rendered in 3D.</p>
+        </div>
+        <button class="icon-btn" id="btn-help-close" type="button" aria-label="Close help">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="help-body">
+        <div class="help-grid">
+          <div>
+            <h3>Shortcuts</h3>
+            <ul class="shortcuts">
+              <li><kbd class="kbd">←</kbd> <kbd class="kbd">→</kbd> previous / next picture</li>
+              <li><kbd class="kbd">L</kbd> toggle automatic camera orbit</li>
+              <li><kbd class="kbd">A</kbd> toggle automatic refresh</li>
+              <li><kbd class="kbd">R</kbd> refresh the 14-day window</li>
+              <li><kbd class="kbd">T</kbd> toggle light / dark theme</li>
+              <li><kbd class="kbd">?</kbd> open this help</li>
+            </ul>
+          </div>
+          <div>
+            <h3>About this page</h3>
+            <p>
+              The hero frame, the orbit rail, the star field and the planet are all WebGL.
+              The panel is an accessible HTML mirror of the selected picture.
+            </p>
+            <p>
+              Live data comes from <code>api.nasa.gov/planetary/apod</code>. The public
+              <code>DEMO_KEY</code> works without signing up; append
+              <code>?api_key=YOUR_KEY</code> for a higher limit.
+            </p>
+            <p class="help-small">
+              If NASA is unreachable, the page falls back to the last cached snapshot
+              (<code>data/apod.json</code>), then to a labelled demo gallery.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="boot" id="boot">
+    <div class="boot-inner">
+      <span class="boot-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="34" height="34"><circle cx="15" cy="17" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="23" cy="9" r="2.6" fill="currentColor"/></svg>
+      </span>
+      <p class="boot-title">VoltScope Space</p>
+      <p class="boot-sub" id="boot-sub">Opening the observatory…</p>
+      <span class="boot-bar"><i></i></span>
+    </div>
+  </div>
+
+  <noscript>
+    <div class="noscript">VoltScope Space needs JavaScript to render the 3D observatory.</div>
+  </noscript>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./assets/vendor/three/three.module.js",
+        "three/addons/": "./assets/vendor/three/addons/"
+      }
+    }
+  </script>
+  <script type="module" src="assets/js/space.js?v=20261106-1"></script>
+  <script>
+    setTimeout(function () {
+      var boot = document.getElementById('boot');
+      if (boot && !boot.classList.contains('is-done')) {
+        boot.dataset.state = 'error';
+        var sub = document.getElementById('boot-sub');
+        if (sub) sub.textContent = 'Dashboard assets did not load. Check the console and reload.';
+      }
+    }, 15000);
+  </script>
+</body>
+</html>
