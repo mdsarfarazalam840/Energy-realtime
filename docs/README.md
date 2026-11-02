@@ -46,6 +46,8 @@ The fail-safe cache is `data/apod.json`, written by `scripts/cache_apod.mjs`
 and refreshed by `.github/workflows/apod_cache.yml` every six hours. Set the
 optional `NASA_API_KEY` secret for the higher API limit. If NASA is unreachable
 (or rate limited), the page uses that snapshot, then a labelled demo gallery.
+Demo frames link to the official APOD archive page for their date, so a click
+never dead-ends on a missing source link.
 
 ```bash
 node scripts/cache_apod.mjs          # writes docs/data/apod.json

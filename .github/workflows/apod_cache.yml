@@ -40,10 +40,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet docs/data/apod.json; then
+          # Stage first: `git diff --quiet <path>` ignores an untracked file, so a
+          # brand-new docs/data/apod.json would silently skip its first commit.
+          git add docs/data/apod.json
+          if git diff --cached --quiet; then
             echo "APOD cache unchanged; skipping commit."
           else
-            git add docs/data/apod.json
             git commit -m "chore: update NASA APOD cache [skip ci]"
             git push
           fi

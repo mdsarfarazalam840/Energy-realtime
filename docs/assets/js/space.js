@@ -75,7 +75,6 @@ function initScene() {
       onOpen: (entry) => {
         const url = entryUrl(entry);
         if (url) window.open(url, "_blank", "noopener,noreferrer");
-        else showToast("This demo frame has no source link.");
       },
     });
     state.scene.setTheme(state.theme);
@@ -272,15 +271,14 @@ function renderInfo() {
   $("feed-note").textContent = `${creditOf(entry)} · ${sourceNote()}`;
 
   const link = $("space-link");
-  const url = entryUrl(entry);
-  if (url) {
-    link.href = url;
-    link.textContent = entry.mediaType === "video" ? "Watch on NASA ↗" : "Open full resolution ↗";
-    link.hidden = false;
-  } else {
-    link.hidden = true;
-    link.removeAttribute("href");
-  }
+  const direct = entry.hdurl || entry.url;
+  link.href = entryUrl(entry);
+  link.textContent = direct
+    ? entry.mediaType === "video"
+      ? "Watch on NASA ↗"
+      : "Open full resolution ↗"
+    : "Open NASA APOD archive ↗";
+  link.hidden = false;
 
   const index = entries.findIndex((item) => item.date === entry.date);
   $("btn-prev").disabled = index <= 0;

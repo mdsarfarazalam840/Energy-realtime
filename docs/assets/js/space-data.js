@@ -172,9 +172,22 @@ export function creditOf(entry) {
   return "Public domain · NASA";
 }
 
+/** Official APOD archive page for a date (apYYMMDD.html). */
+export function archiveUrl(value) {
+  const date = parseDate(value);
+  if (!date) return "https://apod.nasa.gov/apod/";
+  const stamp = `${String(value).slice(2, 4)}${String(value).slice(5, 7)}${String(value).slice(8, 10)}`;
+  return `https://apod.nasa.gov/apod/ap${stamp}.html`;
+}
+
+/**
+ * A usable source link for any entry. Demo frames (and any entry without a
+ * direct asset URL) fall back to the real APOD page for that date, so a click
+ * never dead-ends on "no source link".
+ */
 export function entryUrl(entry) {
   if (!entry) return "";
-  return entry.hdurl || entry.url || "";
+  return entry.hdurl || entry.url || archiveUrl(entry.date);
 }
 
 /* ---------- Live fetch ---------- */

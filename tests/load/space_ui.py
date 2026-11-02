@@ -433,6 +433,20 @@ def run_fallback(browser, url: str, *, label: str) -> int:
     status = page.locator("#status-text").inner_text().lower()
     check(f"{label}: status reports demo", "demo" in status, status)
     check(f"{label}: demo title is populated", page.locator("#space-title").inner_text() not in ("", "—"))
+    selected = selected_date(page)
+    archive = f"https://apod.nasa.gov/apod/ap{selected[2:4]}{selected[5:7]}{selected[8:10]}.html"
+    href = page.locator("#space-link").get_attribute("href") or ""
+    check(f"{label}: frame links to the real NASA archive", href == archive, href)
+
+    # The reported dead-end: clicking the 3D hero frame must open the archive
+    # page for that date, not show a "no source link" toast.
+    page.evaluate("() => { window.__opened = null; window.open = (url) => { window.__opened = url; return null; }; }")
+    canvas = page.locator("#scene canvas").bounding_box()
+    page.mouse.click(canvas["x"] + canvas["width"] / 2, canvas["y"] + canvas["height"] / 2)
+    page.wait_for_timeout(300)
+    opened = page.evaluate("() => window.__opened")
+    check(f"{label}: clicking the 3D frame opens the NASA archive", opened == archive, str(opened))
+
     check(f"{label}: demo scene boots", scene_canvas(page) == 1)
     check(f"{label}: no console or page errors", not errors, "; ".join(errors[:3]))
     page.screenshot(path=str(RESULTS / f"space-{label}.png"), full_page=True)
