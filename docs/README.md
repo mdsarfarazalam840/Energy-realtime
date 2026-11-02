@@ -44,10 +44,14 @@ texture cannot be loaded the frame keeps a drawn title card.
 
 The fail-safe cache is `data/apod.json`, written by `scripts/cache_apod.mjs`
 and refreshed by `.github/workflows/apod_cache.yml` every six hours. Set the
-optional `NASA_API_KEY` secret for the higher API limit. If NASA is unreachable
-(or rate limited), the page uses that snapshot, then a labelled demo gallery.
-Demo frames link to the official APOD archive page for their date, so a click
-never dead-ends on a missing source link.
+optional `NASA_API_KEY` secret for the higher API limit. The API sometimes
+answers with placeholder `NASA Science` records (all pointing at the same
+logo) for dates it has no entry for; the writer then reads NASA's public APOD
+site feed record for the same dates, and the browser ignores placeholder
+records in favour of the cache. If NASA is unreachable (or rate limited), the
+page uses the snapshot, then a labelled demo gallery. Demo frames link to the
+official APOD archive page for their date, so a click never dead-ends on a
+missing source link.
 
 ```bash
 node scripts/cache_apod.mjs          # writes docs/data/apod.json
