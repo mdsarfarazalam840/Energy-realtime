@@ -727,10 +727,6 @@
       "name": "ADVANCED MICRO DEVICES INC",
       "quarterly_net_income": [
         [
-          "2024-03-30",
-          123000000.0
-        ],
-        [
           "2024-06-29",
           265000000.0
         ],
@@ -757,13 +753,13 @@
         [
           "2026-06-27",
           2297000000.0
+        ],
+        [
+          "2026-09-26",
+          2428000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2024-03-30",
-          5473000000.0
-        ],
         [
           "2024-06-29",
           5835000000.0
@@ -791,6 +787,10 @@
         [
           "2026-06-27",
           11536000000.0
+        ],
+        [
+          "2026-09-26",
+          13377000000.0
         ]
       ],
       "ratios": {
@@ -9428,6 +9428,17 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0000002488-26-000191",
+      "cik": "0000002488",
+      "document": "amd-20260926.htm",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-26",
+      "ticker": "AMD",
+      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000191/amd-20260926.htm"
+    },
+    {
       "accession": "0001628280-26-069608",
       "cik": "0000080424",
       "document": "pg-20261103.htm",
@@ -11782,17 +11793,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176626000127/unh-20260331.htm"
     },
     {
-      "accession": "0000002488-26-000072",
-      "cik": "0000002488",
-      "document": "amd-20260505.htm",
-      "filed": "2026-05-05",
-      "form": "8-K",
-      "items": "2.02,7.01,9.01",
-      "period": "2026-05-05",
-      "ticker": "AMD",
-      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000072/amd-20260505.htm"
-    },
-    {
       "accession": "0001628280-26-029802",
       "cik": "0000310158",
       "document": "mrk-20260331.htm",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000005/aapl-20260129.htm"
     }
   ],
-  "generated_at": "2026-11-04T06:34:49Z",
+  "generated_at": "2026-11-04T19:50:22Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12384,11 +12384,11 @@
     "filing_count": 268,
     "form_counts": {
       "10-K": 7,
-      "10-Q": 63,
-      "8-K": 186,
+      "10-Q": 64,
+      "8-K": 185,
       "DEF 14A": 12
     },
-    "latest_filed": "2026-11-03",
+    "latest_filed": "2026-11-04",
     "sectors": [
       "Energy",
       "Financials",
