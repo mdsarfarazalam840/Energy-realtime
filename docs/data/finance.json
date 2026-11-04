@@ -3998,10 +3998,6 @@
       "name": "JPMORGAN CHASE & CO",
       "quarterly_net_income": [
         [
-          "2024-03-31",
-          13419000000.0
-        ],
-        [
           "2024-06-30",
           18149000000.0
         ],
@@ -4028,6 +4024,10 @@
         [
           "2026-06-30",
           21155000000.0
+        ],
+        [
+          "2026-09-30",
+          15305000000.0
         ]
       ],
       "quarterly_revenue": [
@@ -8332,10 +8332,6 @@
       "name": "UNITEDHEALTH GROUP INC",
       "quarterly_net_income": [
         [
-          "2024-03-31",
-          -1409000000.0
-        ],
-        [
           "2024-06-30",
           4216000000.0
         ],
@@ -8362,13 +8358,13 @@
         [
           "2026-06-30",
           5484000000.0
+        ],
+        [
+          "2026-09-30",
+          4110000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2024-03-31",
-          99796000000.0
-        ],
         [
           "2024-06-30",
           98855000000.0
@@ -8396,6 +8392,10 @@
         [
           "2026-06-30",
           112032000000.0
+        ],
+        [
+          "2026-09-30",
+          112694000000.0
         ]
       ],
       "ratios": {
@@ -9428,6 +9428,28 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0001628280-26-069608",
+      "cik": "0000080424",
+      "document": "pg-20261103.htm",
+      "filed": "2026-11-03",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-11-03",
+      "ticker": "PG",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000162828026069608/pg-20261103.htm"
+    },
+    {
+      "accession": "0001628280-26-069523",
+      "cik": "0000019617",
+      "document": "jpm-20260930.htm",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "JPM",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000162828026069523/jpm-20260930.htm"
+    },
+    {
       "accession": "0001551152-26-000037",
       "cik": "0001551152",
       "document": "abbv-20260930.htm",
@@ -9439,6 +9461,17 @@
       "url": "https://www.sec.gov/Archives/edgar/data/1551152/000155115226000037/abbv-20260930.htm"
     },
     {
+      "accession": "0000731766-26-000266",
+      "cik": "0000731766",
+      "document": "unh-20260930.htm",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "UNH",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176626000266/unh-20260930.htm"
+    },
+    {
       "accession": "0000320193-26-000026",
       "cik": "0000320193",
       "document": "aapl-20260926.htm",
@@ -9448,6 +9481,17 @@
       "period": "2026-09-26",
       "ticker": "AAPL",
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/aapl-20260926.htm"
+    },
+    {
+      "accession": "0000002488-26-000188",
+      "cik": "0000002488",
+      "document": "amd-20261103.htm",
+      "filed": "2026-11-03",
+      "form": "8-K",
+      "items": "2.02,7.01,9.01",
+      "period": "2026-11-03",
+      "ticker": "AMD",
+      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000188/amd-20261103.htm"
     },
     {
       "accession": "0002115436-26-000020",
@@ -10814,17 +10858,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000163/jnj-20260729.htm"
     },
     {
-      "accession": "0000080424-26-000097",
-      "cik": "0000080424",
-      "document": "pg-20260729.htm",
-      "filed": "2026-07-29",
-      "form": "8-K",
-      "items": "7.01,9.01",
-      "period": "2026-07-29",
-      "ticker": "PG",
-      "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042426000097/pg-20260729.htm"
-    },
-    {
       "accession": "0001628280-26-049922",
       "cik": "0000021344",
       "document": "ko-20260728.htm",
@@ -11175,17 +11208,6 @@
       "period": "2026-06-24",
       "ticker": "JPM",
       "url": "https://www.sec.gov/Archives/edgar/data/19617/000001961726000241/jpm-20260624.htm"
-    },
-    {
-      "accession": "0001628280-26-045169",
-      "cik": "0000019617",
-      "document": "jpm-20260624.htm",
-      "filed": "2026-06-24",
-      "form": "8-K",
-      "items": "7.01,9.01",
-      "period": "2026-06-24",
-      "ticker": "JPM",
-      "url": "https://www.sec.gov/Archives/edgar/data/19617/000162828026045169/jpm-20260624.htm"
     },
     {
       "accession": "0001193125-26-275783",
@@ -12211,17 +12233,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526144028/d87999d8k.htm"
     },
     {
-      "accession": "0001193125-26-129057",
-      "cik": "0000002488",
-      "document": "d85856ddef14a.htm",
-      "filed": "2026-03-27",
-      "form": "DEF 14A",
-      "items": "",
-      "period": "2026-05-13",
-      "ticker": "AMD",
-      "url": "https://www.sec.gov/Archives/edgar/data/2488/000119312526129057/d85856ddef14a.htm"
-    },
-    {
       "accession": "0000104169-26-000067",
       "cik": "0000104169",
       "document": "wmt-20260327.htm",
@@ -12286,17 +12297,6 @@
       "period": "2026-02-15",
       "ticker": "COST",
       "url": "https://www.sec.gov/Archives/edgar/data/909832/000090983226000029/cost-20260215.htm"
-    },
-    {
-      "accession": "0000731766-26-000067",
-      "cik": "0000731766",
-      "document": "unh-20260309.htm",
-      "filed": "2026-03-09",
-      "form": "8-K",
-      "items": "7.01",
-      "period": "2026-03-09",
-      "ticker": "UNH",
-      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176626000067/unh-20260309.htm"
     },
     {
       "accession": "0000909832-26-000025",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000005/aapl-20260129.htm"
     }
   ],
-  "generated_at": "2026-11-03T19:33:12Z",
+  "generated_at": "2026-11-04T06:34:49Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12384,9 +12384,9 @@
     "filing_count": 268,
     "form_counts": {
       "10-K": 7,
-      "10-Q": 61,
-      "8-K": 187,
-      "DEF 14A": 13
+      "10-Q": 63,
+      "8-K": 186,
+      "DEF 14A": 12
     },
     "latest_filed": "2026-11-03",
     "sectors": [
