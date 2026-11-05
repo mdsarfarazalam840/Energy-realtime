@@ -6,23 +6,13 @@
     "image_count": 13,
     "video_count": 1,
     "other_count": 0,
-    "first_date": "2026-10-22",
-    "latest_date": "2026-11-04",
+    "first_date": "2026-10-23",
+    "latest_date": "2026-11-05",
     "window_days": 14,
-    "generated_at": "2026-11-04T19:57:15.174Z",
-    "cached_at": "2026-11-04T19:57:15.174Z"
+    "generated_at": "2026-11-05T07:09:31.339Z",
+    "cached_at": "2026-11-05T07:09:31.339Z"
   },
   "entries": [
-    {
-      "date": "2026-10-22",
-      "title": "The First Green Star, WD J1330+6435",
-      "explanation": "Star light, star bright: is there a green star out tonight? Other than the Sun, all stars are so far from Earth that they appear as points in the sky. They are mostly white, but sometimes noticeably red or blue. This color typically relates to the temperature: blue stars are hotter than red stars. What about other colors? The featured image is an illustration showing WD J1330+6435, a white dwarf star, surrounded by an accretion disk with gas and rocks orbiting the star. White dwarfs are small, faint stars that are left over when a star like the Sun exhausts its nuclear fuel. Astronomers recently found that some white dwarf stars, despite their name, would appear yellow, green, cyan, pink, or purple. In these cases, trace elements that were accreted to these stars interact with the stellar atmosphere and shift its normally white color. But, alas! I wish I may, I wish I might, but they are too faint to see tonight … Tomorrow’s picture: eye in the sky",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/green_wd_mark-garlick_annotated2.jpg?w=1280&h=1280&fit=clip&crop=faces%2Cfocalpoint",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/green_wd_mark-garlick_annotated2.jpg?w=1280&h=1280&fit=clip&crop=faces%2Cfocalpoint",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-10-23",
       "title": "Andromeda in Southern Spring",
@@ -152,6 +142,16 @@
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/ic342.png?w=4144&h=2822&fit=clip&crop=faces%2Cfocalpoint",
       "thumbnail_url": "",
       "copyright": ""
+    },
+    {
+      "date": "2026-11-05",
+      "title": "Enceladus in Silhouette",
+      "explanation": "One of our Solar System’s most tantalizing worlds, Enceladus is backlit by the Sun in this Cassini spacecraft image from November 1, 2009. The dramatic illumination reveals the plumes that continuously spew into space from the south pole of Saturn’s 500 kilometer diameter moon. Discovered by Cassini in 2005, the icy plumes are likely connected to an ocean beneath the ice shell of Enceladus. They supply material directly to Saturn’s outer, tenuous E ring and make the surface of Enceladus as reflective as snow. Across the scene, Saturn’s icy rings scatter sunlight toward Cassini’s cameras. Beyond the rings (lower right), the night side of 80 kilometer diameter moon Pandora is faintly lit by Saturnlight. Tomorrow’s picture: pixels in space",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/PIA17144EnceladusPandora.png?w=982&h=575&fit=clip&crop=faces%2Cfocalpoint",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/PIA17144EnceladusPandora.png?w=982&h=575&fit=clip&crop=faces%2Cfocalpoint",
+      "thumbnail_url": "",
+      "copyright": "Cassini Imaging Team, SSI, JPL, ESA, NASA"
     }
   ],
   "demo": false
