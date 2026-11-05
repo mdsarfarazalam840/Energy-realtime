@@ -5769,10 +5769,6 @@
       "name": "Merck & Co., Inc.",
       "quarterly_net_income": [
         [
-          "2024-03-31",
-          4762000000.0
-        ],
-        [
           "2024-06-30",
           5455000000.0
         ],
@@ -5799,13 +5795,13 @@
         [
           "2026-06-30",
           -1335000000.0
+        ],
+        [
+          "2026-09-30",
+          5065000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2024-03-31",
-          15775000000.0
-        ],
         [
           "2024-06-30",
           16112000000.0
@@ -5833,6 +5829,10 @@
         [
           "2026-06-30",
           16607000000.0
+        ],
+        [
+          "2026-09-30",
+          18085000000.0
         ]
       ],
       "ratios": {
@@ -9428,6 +9428,28 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0001193125-26-447173",
+      "cik": "0000789019",
+      "document": "d178557d8k.htm",
+      "filed": "2026-11-04",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-10-29",
+      "ticker": "MSFT",
+      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526447173/d178557d8k.htm"
+    },
+    {
+      "accession": "0000310158-26-000248",
+      "cik": "0000310158",
+      "document": "mrk-20260930.htm",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "MRK",
+      "url": "https://www.sec.gov/Archives/edgar/data/310158/000031015826000248/mrk-20260930.htm"
+    },
+    {
       "accession": "0000002488-26-000191",
       "cik": "0000002488",
       "document": "amd-20260926.htm",
@@ -11969,17 +11991,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000079/v-20260331.htm"
     },
     {
-      "accession": "0001193125-26-191507",
-      "cik": "0000789019",
-      "document": "msft-20260331.htm",
-      "filed": "2026-04-29",
-      "form": "10-Q",
-      "items": "",
-      "period": "2026-03-31",
-      "ticker": "MSFT",
-      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526191507/msft-20260331.htm"
-    },
-    {
       "accession": "0001628280-26-027723",
       "cik": "0000021344",
       "document": "ko-20260428.htm",
@@ -12332,17 +12343,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/354950/000035495026000026/hd-20260224.htm"
     },
     {
-      "accession": "0000310158-26-000063",
-      "cik": "0000310158",
-      "document": "mrk-20251231.htm",
-      "filed": "2026-02-24",
-      "form": "10-K",
-      "items": "",
-      "period": "2025-12-31",
-      "ticker": "MRK",
-      "url": "https://www.sec.gov/Archives/edgar/data/310158/000031015826000063/mrk-20251231.htm"
-    },
-    {
       "accession": "0000059478-26-000013",
       "cik": "0000059478",
       "document": "lly-20251231.htm",
@@ -12376,16 +12376,16 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000005/aapl-20260129.htm"
     }
   ],
-  "generated_at": "2026-11-04T19:50:22Z",
+  "generated_at": "2026-11-05T06:56:25Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
     "currency": "USD",
     "filing_count": 268,
     "form_counts": {
-      "10-K": 7,
+      "10-K": 6,
       "10-Q": 64,
-      "8-K": 185,
+      "8-K": 186,
       "DEF 14A": 12
     },
     "latest_filed": "2026-11-04",
