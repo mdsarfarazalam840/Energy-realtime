@@ -6,23 +6,13 @@
     "image_count": 13,
     "video_count": 1,
     "other_count": 0,
-    "first_date": "2026-10-23",
-    "latest_date": "2026-11-05",
+    "first_date": "2026-10-24",
+    "latest_date": "2026-11-06",
     "window_days": 14,
-    "generated_at": "2026-11-05T20:11:43.377Z",
-    "cached_at": "2026-11-05T20:11:43.377Z"
+    "generated_at": "2026-11-06T07:08:55.962Z",
+    "cached_at": "2026-11-06T07:08:55.962Z"
   },
   "entries": [
-    {
-      "date": "2026-10-23",
-      "title": "Andromeda in Southern Spring",
-      "explanation": "Looking toward the north from Mullion, New South Wales, Australia, the Andromeda Galaxy never gets more than a few degrees above the horizon. During the southern hemisphere spring, Andromeda is highest in the sky around midnight though. And in this telephoto scene from October 10/11, multiple exposures were used to reveal the spiral galaxy in tantalizing detail as it climbed above rolling Australian hills. Also known as M31, the Andromeda Galaxy is one of the brightest objects in the Messier catalog, but is only visible to the unaided eye as a small, faint, fuzzy patch. Digitally tracked and stacked frames were combined with a foreground shot in the deep astro-image composite to reveal the galaxy’s greater extent in planet Earth’s night. In the springtime night skyscape,the closest large spiral galaxy spans nearly 6 full moons. Tomorrow’s picture: pixels in space",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/APOD_Lucy.jpg?w=3000&h=2004&fit=clip&crop=faces%2Cfocalpoint",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/APOD_Lucy.jpg?w=3000&h=2004&fit=clip&crop=faces%2Cfocalpoint",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-10-24",
       "title": "Rosetta’s Selfie",
@@ -152,6 +142,16 @@
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/PIA17144EnceladusPandora.png?w=982&h=575&fit=clip&crop=faces%2Cfocalpoint",
       "thumbnail_url": "",
       "copyright": "Cassini Imaging Team, SSI, JPL, ESA, NASA"
+    },
+    {
+      "date": "2026-11-06",
+      "title": "A Farewell to Swift",
+      "explanation": "It is time to say goodbye to NASA ‘s Neil Gehrels Swift Observatory. After nearly 22 years of service, the satellite re-entered Earth’s atmosphere on November 4 at 7:39 EST over the North Sumatra region of Indonesia. The featured image is a mosaic created in 2018 using the first one million images captured by the satellite’s Ultraviolet/Optical Telescope. Swift had a combination of instruments, including an X-ray telescope and a gamma-ray telescope, that worked together to enable humanity to study, in unprecedented detail, the fastest and most energetic explosions in the universe. The most recent solar maximum accelerated the decay of the satellite’s orbit. An innovative mission to rescue Swift by boosting its orbit was not successful. Swift burned on reentry like a shooting star, but the impressive data acquired by the telescope over its mission will continue to bring light to the mysteries of the cosmos for years to come. May it keep inspiring new missions to boldly go into space, explore new data and seek out new science. Tomorrow’s picture: what’s next?",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&h=3744&fit=clip&crop=faces%2Cfocalpoint",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&h=3744&fit=clip&crop=faces%2Cfocalpoint",
+      "thumbnail_url": "",
+      "copyright": ""
     }
   ],
   "demo": false
