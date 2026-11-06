@@ -177,10 +177,17 @@ body {
   max-width: min(560px, calc(100% - 36px));
 }
 
+/* crypto.css pins .scene-hint to the stage bottom-left; inside the stage-tools
+   flex row that pulls it out of flow and overlaps the camera buttons. */
 .scene-hint {
+  position: static;
+  left: auto;
+  bottom: auto;
   flex: 1 0 100%;
+  margin: 0;
   pointer-events: none;
   text-align: right;
+  line-height: 1.4;
   color: var(--faint);
   font-family: var(--mono);
   font-size: 0.66rem;
