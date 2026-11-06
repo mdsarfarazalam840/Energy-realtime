@@ -4,17 +4,17 @@
       "cik": "0000320193",
       "exchange": "Nasdaq",
       "filings_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320193&type=&dateb=&owner=include&count=40",
-      "fiscal_year": 2025,
+      "fiscal_year": 2026,
       "fiscal_year_end": "0926",
       "latest": {
-        "assets": 359241000000.0,
-        "cash": 35934000000.0,
-        "eps": 7.46,
-        "equity": 73733000000.0,
-        "liabilities": 285508000000.0,
-        "net_income": 112010000000.0,
-        "operating_cash_flow": 111482000000.0,
-        "revenue": 416161000000.0
+        "assets": 404548000000.0,
+        "cash": 36305000000.0,
+        "eps": 8.98,
+        "equity": 112093000000.0,
+        "liabilities": 292455000000.0,
+        "net_income": 132175000000.0,
+        "operating_cash_flow": 145097000000.0,
+        "revenue": 478834000000.0
       },
       "name": "Apple Inc.",
       "quarterly_net_income": [
@@ -86,18 +86,14 @@
         ]
       ],
       "ratios": {
-        "liability_ratio": 0.7947533828265705,
-        "net_margin": 0.2691506412181824,
-        "return_on_equity": 1.5191298333175105,
-        "revenue_growth": 0.06425511782832749
+        "liability_ratio": 0.7229179232130675,
+        "net_margin": 0.27603511864236874,
+        "return_on_equity": 1.17915480895328,
+        "revenue_growth": 0.1505979656911629
       },
       "sector": "Technology",
       "series": {
         "assets": [
-          [
-            2018,
-            365725000000.0
-          ],
           [
             2019,
             338516000000.0
@@ -125,13 +121,13 @@
           [
             2025,
             359241000000.0
+          ],
+          [
+            2026,
+            404548000000.0
           ]
         ],
         "cash": [
-          [
-            2018,
-            25913000000.0
-          ],
           [
             2019,
             48844000000.0
@@ -159,13 +155,13 @@
           [
             2025,
             35934000000.0
+          ],
+          [
+            2026,
+            36305000000.0
           ]
         ],
         "eps": [
-          [
-            2018,
-            2.98
-          ],
           [
             2019,
             2.97
@@ -193,13 +189,13 @@
           [
             2025,
             7.46
+          ],
+          [
+            2026,
+            8.98
           ]
         ],
         "equity": [
-          [
-            2018,
-            107147000000.0
-          ],
           [
             2019,
             90488000000.0
@@ -227,13 +223,13 @@
           [
             2025,
             73733000000.0
+          ],
+          [
+            2026,
+            112093000000.0
           ]
         ],
         "liabilities": [
-          [
-            2018,
-            258578000000.0
-          ],
           [
             2019,
             248028000000.0
@@ -261,13 +257,13 @@
           [
             2025,
             285508000000.0
+          ],
+          [
+            2026,
+            292455000000.0
           ]
         ],
         "net_income": [
-          [
-            2018,
-            59531000000.0
-          ],
           [
             2019,
             55256000000.0
@@ -295,13 +291,13 @@
           [
             2025,
             112010000000.0
+          ],
+          [
+            2026,
+            132175000000.0
           ]
         ],
         "operating_cash_flow": [
-          [
-            2018,
-            77434000000.0
-          ],
           [
             2019,
             69391000000.0
@@ -329,13 +325,13 @@
           [
             2025,
             111482000000.0
+          ],
+          [
+            2026,
+            145097000000.0
           ]
         ],
         "revenue": [
-          [
-            2018,
-            265595000000.0
-          ],
           [
             2019,
             260174000000.0
@@ -363,6 +359,10 @@
           [
             2025,
             416161000000.0
+          ],
+          [
+            2026,
+            478834000000.0
           ]
         ]
       },
@@ -390,10 +390,6 @@
       "name": "AbbVie Inc.",
       "quarterly_net_income": [
         [
-          "2024-03-31",
-          1369000000.0
-        ],
-        [
           "2024-06-30",
           1370000000.0
         ],
@@ -420,13 +416,13 @@
         [
           "2026-06-30",
           3613000000.0
+        ],
+        [
+          "2026-09-30",
+          4218000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2024-03-31",
-          12310000000.0
-        ],
         [
           "2024-06-30",
           14462000000.0
@@ -454,6 +450,10 @@
         [
           "2026-06-30",
           16990000000.0
+        ],
+        [
+          "2026-09-30",
+          17404000000.0
         ]
       ],
       "ratios": {
@@ -727,10 +727,6 @@
       "name": "ADVANCED MICRO DEVICES INC",
       "quarterly_net_income": [
         [
-          "2024-03-30",
-          123000000.0
-        ],
-        [
           "2024-06-29",
           265000000.0
         ],
@@ -757,13 +753,13 @@
         [
           "2026-06-27",
           2297000000.0
+        ],
+        [
+          "2026-09-26",
+          2428000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2024-03-30",
-          5473000000.0
-        ],
         [
           "2024-06-29",
           5835000000.0
@@ -791,6 +787,10 @@
         [
           "2026-06-27",
           11536000000.0
+        ],
+        [
+          "2026-09-26",
+          13377000000.0
         ]
       ],
       "ratios": {
@@ -2514,10 +2514,6 @@
       "name": "CHEVRON CORP",
       "quarterly_net_income": [
         [
-          "2024-03-31",
-          5501000000.0
-        ],
-        [
           "2024-06-30",
           4434000000.0
         ],
@@ -2544,13 +2540,13 @@
         [
           "2026-06-30",
           12072000000.0
+        ],
+        [
+          "2026-09-30",
+          9924000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2024-03-31",
-          46580000000.0
-        ],
         [
           "2024-06-30",
           49574000000.0
@@ -2578,6 +2574,10 @@
         [
           "2026-06-30",
           67199000000.0
+        ],
+        [
+          "2026-09-30",
+          65237000000.0
         ]
       ],
       "ratios": {
@@ -3998,10 +3998,6 @@
       "name": "JPMORGAN CHASE & CO",
       "quarterly_net_income": [
         [
-          "2024-03-31",
-          13419000000.0
-        ],
-        [
           "2024-06-30",
           18149000000.0
         ],
@@ -4028,6 +4024,10 @@
         [
           "2026-06-30",
           21155000000.0
+        ],
+        [
+          "2026-09-30",
+          15305000000.0
         ]
       ],
       "quarterly_revenue": [
@@ -5769,10 +5769,6 @@
       "name": "Merck & Co., Inc.",
       "quarterly_net_income": [
         [
-          "2024-03-31",
-          4762000000.0
-        ],
-        [
           "2024-06-30",
           5455000000.0
         ],
@@ -5799,13 +5795,13 @@
         [
           "2026-06-30",
           -1335000000.0
+        ],
+        [
+          "2026-09-30",
+          5065000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2024-03-31",
-          15775000000.0
-        ],
         [
           "2024-06-30",
           16112000000.0
@@ -5833,6 +5829,10 @@
         [
           "2026-06-30",
           16607000000.0
+        ],
+        [
+          "2026-09-30",
+          18085000000.0
         ]
       ],
       "ratios": {
@@ -8332,10 +8332,6 @@
       "name": "UNITEDHEALTH GROUP INC",
       "quarterly_net_income": [
         [
-          "2024-03-31",
-          -1409000000.0
-        ],
-        [
           "2024-06-30",
           4216000000.0
         ],
@@ -8362,13 +8358,13 @@
         [
           "2026-06-30",
           5484000000.0
+        ],
+        [
+          "2026-09-30",
+          4110000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2024-03-31",
-          99796000000.0
-        ],
         [
           "2024-06-30",
           98855000000.0
@@ -8396,6 +8392,10 @@
         [
           "2026-06-30",
           112032000000.0
+        ],
+        [
+          "2026-09-30",
+          112694000000.0
         ]
       ],
       "ratios": {
@@ -8688,24 +8688,20 @@
       "cik": "0001403161",
       "exchange": "NYSE",
       "filings_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001403161&type=&dateb=&owner=include&count=40",
-      "fiscal_year": 2025,
+      "fiscal_year": 2026,
       "fiscal_year_end": "0930",
       "latest": {
-        "assets": 99627000000.0,
-        "cash": 17164000000.0,
+        "assets": 94360000000.0,
+        "cash": 12938000000.0,
         "eps": null,
-        "equity": 37909000000.0,
-        "liabilities": 61718000000.0,
-        "net_income": 20058000000.0,
-        "operating_cash_flow": 23059000000.0,
-        "revenue": 40000000000.0
+        "equity": 36111000000.0,
+        "liabilities": 58249000000.0,
+        "net_income": 23504000000.0,
+        "operating_cash_flow": 23728000000.0,
+        "revenue": 45903000000.0
       },
       "name": "VISA INC.",
       "quarterly_net_income": [
-        [
-          "2023-12-31",
-          4890000000.0
-        ],
         [
           "2024-03-31",
           4663000000.0
@@ -8733,13 +8729,13 @@
         [
           "2026-03-31",
           6021000000.0
+        ],
+        [
+          "2026-06-30",
+          5628000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2023-12-31",
-          8634000000.0
-        ],
         [
           "2024-03-31",
           8775000000.0
@@ -8767,21 +8763,21 @@
         [
           "2026-03-31",
           11230000000.0
+        ],
+        [
+          "2026-06-30",
+          11633000000.0
         ]
       ],
       "ratios": {
-        "liability_ratio": 0.6194907003121644,
-        "net_margin": 0.50145,
-        "return_on_equity": 0.5291091825160252,
-        "revenue_growth": 0.11339976618604908
+        "liability_ratio": 0.6173060618906316,
+        "net_margin": 0.5120362503540073,
+        "return_on_equity": 0.6508820027138545,
+        "revenue_growth": 0.147575
       },
       "sector": "Services",
       "series": {
         "assets": [
-          [
-            2018,
-            69225000000.0
-          ],
           [
             2019,
             72574000000.0
@@ -8809,13 +8805,13 @@
           [
             2025,
             99627000000.0
+          ],
+          [
+            2026,
+            94360000000.0
           ]
         ],
         "cash": [
-          [
-            2018,
-            8162000000.0
-          ],
           [
             2019,
             7838000000.0
@@ -8843,13 +8839,13 @@
           [
             2025,
             17164000000.0
+          ],
+          [
+            2026,
+            12938000000.0
           ]
         ],
         "equity": [
-          [
-            2018,
-            34006000000.0
-          ],
           [
             2019,
             34684000000.0
@@ -8877,13 +8873,13 @@
           [
             2025,
             37909000000.0
+          ],
+          [
+            2026,
+            36111000000.0
           ]
         ],
         "liabilities": [
-          [
-            2018,
-            35219000000.0
-          ],
           [
             2019,
             37890000000.0
@@ -8911,13 +8907,13 @@
           [
             2025,
             61718000000.0
+          ],
+          [
+            2026,
+            58249000000.0
           ]
         ],
         "net_income": [
-          [
-            2018,
-            10301000000.0
-          ],
           [
             2019,
             12080000000.0
@@ -8945,13 +8941,13 @@
           [
             2025,
             20058000000.0
+          ],
+          [
+            2026,
+            23504000000.0
           ]
         ],
         "operating_cash_flow": [
-          [
-            2018,
-            12941000000.0
-          ],
           [
             2019,
             12784000000.0
@@ -8979,13 +8975,13 @@
           [
             2025,
             23059000000.0
+          ],
+          [
+            2026,
+            23728000000.0
           ]
         ],
         "revenue": [
-          [
-            2018,
-            20609000000.0
-          ],
           [
             2019,
             22977000000.0
@@ -9013,6 +9009,10 @@
           [
             2025,
             40000000000.0
+          ],
+          [
+            2026,
+            45903000000.0
           ]
         ]
       },
@@ -9381,8 +9381,16 @@
           7082000000.0
         ],
         [
+          "2025-09-30",
+          7548000000.0
+        ],
+        [
           "2026-06-30",
           14525000000.0
+        ],
+        [
+          "2026-09-30",
+          15413000000.0
         ]
       ],
       "quarterly_revenue": [
@@ -9391,8 +9399,16 @@
           81506000000.0
         ],
         [
+          "2025-09-30",
+          85294000000.0
+        ],
+        [
           "2026-06-30",
           116017000000.0
+        ],
+        [
+          "2026-09-30",
+          113164000000.0
         ]
       ],
       "ratios": {
@@ -9411,6 +9427,204 @@
   ],
   "demo": false,
   "filings": [
+    {
+      "accession": "0001403161-26-000134",
+      "cik": "0001403161",
+      "document": "v-20260930.htm",
+      "filed": "2026-11-05",
+      "form": "10-K",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "V",
+      "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000134/v-20260930.htm"
+    },
+    {
+      "accession": "0001193125-26-450074",
+      "cik": "0001326801",
+      "document": "d166273d8k.htm",
+      "filed": "2026-11-05",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-11-03",
+      "ticker": "META",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000119312526450074/d166273d8k.htm"
+    },
+    {
+      "accession": "0001193125-26-449835",
+      "cik": "0001652044",
+      "document": "d174184d8k.htm",
+      "filed": "2026-11-05",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-11-05",
+      "ticker": "GOOGL",
+      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526449835/d174184d8k.htm"
+    },
+    {
+      "accession": "0001193125-26-448357",
+      "cik": "0000789019",
+      "document": "d177209d8k.htm",
+      "filed": "2026-11-05",
+      "form": "8-K",
+      "items": "5.02",
+      "period": "2026-11-04",
+      "ticker": "MSFT",
+      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526448357/d177209d8k.htm"
+    },
+    {
+      "accession": "0000093410-26-000200",
+      "cik": "0000093410",
+      "document": "cvx-20260930.htm",
+      "filed": "2026-11-05",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "CVX",
+      "url": "https://www.sec.gov/Archives/edgar/data/93410/000009341026000200/cvx-20260930.htm"
+    },
+    {
+      "accession": "0001193125-26-447173",
+      "cik": "0000789019",
+      "document": "d178557d8k.htm",
+      "filed": "2026-11-04",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-10-29",
+      "ticker": "MSFT",
+      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526447173/d178557d8k.htm"
+    },
+    {
+      "accession": "0000310158-26-000248",
+      "cik": "0000310158",
+      "document": "mrk-20260930.htm",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "MRK",
+      "url": "https://www.sec.gov/Archives/edgar/data/310158/000031015826000248/mrk-20260930.htm"
+    },
+    {
+      "accession": "0000002488-26-000191",
+      "cik": "0000002488",
+      "document": "amd-20260926.htm",
+      "filed": "2026-11-04",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-26",
+      "ticker": "AMD",
+      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000191/amd-20260926.htm"
+    },
+    {
+      "accession": "0001628280-26-069608",
+      "cik": "0000080424",
+      "document": "pg-20261103.htm",
+      "filed": "2026-11-03",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-11-03",
+      "ticker": "PG",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000162828026069608/pg-20261103.htm"
+    },
+    {
+      "accession": "0001628280-26-069523",
+      "cik": "0000019617",
+      "document": "jpm-20260930.htm",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "JPM",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000162828026069523/jpm-20260930.htm"
+    },
+    {
+      "accession": "0001551152-26-000037",
+      "cik": "0001551152",
+      "document": "abbv-20260930.htm",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "ABBV",
+      "url": "https://www.sec.gov/Archives/edgar/data/1551152/000155115226000037/abbv-20260930.htm"
+    },
+    {
+      "accession": "0000731766-26-000266",
+      "cik": "0000731766",
+      "document": "unh-20260930.htm",
+      "filed": "2026-11-03",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "UNH",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176626000266/unh-20260930.htm"
+    },
+    {
+      "accession": "0000320193-26-000026",
+      "cik": "0000320193",
+      "document": "aapl-20260926.htm",
+      "filed": "2026-11-03",
+      "form": "10-K",
+      "items": "",
+      "period": "2026-09-26",
+      "ticker": "AAPL",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/aapl-20260926.htm"
+    },
+    {
+      "accession": "0000002488-26-000188",
+      "cik": "0000002488",
+      "document": "amd-20261103.htm",
+      "filed": "2026-11-03",
+      "form": "8-K",
+      "items": "2.02,7.01,9.01",
+      "period": "2026-11-03",
+      "ticker": "AMD",
+      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000188/amd-20261103.htm"
+    },
+    {
+      "accession": "0002115436-26-000020",
+      "cik": "0002115436",
+      "document": "xom-20260930.htm",
+      "filed": "2026-11-02",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-09-30",
+      "ticker": "XOM",
+      "url": "https://www.sec.gov/Archives/edgar/data/2115436/000211543626000020/xom-20260930.htm"
+    },
+    {
+      "accession": "0001628280-26-068909",
+      "cik": "0000080424",
+      "document": "pg-20261102.htm",
+      "filed": "2026-11-02",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-11-02",
+      "ticker": "PG",
+      "url": "https://www.sec.gov/Archives/edgar/data/80424/000162828026068909/pg-20261102.htm"
+    },
+    {
+      "accession": "0001104659-26-121322",
+      "cik": "0001551152",
+      "document": "tm2628215d1_8k.htm",
+      "filed": "2026-11-02",
+      "form": "8-K",
+      "items": "5.02",
+      "period": "2026-10-28",
+      "ticker": "ABBV",
+      "url": "https://www.sec.gov/Archives/edgar/data/1551152/000110465926121322/tm2628215d1_8k.htm"
+    },
+    {
+      "accession": "0000320193-26-000024",
+      "cik": "0000320193",
+      "document": "aapl-20261102.htm",
+      "filed": "2026-11-02",
+      "form": "8-K",
+      "items": "2.02,9.01",
+      "period": "2026-11-02",
+      "ticker": "AAPL",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000024/aapl-20261102.htm"
+    },
     {
       "accession": "0002115436-26-000018",
       "cik": "0002115436",
@@ -10732,28 +10946,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000163/jnj-20260729.htm"
     },
     {
-      "accession": "0000080424-26-000097",
-      "cik": "0000080424",
-      "document": "pg-20260729.htm",
-      "filed": "2026-07-29",
-      "form": "8-K",
-      "items": "7.01,9.01",
-      "period": "2026-07-29",
-      "ticker": "PG",
-      "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042426000097/pg-20260729.htm"
-    },
-    {
-      "accession": "0000080424-26-000094",
-      "cik": "0000080424",
-      "document": "pg-20260729.htm",
-      "filed": "2026-07-29",
-      "form": "8-K",
-      "items": "5.02,7.01,9.01",
-      "period": "2026-07-29",
-      "ticker": "PG",
-      "url": "https://www.sec.gov/Archives/edgar/data/80424/000008042426000094/pg-20260729.htm"
-    },
-    {
       "accession": "0001628280-26-049922",
       "cik": "0000021344",
       "document": "ko-20260728.htm",
@@ -11018,17 +11210,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/2115436/000211543626000003/xom-20260707.htm"
     },
     {
-      "accession": "0001551152-26-000021",
-      "cik": "0001551152",
-      "document": "abbv-20260706.htm",
-      "filed": "2026-07-06",
-      "form": "8-K",
-      "items": "2.02,9.01",
-      "period": "2026-07-06",
-      "ticker": "ABBV",
-      "url": "https://www.sec.gov/Archives/edgar/data/1551152/000155115226000021/abbv-20260706.htm"
-    },
-    {
       "accession": "0001193125-26-295589",
       "cik": "0001730168",
       "document": "d84378d8k.htm",
@@ -11115,28 +11296,6 @@
       "period": "2026-06-24",
       "ticker": "JPM",
       "url": "https://www.sec.gov/Archives/edgar/data/19617/000001961726000241/jpm-20260624.htm"
-    },
-    {
-      "accession": "0001628280-26-045169",
-      "cik": "0000019617",
-      "document": "jpm-20260624.htm",
-      "filed": "2026-06-24",
-      "form": "8-K",
-      "items": "7.01,9.01",
-      "period": "2026-06-24",
-      "ticker": "JPM",
-      "url": "https://www.sec.gov/Archives/edgar/data/19617/000162828026045169/jpm-20260624.htm"
-    },
-    {
-      "accession": "0001104659-26-076067",
-      "cik": "0001551152",
-      "document": "tm2618365d1_8k.htm",
-      "filed": "2026-06-22",
-      "form": "8-K",
-      "items": "7.01,9.01",
-      "period": "2026-06-18",
-      "ticker": "ABBV",
-      "url": "https://www.sec.gov/Archives/edgar/data/1551152/000110465926076067/tm2618365d1_8k.htm"
     },
     {
       "accession": "0001193125-26-275783",
@@ -11513,17 +11672,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/1018724/000110465926065717/tm2614288d1_8k.htm"
     },
     {
-      "accession": "0001193125-26-234488",
-      "cik": "0001652044",
-      "document": "d144566d8k.htm",
-      "filed": "2026-05-21",
-      "form": "8-K",
-      "items": "8.01,9.01",
-      "period": "2026-05-21",
-      "ticker": "GOOGL",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526234488/d144566d8k.htm"
-    },
-    {
       "accession": "0000104169-26-000095",
       "cik": "0000104169",
       "document": "wmt-20260521.htm",
@@ -11588,17 +11736,6 @@
       "period": "2026-05-13",
       "ticker": "AMD",
       "url": "https://www.sec.gov/Archives/edgar/data/2488/000119312526226746/d118163d8k.htm"
-    },
-    {
-      "accession": "0001193125-26-224155",
-      "cik": "0000789019",
-      "document": "d125909d8k.htm",
-      "filed": "2026-05-14",
-      "form": "8-K",
-      "items": "5.02,9.01",
-      "period": "2026-05-13",
-      "ticker": "MSFT",
-      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526224155/d125909d8k.htm"
     },
     {
       "accession": "0001193125-26-219432",
@@ -11709,17 +11846,6 @@
       "period": "2026-03-31",
       "ticker": "UNH",
       "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176626000127/unh-20260331.htm"
-    },
-    {
-      "accession": "0000002488-26-000072",
-      "cik": "0000002488",
-      "document": "amd-20260505.htm",
-      "filed": "2026-05-05",
-      "form": "8-K",
-      "items": "2.02,7.01,9.01",
-      "period": "2026-05-05",
-      "ticker": "AMD",
-      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000072/amd-20260505.htm"
     },
     {
       "accession": "0001628280-26-029802",
@@ -11898,17 +12024,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000079/v-20260331.htm"
     },
     {
-      "accession": "0001193125-26-191507",
-      "cik": "0000789019",
-      "document": "msft-20260331.htm",
-      "filed": "2026-04-29",
-      "form": "10-Q",
-      "items": "",
-      "period": "2026-03-31",
-      "ticker": "MSFT",
-      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526191507/msft-20260331.htm"
-    },
-    {
       "accession": "0001628280-26-027723",
       "cik": "0000021344",
       "document": "ko-20260428.htm",
@@ -11918,17 +12033,6 @@
       "period": "2026-04-28",
       "ticker": "KO",
       "url": "https://www.sec.gov/Archives/edgar/data/21344/000162828026027723/ko-20260428.htm"
-    },
-    {
-      "accession": "0001403161-26-000077",
-      "cik": "0001403161",
-      "document": "v-20260428.htm",
-      "filed": "2026-04-28",
-      "form": "8-K",
-      "items": "2.02,8.01,9.01",
-      "period": "2026-04-28",
-      "ticker": "V",
-      "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000077/v-20260428.htm"
     },
     {
       "accession": "0000200406-26-000089",
@@ -12052,17 +12156,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/1065280/000106528026000138/nflx-20260331.htm"
     },
     {
-      "accession": "0001628280-26-025532",
-      "cik": "0001326801",
-      "document": "meta-20260416.htm",
-      "filed": "2026-04-16",
-      "form": "DEF 14A",
-      "items": "",
-      "period": "2025-12-31",
-      "ticker": "META",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026025532/meta-20260416.htm"
-    },
-    {
       "accession": "0001193125-26-159286",
       "cik": "0001065280",
       "document": "d20613ddef14a.htm",
@@ -12118,17 +12211,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000076/jnj-20260414.htm"
     },
     {
-      "accession": "0000093410-26-000108",
-      "cik": "0000093410",
-      "document": "cvx-20260409.htm",
-      "filed": "2026-04-09",
-      "form": "8-K",
-      "items": "2.02",
-      "period": "2026-04-09",
-      "ticker": "CVX",
-      "url": "https://www.sec.gov/Archives/edgar/data/93410/000009341026000108/cvx-20260409.htm"
-    },
-    {
       "accession": "0001193125-26-147704",
       "cik": "0000310158",
       "document": "d85708ddef14a.htm",
@@ -12160,17 +12242,6 @@
       "period": "2026-04-06",
       "ticker": "AVGO",
       "url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526144028/d87999d8k.htm"
-    },
-    {
-      "accession": "0001193125-26-129057",
-      "cik": "0000002488",
-      "document": "d85856ddef14a.htm",
-      "filed": "2026-03-27",
-      "form": "DEF 14A",
-      "items": "",
-      "period": "2026-05-13",
-      "ticker": "AMD",
-      "url": "https://www.sec.gov/Archives/edgar/data/2488/000119312526129057/d85856ddef14a.htm"
     },
     {
       "accession": "0000104169-26-000067",
@@ -12239,17 +12310,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/909832/000090983226000029/cost-20260215.htm"
     },
     {
-      "accession": "0000731766-26-000067",
-      "cik": "0000731766",
-      "document": "unh-20260309.htm",
-      "filed": "2026-03-09",
-      "form": "8-K",
-      "items": "7.01",
-      "period": "2026-03-09",
-      "ticker": "UNH",
-      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176626000067/unh-20260309.htm"
-    },
-    {
       "accession": "0000909832-26-000025",
       "cik": "0000909832",
       "document": "cost-20260305.htm",
@@ -12283,17 +12343,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/354950/000035495026000026/hd-20260224.htm"
     },
     {
-      "accession": "0000310158-26-000063",
-      "cik": "0000310158",
-      "document": "mrk-20251231.htm",
-      "filed": "2026-02-24",
-      "form": "10-K",
-      "items": "",
-      "period": "2025-12-31",
-      "ticker": "MRK",
-      "url": "https://www.sec.gov/Archives/edgar/data/310158/000031015826000063/mrk-20251231.htm"
-    },
-    {
       "accession": "0000059478-26-000013",
       "cik": "0000059478",
       "document": "lly-20251231.htm",
@@ -12325,43 +12374,21 @@
       "period": "2026-01-29",
       "ticker": "AAPL",
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000005/aapl-20260129.htm"
-    },
-    {
-      "accession": "0001308179-26-000008",
-      "cik": "0000320193",
-      "document": "aapl014016-def14a.htm",
-      "filed": "2026-01-08",
-      "form": "DEF 14A",
-      "items": "",
-      "period": "2026-02-24",
-      "ticker": "AAPL",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000130817926000008/aapl014016-def14a.htm"
-    },
-    {
-      "accession": "0001140361-26-000199",
-      "cik": "0000320193",
-      "document": "ef20060722_8k.htm",
-      "filed": "2026-01-02",
-      "form": "8-K",
-      "items": "5.02",
-      "period": "2025-12-30",
-      "ticker": "AAPL",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126000199/ef20060722_8k.htm"
     }
   ],
-  "generated_at": "2026-11-01T11:55:54Z",
+  "generated_at": "2026-11-06T06:56:05Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
     "currency": "USD",
-    "filing_count": 267,
+    "filing_count": 268,
     "form_counts": {
-      "10-K": 6,
-      "10-Q": 59,
-      "8-K": 188,
-      "DEF 14A": 14
+      "10-K": 7,
+      "10-Q": 65,
+      "8-K": 185,
+      "DEF 14A": 11
     },
-    "latest_filed": "2026-10-30",
+    "latest_filed": "2026-11-05",
     "sectors": [
       "Energy",
       "Financials",
