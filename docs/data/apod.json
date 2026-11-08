@@ -6,23 +6,13 @@
     "image_count": 13,
     "video_count": 1,
     "other_count": 0,
-    "first_date": "2026-10-25",
-    "latest_date": "2026-11-07",
+    "first_date": "2026-10-26",
+    "latest_date": "2026-11-08",
     "window_days": 14,
-    "generated_at": "2026-11-07T22:10:16.656Z",
-    "cached_at": "2026-11-07T22:10:16.656Z"
+    "generated_at": "2026-11-08T06:27:55.254Z",
+    "cached_at": "2026-11-08T06:27:55.254Z"
   },
   "entries": [
-    {
-      "date": "2026-10-25",
-      "title": "Dark Matter in a Simulated Universe",
-      "explanation": "Is our universe haunted? It might look that way on this dark matter map. The gravity of unseen dark matter is the leading explanation for why galaxies rotate so fast, why galaxies orbit clusters so fast, why gravitational lenses so strongly deflect light, and how visible matter is distributed. The featured image from the American Museum of Natural History ‘s Hayden Planetarium Space Show, Dark Universe, highlights one example of how pervasive dark matter might haunt our universe. In this frame from a detailed computer simulation, complex filaments of dark matter, shown in black, are strewn about the universe like spider webs, while the relatively rare clumps of familiar baryon ic matter are colored orange. These simulations are good statistical matches to astronomical observations. In what is perhaps a scarier turn of events, dark matter — although quite strange and in an unknown form — is no longer thought to be the strangest source of gravity in the universe. That honor now falls to dark energy, a more uniform source of repulsive gravity that seems to now dominate the expansion of the entire universe. Tomorrow’s picture: Orion the Great",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2021/october/DarkMatter_KipacAmnh_1200.jpg?w=1200&h=900&fit=clip&crop=faces%2Cfocalpoint",
-      "hdurl": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2021/october/DarkMatter_KipacAmnh_1200.jpg?w=1200&h=900&fit=clip&crop=faces%2Cfocalpoint",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-10-26",
       "title": "M42: The Great Nebula in Orion",
@@ -152,6 +142,16 @@
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/GerlacheKocherMassif_Sans.jpg?w=1500&h=1022&fit=clip&crop=faces%2Cfocalpoint",
       "thumbnail_url": "",
       "copyright": "Alejandro Sanz"
+    },
+    {
+      "date": "2026-11-08",
+      "title": "Major Fireball Meteor",
+      "explanation": "The sky glows with soft pinkish colors of fading twilight in this serendipitous mountaintop vista. Taken in subfreezing temperatures, the thoughtfully composed photo shows snowy, rugged peaks seen from a mountain pass on 2017 November 14. Below lies the village of La Villa, Alta Badia in Italy ‘s Dolomite Alps. Above the nestled village lights, the constellation Ursa Major hangs over the northern horizon. But most stunning is the intense fireball meteor. It was captured during the camera’s exposure by chance as it flashed east to west across the northern horizon, under Ursa Major’s familiar Big Dipper asterism. Sightings of this major fireball meteor were widely reported in European skies, making it one of the most reported fireball events ever for planet Earth’s American Meteor Society and the International Meteor Organization. The meteor’s measured track over Germany is consistent with its origin near the active radiant of November’s Northern Taurid Meteor Shower, a shower associated with dust from Encke’s comet. Tomorrow’s picture: witch sky?",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg?w=0&h=0&fit=clip&crop=faces%2Cfocalpoint",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg?w=0&h=0&fit=clip&crop=faces%2Cfocalpoint",
+      "thumbnail_url": "",
+      "copyright": ""
     }
   ],
   "demo": false
