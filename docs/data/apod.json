@@ -6,23 +6,13 @@
     "image_count": 13,
     "video_count": 1,
     "other_count": 0,
-    "first_date": "2026-10-26",
-    "latest_date": "2026-11-08",
+    "first_date": "2026-10-27",
+    "latest_date": "2026-11-09",
     "window_days": 14,
-    "generated_at": "2026-11-08T22:20:04.276Z",
-    "cached_at": "2026-11-08T22:20:04.276Z"
+    "generated_at": "2026-11-09T06:59:11.719Z",
+    "cached_at": "2026-11-09T06:59:11.719Z"
   },
   "entries": [
-    {
-      "date": "2026-10-26",
-      "title": "M42: The Great Nebula in Orion",
-      "explanation": "The Great Nebula in Orion, an immense, nearby starbirth region, is one of the most famous of all astronomical nebulas. Here, glowing gas surrounds hot young stars at the edge of an immense interstellar molecular cloud only 1500 light-years away. In the featured deep image in assigned colors highlighted by emission in hydrogen, wisps and sheets of dust and gas are particularly evident. The Great Nebula in Orion can be found with the unaided eye near the easily identifiable belt of three stars in the popular constellation Orion. In addition to housing a bright open cluster of stars known as the Trapezium, the Orion Nebula contains many stellar nurseries. These nurseries contain much hydrogen gas, hot young stars, proplyds, and stellar jets spewing material at high speeds. Also known as M42, the Orion Nebula spans about 40 light years and is located in the same spiral arm of our Galaxy as the Sun. Tomorrow’s picture: open space",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/OrionSword_Palaia_2000.jpg?w=2000&h=2090&fit=clip&crop=faces%2Cfocalpoint",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/OrionSword_Palaia_2000.jpg?w=2000&h=2090&fit=clip&crop=faces%2Cfocalpoint",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-10-27",
       "title": "Noctilucent Clouds over Sweden",
@@ -150,6 +140,16 @@
       "media_type": "image",
       "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg?w=0&h=0&fit=clip&crop=faces%2Cfocalpoint",
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg?w=0&h=0&fit=clip&crop=faces%2Cfocalpoint",
+      "thumbnail_url": "",
+      "copyright": ""
+    },
+    {
+      "date": "2026-11-09",
+      "title": "Rigel and the Witch Head Nebula",
+      "explanation": "Does the blue nebula look like the head of a witch? The nebula is known popularly as the Witch Head Nebula because, it is said, the nebula’s shape resembles a Halloween-style caricature of a witch’s head. Exactly how, though, can be a topic of imaginative speculation. What is clear is that IC 2118 is about 50 light-years across and made of gas and dust that points to — because it has been partly eroded by — the nearby star Rigel. One of the brighter stars in the constellation Orion, Rigel lies just below the center of the featured image. The blue color of the Witch Head Nebula and is caused not only by Rigel’s intense blue starlight but also because the dust grains scatter blue light more efficiently than red. The same physical process causes Earth’s daytime sky to appear blue, although the scatterers in planet Earth’s atmosphere are molecules of nitrogen and oxygen. Tomorrow’s picture: suddenly Saturn",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&h=1990&fit=clip&crop=faces%2Cfocalpoint",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&h=1990&fit=clip&crop=faces%2Cfocalpoint",
       "thumbnail_url": "",
       "copyright": ""
     }
