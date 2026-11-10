@@ -1,0 +1,81 @@
+name: Ensure Databricks warehouse is running
+description: |
+  Starts the Databricks SQL warehouse if it is not already RUNNING and waits
+  until it is. The SQL Statement Execution API does not auto-start a stopped
+  warehouse; it rejects the request with HTTP 400 instead. Run this before any
+  script that calls POST /api/2.0/sql/statements.
+
+inputs:
+  host:
+    description: Databricks workspace URL (with or without https://)
+    required: true
+  token:
+    description: Databricks PAT (or other bearer token) that has CAN USE on the warehouse
+    required: true
+  warehouse_id:
+    description: SQL warehouse ID
+    required: true
+  timeout_seconds:
+    description: Maximum seconds to wait for RUNNING
+    required: false
+    default: "600"
+
+runs:
+  using: composite
+  steps:
+    - name: Start and wait for warehouse
+      shell: bash
+      env:
+        DBX_HOST_RAW: ${{ inputs.host }}
+        DBX_TOKEN: ${{ inputs.token }}
+        DBX_WH: ${{ inputs.warehouse_id }}
+        DBX_TIMEOUT: ${{ inputs.timeout_seconds }}
+      run: |
+        set -euo pipefail
+
+        host="${DBX_HOST_RAW%/}"
+        host="${host#https://}"; host="${host#http://}"
+        base="https://${host}"
+        url="${base}/api/2.0/sql/warehouses/${DBX_WH}"
+
+        get_state() {
+          curl -sSf -H "Authorization: Bearer ${DBX_TOKEN}" "$url" \
+            | jq -r '.state // "UNKNOWN"'
+        }
+        start_warehouse() {
+          curl -sS -X POST -H "Authorization: Bearer ${DBX_TOKEN}" \
+            "${url}/start" >/dev/null || true
+        }
+
+        initial=$(get_state || echo "UNKNOWN")
+        echo "Initial warehouse state: ${initial}"
+
+        if [ "$initial" = "RUNNING" ]; then
+          echo "Warehouse already RUNNING; skipping start."
+          exit 0
+        fi
+
+        echo "Requesting start..."
+        start_warehouse
+
+        deadline=$(( $(date +%s) + DBX_TIMEOUT ))
+        while [ "$(date +%s)" -lt "$deadline" ]; do
+          state=$(get_state || echo "UNKNOWN")
+          echo "warehouse state: ${state}"
+          case "$state" in
+            RUNNING)
+              echo "Warehouse is RUNNING."
+              exit 0 ;;
+            STOPPED)
+              start_warehouse ;;
+            STARTING|STOPPING)
+              : ;; # transition in progress, keep waiting
+            DELETED|DELETING)
+              echo "::error::Warehouse ${DBX_WH} is ${state}."
+              exit 1 ;;
+          esac
+          sleep 10
+        done
+
+        echo "::error::Warehouse did not reach RUNNING within ${DBX_TIMEOUT}s (last state: ${state:-UNKNOWN})."
+        exit 1

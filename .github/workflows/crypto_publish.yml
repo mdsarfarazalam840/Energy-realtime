@@ -39,6 +39,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests==2.32.3
 
+      - name: Ensure Databricks warehouse is running
+        uses: ./.github/actions/ensure-databricks-warehouse
+        with:
+          host: ${{ secrets.DATABRICKS_HOST }}
+          token: ${{ secrets.DATABRICKS_TOKEN }}
+          warehouse_id: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
+          timeout_seconds: "600"
+
+      - name: Export crypto snapshot from Databricks
+        run: |
+          python scripts/export_crypto_data.py \
+            --window-days "${CRYPTO_WINDOW_DAYS}" \
+            --max-rows "${CRYPTO_MAX_ROWS}" \
+            --out "${CRYPTO_OUT}" \
+            --max-wait "${CRYPTO_MAX_WAIT}"
+
       - name: Export crypto snapshot from Databricks
         run: |
           python scripts/export_crypto_data.py \

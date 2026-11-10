@@ -32,6 +32,23 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install requests==2.32.3
+      
+      - name: Ensure Databricks warehouse is running
+        uses: ./.github/actions/ensure-databricks-warehouse
+        with:
+          host: ${{ secrets.DATABRICKS_HOST }}
+          token: ${{ secrets.DATABRICKS_TOKEN }}
+          warehouse_id: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
+          timeout_seconds: "300"     # 5-min cron can't wait 10 minutes
+
+      - name: Export crypto live tail from Databricks
+        run: |
+          python scripts/export_live_crypto.py \
+            --out "${CRYPTO_LIVE_OUT}" \
+            --window-minutes "${CRYPTO_LIVE_WINDOW_MINUTES}" \
+            --max-rows "${CRYPTO_LIVE_MAX_ROWS}" \
+            --max-wait "${CRYPTO_LIVE_MAX_WAIT}"
+
 
       - name: Export crypto live tail from Databricks
         run: |
