@@ -9428,6 +9428,28 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0001140361-26-042798",
+      "cik": "0000320193",
+      "document": "ef20085077_8k.htm",
+      "filed": "2026-11-09",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-11-05",
+      "ticker": "AAPL",
+      "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126042798/ef20085077_8k.htm"
+    },
+    {
+      "accession": "0000731766-26-000274",
+      "cik": "0000731766",
+      "document": "unh-20261103.htm",
+      "filed": "2026-11-09",
+      "form": "8-K",
+      "items": "5.02",
+      "period": "2026-11-03",
+      "ticker": "UNH",
+      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176626000274/unh-20261103.htm"
+    },
+    {
       "accession": "0001403161-26-000134",
       "cik": "0001403161",
       "document": "v-20260930.htm",
@@ -12123,17 +12145,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/731766/000110465926046125/tm261387-6_def14a.htm"
     },
     {
-      "accession": "0000731766-26-000121",
-      "cik": "0000731766",
-      "document": "unh-20260421.htm",
-      "filed": "2026-04-21",
-      "form": "8-K",
-      "items": "2.02,9.01",
-      "period": "2026-04-21",
-      "ticker": "UNH",
-      "url": "https://www.sec.gov/Archives/edgar/data/731766/000073176626000121/unh-20260421.htm"
-    },
-    {
       "accession": "0001140361-26-015711",
       "cik": "0000320193",
       "document": "ef20071035_8k.htm",
@@ -12363,20 +12374,9 @@
       "period": "2025-12-27",
       "ticker": "AAPL",
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
-    },
-    {
-      "accession": "0000320193-26-000005",
-      "cik": "0000320193",
-      "document": "aapl-20260129.htm",
-      "filed": "2026-01-29",
-      "form": "8-K",
-      "items": "2.02,9.01",
-      "period": "2026-01-29",
-      "ticker": "AAPL",
-      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000005/aapl-20260129.htm"
     }
   ],
-  "generated_at": "2026-11-06T06:56:05Z",
+  "generated_at": "2026-11-09T22:27:06Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12388,7 +12388,7 @@
       "8-K": 185,
       "DEF 14A": 11
     },
-    "latest_filed": "2026-11-05",
+    "latest_filed": "2026-11-09",
     "sectors": [
       "Energy",
       "Financials",
