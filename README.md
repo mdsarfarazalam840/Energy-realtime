@@ -79,6 +79,7 @@ The repository started from the Databricks **default-python** Declarative Automa
 | Finance dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/finance.html> | SEC EDGAR filings, annual and quarterly financial facts, sector exposure |
 | Tech Pulse | <https://mdsaifedu.eu.cc/Energy-realtime/tech.html> | Hacker News top headlines in a 3D hologram feed |
 | Space observatory | <https://mdsaifedu.eu.cc/Energy-realtime/space.html> | NASA's Astronomy Picture of the Day in a full-screen 3D observatory |
+| Flight globe | <https://mdsaifedu.eu.cc/Energy-realtime/flights.html> | OpenSky Network aircraft plotted live on a 3D globe |
 | Diagram gallery | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/> | All system diagrams in one place |
 | System architecture | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html> | Interactive runtime topology and trust boundary |
 | Energy data flow | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html> | Interactive lineage from feeds to browser |

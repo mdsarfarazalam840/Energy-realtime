@@ -28,6 +28,22 @@ API (no key needed). If the network is unreachable it falls back to a bundled
 demo headline set so the dashboard never stalls. The page is tested end-to-end
 by `tests/load/tech_ui.py`.
 
+## Flights page (OpenSky Network)
+
+`flights.html` plots OpenSky Network aircraft on a 3D globe — a wireframe
+Earth, a seeded starfield, one vertex-coloured dot per aircraft, and a
+hand-rolled orbit camera (drag to rotate, scroll to zoom, click to pin).
+
+OpenSky's anonymous `states/all` tier is rate limited, so the page never calls
+the API: it reads the committed `data/flights.json` snapshot and falls back to
+a labelled deterministic demo deck. `scripts/cache_flights.mjs` writes the
+snapshot, refreshed hourly by `.github/workflows/cache_flights.yml` with
+jittered retries; there is no API key anywhere, and the cache lives in git so
+a failed fetch cannot blank the globe.
+
+The page is tested end-to-end by `tests/load/flights_ui.py` against a local
+mirror of `docs/` — never the live host.
+
 ## Space page (NASA APOD)
 
 `space.html` is a full-screen 3D observatory around NASA's Astronomy Picture of
