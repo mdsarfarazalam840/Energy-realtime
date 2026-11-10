@@ -47,7 +47,7 @@ function seededRandom(seed) {
   };
 }
 
-function buildDemoSnapshot(nowMs = Date.now()) {
+export function buildDemoSnapshot(nowMs = Date.now()) {
   const random = seededRandom(DEMO_SEED);
   const planes = [];
   for (let index = 0; index < DEMO_COUNT; index++) {

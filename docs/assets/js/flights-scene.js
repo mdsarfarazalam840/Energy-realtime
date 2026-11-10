@@ -131,7 +131,7 @@ function clone01(rgb) {
   return [rgb[0], rgb[1], rgb[2]];
 }
 
-function createScene(root, options = {}) {
+export function createScene(root, options = {}) {
   const onSelect = typeof options.onSelect === "function" ? options.onSelect : () => {};
   const onHover = typeof options.onHover === "function" ? options.onHover : () => {};
   const onUnavailable = typeof options.onUnavailable === "function" ? options.onUnavailable : null;
