@@ -6,23 +6,13 @@
     "image_count": 13,
     "video_count": 1,
     "other_count": 0,
-    "first_date": "2026-10-27",
-    "latest_date": "2026-11-09",
+    "first_date": "2026-10-28",
+    "latest_date": "2026-11-10",
     "window_days": 14,
-    "generated_at": "2026-11-09T22:37:18.023Z",
-    "cached_at": "2026-11-09T22:37:18.023Z"
+    "generated_at": "2026-11-10T07:36:39.401Z",
+    "cached_at": "2026-11-10T07:36:39.401Z"
   },
   "entries": [
-    {
-      "date": "2026-10-27",
-      "title": "Noctilucent Clouds over Sweden",
-      "explanation": "Sometimes it’s night on the ground but day in the air. As the Earth rotates to eclipse the Sun, sunset rises up from the ground. Therefore, at sunset on the ground, sunlight still shines on clouds above. Under usual circumstances, a pretty sunset might be visible, but unusual noctilucent clouds float so high up they can be seen well after dark. Normally too dim to be seen, they may become visible just after sunset during the summer when illuminated by sunlight from below the horizon. Noctilucent cloud s are the highest clouds and are known more technically as polar mesospheric clouds. Featured here as they appeared in early August 2026, a network of blue noctilucent clouds was captured in the distant sky above a field of green grass near Linköping, Sweden, with trees in stark silhouette across the horizon. Much about noctilucent clouds has been discovered only in the past two decades, and how they form and evolve remains a topic of active research. Tomorrow’s picture: round and round",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/NocClouds_Hofer_6048.jpg?w=6048&h=4030&fit=clip&crop=faces%2Cfocalpoint",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/NocClouds_Hofer_6048.jpg?w=6048&h=4030&fit=clip&crop=faces%2Cfocalpoint",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-10-28",
       "title": "The Mutual Occultation of Ganymede and Io",
@@ -150,6 +140,16 @@
       "media_type": "image",
       "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&h=1990&fit=clip&crop=faces%2Cfocalpoint",
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&h=1990&fit=clip&crop=faces%2Cfocalpoint",
+      "thumbnail_url": "",
+      "copyright": ""
+    },
+    {
+      "date": "2026-11-10",
+      "title": "Saturn Behind the Moon",
+      "explanation": "Sometimes Saturn disappears. It doesn’t really go away, of course — it just disappears from our view when Earth’s Moon moves in front. Such a Saturn ian eclipse, more formally called an occultation, was visible in early 2025 along a small swath of Earth — from Greenland through central Europe and into northern Africa. The featured image is a digital fusion of three images, the first of just Saturn before it disappeared, and then two more of the Moon with different exposure lengths. The images were taken from Sardinia, Italy, after sunset. The bright dot near Saturn is not a moon of Saturn, but rather the star 85 Aquarii, which is further behind Saturn than Saturn is behind the Moon. The next time the Moon moves in front of Saturn, as visible from some place on Earth, will be in 2031. Tomorrow’s picture: small but mighty",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Moonsaturn6_Ortu_2124.jpg?w=2124&h=1582&fit=clip&crop=faces%2Cfocalpoint",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Moonsaturn6_Ortu_2124.jpg?w=2124&h=1582&fit=clip&crop=faces%2Cfocalpoint",
       "thumbnail_url": "",
       "copyright": ""
     }
