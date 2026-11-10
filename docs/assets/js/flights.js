@@ -12,8 +12,8 @@ import {
   formatAge,
   formatStamp,
   formatCoord,
-} from "./flights-data.js?v=20261110-2";
-import { createScene } from "./flights-scene.js?v=20261110-2";
+} from "./flights-data.js?v=20261110-3";
+import { createScene } from "./flights-scene.js?v=20261110-3";
 
 const $ = (id) => document.getElementById(id);
 const THEME_KEY = "voltscope-flights-theme";

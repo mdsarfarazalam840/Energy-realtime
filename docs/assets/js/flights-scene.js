@@ -50,7 +50,8 @@ const PALETTES = {
 };
 
 function hexToRgb01(hex) {
-  const value = Number.parseInt(hex.slice(1), 16);
+  // PALETTES store 0xRRGGBB numbers; tolerate strings too, with or without '#'.
+  const value = typeof hex === "number" ? hex : Number.parseInt(hex.replace(/^#/, ""), 16);
   return [(value >> 16) & 255, (value >> 8) & 255, value & 255].map((channel) => channel / 255);
 }
 
