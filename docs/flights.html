@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#04060f">
+  <meta name="description" content="VoltScope Flights — adsb.lol aircraft positions plotted live on a 3D globe.">
+  <title>VoltScope Flights — adsb.lol Flight Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2304060f'/%3E%3Cpath d='M20 3 3 11l7 2.3L12.5 21 20 13.2z' fill='none' stroke='%237fe9ff' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/css/flights.css?v=20261111-2">
+</head>
+<body>
+  <div class="app flights-app" id="app">
+
+    <header class="topbar">
+      <a class="brand" href="flights.html" aria-label="VoltScope Flights home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="22" height="22"><path d="M19 3 2 10.5l7.6 2.2L12.6 22 19 12.6z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-copy">
+          <strong>VoltScope</strong>
+          <small>Flights</small>
+        </span>
+      </a>
+
+      <nav class="site-nav" aria-label="Dashboards">
+        <a href="index.html">Energy</a>
+        <a href="crypto.html">Crypto</a>
+        <a href="finance.html">Finance</a>
+        <a href="tech.html">Tech</a>
+        <a href="space.html">Space</a>
+        <a href="flights.html" class="is-active" aria-current="page">Flights</a>
+        <a href="diagrams/">Architecture</a>
+      </nav>
+
+      <div class="status" id="status" data-state="loading">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-text" id="status-text">Loading snapshot</span>
+        <span class="status-sub" id="status-sub">reading data/flights.json</span>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="chip-toggle" id="btn-orbit" type="button" aria-pressed="true" title="Keyboard: L">
+          <span class="chip-dot" aria-hidden="true"></span>Orbit
+        </button>
+        <button class="chip-toggle" id="btn-refresh" type="button" title="Keyboard: R">Refresh snapshot</button>
+        <button class="icon-btn" id="btn-theme" type="button" aria-label="Toggle light or dark theme" title="Keyboard: T">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"/>
+            <path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="btn-help" type="button" aria-label="Controls and shortcuts" title="Keyboard: ?">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.6 2.6 0 1 1 3.7 1.8c-.7.3-1.1.9-1.1 1.6v.4"/><circle cx="12" cy="15.5" r=".95" fill="currentColor" stroke="none"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="flights-main">
+      <div class="scene" id="flights-scene">
+        <canvas aria-hidden="true"></canvas>
+        <div class="flight-tip" id="flight-tooltip" hidden></div>
+        <div class="scene-loading" id="flights-loading">
+          <span class="loader" aria-hidden="true"></span>
+          <span>Parsing aircraft positions…</span>
+        </div>
+        <div class="scene-fallback" id="flight-fallback" hidden>
+          <strong>3D globe unavailable</strong>
+          <span>The snapshot panel still lists the data — check WebGL support and reload.</span>
+        </div>
+        <div class="stage-tools">
+          <span class="scene-hint">Drag to orbit · scroll to zoom · click an aircraft</span>
+        </div>
+      </div>
+
+      <aside class="info-panel">
+        <p class="info-eyebrow"><span class="badge">ODbL 1.0</span> Community network</p>
+        <h1>adsb.lol flights</h1>
+        <p class="summary" id="flights-summary">—</p>
+
+        <div class="control">
+          <label for="flights-country">Country</label>
+          <select id="flights-country"></select>
+        </div>
+
+        <div class="selected" id="flight-selected">Click an aircraft on the globe to inspect it.</div>
+
+        <p class="info-foot"><span id="flights-source">—</span> · <span id="flights-asof">—</span> · snapshots refreshed by a scheduled workflow, never polled per visitor</p>
+      </aside>
+    </main>
+
+    <dialog class="help-dialog" id="help-dialog">
+      <div class="help-head">
+        <div>
+          <h2>Flight layer controls</h2>
+          <p>Everything here reads the committed snapshot in <code>docs/data/flights.json</code>.</p>
+        </div>
+        <button class="icon-btn" id="btn-help-close" type="button" aria-label="Close dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="help-body">
+        <div class="help-grid">
+          <div>
+            <h3>View</h3>
+            <ul>
+              <li>Drag the globe to orbit, scroll to zoom.</li>
+              <li>Click an aircraft to pin its card, click empty space to clear.</li>
+              <li><kbd>L</kbd> toggles auto-orbit.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Data &amp; chrome</h3>
+            <ul>
+              <li><kbd>R</kbd> re-reads the cached snapshot.</li>
+              <li><kbd>T</kbd> switches light / dark.</li>
+              <li>The country filter narrows the plotted layer.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="help-small">Shortcuts stay inert while focus is in a form field. adsb.lol rate limits its public API, so this page ships a committed regional snapshot instead of a per-visitor poll.</p>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <div class="boot" id="boot">
+      <span class="boot-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26"><circle cx="16" cy="16" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/><ellipse cx="16" cy="16" rx="4" ry="8" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".7"/><circle cx="6" cy="16" r="1.6" fill="currentColor"/></svg>
+      </span>
+      <p class="boot-title">Rendering flight layer…</p>
+      <p class="boot-sub" id="boot-sub">reading data/flights.json</p>
+      <span class="boot-bar" aria-hidden="true"><i></i></span>
+    </div>
+  </div>
+
+  <noscript>
+    <div class="noscript">VoltScope Flights needs JavaScript to render the globe and panel.</div>
+  </noscript>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./assets/vendor/three/three.module.js",
+        "three/addons/": "./assets/vendor/three/addons/"
+      }
+    }
+  </script>
+  <script type="module" src="assets/js/flights.js?v=20261111-2"></script>
+  <script>
+    setTimeout(function () {
+      var boot = document.getElementById("boot");
+      if (boot && !boot.classList.contains("is-done")) {
+        boot.dataset.state = "error";
+        var sub = document.getElementById("boot-sub");
+        if (sub) sub.textContent = "Flight layer assets did not load — check the console and reload.";
+      }
+    }, 15000);
+  </script>
+</body>
+</html>

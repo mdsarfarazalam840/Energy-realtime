@@ -1,0 +1,139 @@
+name: Flights Data to Kafka
+
+# Step 1 of the flights pipeline. One polite adsb.lol grid pass feeds three
+# consumers: the static flights globe (docs/data/flights.json), the Kafka
+# topic `flights-positions`, and the MotherDuck bridge. Keeping one fetch
+# matters because the public adsb.lol API allows roughly 500 requests per day
+# per IP and one grid pass already spends about 64.
+#
+# The pipeline is independent at every hop:
+#   1. fetch + produce run here, on a cron;
+#   2. Databricks drains the topic with availableNow (skipped when
+#      FLIGHTS_DATABRICKS_JOB_ID is unset);
+#   3. the bridge upserts the same topic into MotherDuck (skipped when
+#      MOTHERDUCK_TOKEN is unset), so a Databricks egress problem never stops
+#      the warehouse from staying current.
+#
+# adsb.lol data is published under the ODbL 1.0 licence. No API key is used.
+
+on:
+  schedule:
+    # Seven runs a day: 64 regions each = 448 requests, leaving headroom under
+    # adsb.lol's 500/day/IP quota for retries. Gaps are 3-4 hours.
+    - cron: "17 0,3,7,10,14,17,21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: flights-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      KAFKA_BOOTSTRAP: ${{ secrets.KAFKA_BOOTSTRAP }}
+      KAFKA_USERNAME: ${{ secrets.KAFKA_USERNAME }}
+      KAFKA_PASSWORD: ${{ secrets.KAFKA_PASSWORD }}
+      KAFKA_CA_LOCATION: aiven_ca.pem
+      FLIGHTS_TOPIC: ${{ vars.FLIGHTS_TOPIC || 'flights-positions' }}
+      MOTHERDUCK_DATABASE: ${{ vars.MOTHERDUCK_DATABASE || 'flights' }}
+      MOTHERDUCK_TABLE: ${{ vars.MOTHERDUCK_TABLE || 'flights_positions' }}
+      TZ: UTC
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch adsb.lol snapshot
+        run: FLIGHTS_FORCE=1 node scripts/cache_flights.mjs
+
+      - name: Commit changed snapshot
+        run: |
+          set -euo pipefail
+          git config user.name "voltscope-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Stage first: `git diff --quiet <path>` ignores an untracked file.
+          git add docs/data/flights.json
+          if git diff --cached --quiet; then
+            echo "Flights snapshot unchanged; skipping commit."
+            exit 0
+          fi
+          git commit -m "chore(data): update adsb.lol flights snapshot [skip ci]"
+          for attempt in 1 2 3; do
+            git pull --rebase --autostash origin main && git push origin HEAD:main && break
+            echo "push attempt ${attempt} failed; retrying"
+            sleep 5
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install producer and bridge dependencies
+        run: pip install "confluent-kafka>=2.4" duckdb pandas
+
+      - name: Write Kafka CA certificate
+        run: printf '%s\n' "${{ secrets.KAFKA_CA_PEM }}" > aiven_ca.pem
+
+      - name: Produce flights to Kafka
+        run: python producer_flights.py --snapshot docs/data/flights.json
+
+      - name: Trigger Databricks availableNow ingest
+        if: ${{ vars.FLIGHTS_DATABRICKS_JOB_ID != '' }}
+        continue-on-error: true
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          FLIGHTS_DATABRICKS_JOB_ID: ${{ vars.FLIGHTS_DATABRICKS_JOB_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${DATABRICKS_HOST}" || { echo "::error::Missing DATABRICKS_HOST"; exit 1; }
+          test -n "${DATABRICKS_TOKEN}" || { echo "::error::Missing DATABRICKS_TOKEN"; exit 1; }
+          host="${DATABRICKS_HOST#https://}"; host="${host#http://}"; host="${host%/}"
+          curl -sS --fail -X POST \
+            -H "Authorization: Bearer ${DATABRICKS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"job_id\": ${FLIGHTS_DATABRICKS_JOB_ID}}" \
+            "https://${host}/api/2.1/jobs/run-now"
+          echo "Triggered Databricks job ${FLIGHTS_DATABRICKS_JOB_ID}."
+
+      - name: Bridge Kafka to MotherDuck
+        env:
+          motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${motherduck_token}" ]; then
+            echo "::notice::MOTHERDUCK_TOKEN not set; skipping the MotherDuck bridge."
+            exit 0
+          fi
+          python scripts/bridge_flights_to_motherduck.py
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## Flights pipeline"
+            echo ""
+            if [ -f docs/data/flights.json ]; then
+              echo "- Snapshot: \`$(jq -r '.fetched_at' docs/data/flights.json)\`"
+              echo "- Aircraft: **$(jq -r '.counts.aircraft' docs/data/flights.json)** across $(jq -r '.counts.countries' docs/data/flights.json) countries"
+              echo "- Regions: $(jq -r '.coverage.succeeded' docs/data/flights.json)/$(jq -r '.coverage.regions' docs/data/flights.json)"
+            else
+              echo "- No snapshot produced."
+            fi
+            echo "- Topic: \`${FLIGHTS_TOPIC}\`"
+            echo "- Warehouse: \`${MOTHERDUCK_DATABASE}.${MOTHERDUCK_TABLE}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

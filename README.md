@@ -79,6 +79,7 @@ The repository started from the Databricks **default-python** Declarative Automa
 | Finance dashboard | <https://mdsaifedu.eu.cc/Energy-realtime/finance.html> | SEC EDGAR filings, annual and quarterly financial facts, sector exposure |
 | Tech Pulse | <https://mdsaifedu.eu.cc/Energy-realtime/tech.html> | Hacker News top headlines in a 3D hologram feed |
 | Space observatory | <https://mdsaifedu.eu.cc/Energy-realtime/space.html> | NASA's Astronomy Picture of the Day in a full-screen 3D observatory |
+| Flight globe | <https://mdsaifedu.eu.cc/Energy-realtime/flights.html> | adsb.lol aircraft plotted live on a 3D globe |
 | Diagram gallery | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/> | All system diagrams in one place |
 | System architecture | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html> | Interactive runtime topology and trust boundary |
 | Energy data flow | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html> | Interactive lineage from feeds to browser |
@@ -218,6 +219,9 @@ The runtime diagram shows where data moves; this map shows where that behavior l
 | Static site | `docs/` | GitHub Pages dashboard, diagram gallery, and JSON artifacts |
 | Browser app | `docs/assets/js/` | Three.js scene, date picker, filters, charts, replay, live merge, URL state |
 | Crypto dashboard | `producer_crypto.py`, `scripts/export_crypto_data.py` | CoinGecko public API → Kafka → Databricks → `docs/data/crypto.json` → `crypto.html` |
+| Flights producer | `producer_flights.py`, `.github/workflows/flights_to_kafka.yml` | One adsb.lol snapshot → Kafka `flights-positions`, keyed by ICAO address |
+| Flights ingest | `src/flights_ingest.ipynb`, `resources/flights_job.yml` | `availableNow` Kafka read → Delta `flights_positions` |
+| MotherDuck bridge | `scripts/bridge_flights_to_motherduck.py` | Kafka consumer → DuckDB upsert into `flights.flights_positions` |
 | Finance dashboard | `scripts/export_edgar_data.py` | SEC EDGAR company facts and submissions → `docs/data/finance.json` → `finance.html` |
 | Tech Pulse | `scripts/cache_hn.mjs` | Hacker News top stories → `docs/data/tech-news.json` → `tech.html` |
 | Space observatory | `scripts/cache_apod.mjs`, `docs/assets/js/space*.js` | NASA APOD 14-day window → `docs/data/apod.json` → `space.html` |
@@ -321,6 +325,7 @@ The data flow is generated from [`docs/diagrams/specs/dataflow.json`](docs/diagr
 | **Live Databricks Feed** | `schedule` + `workflow_dispatch` (also dispatchable by the relay) | `*/5 * * * *` | Produce AEMO dispatch and Elecz spot, trigger ingest, wait for the run, publish `docs/data/live.json` |
 | **Energy Market Data to Kafka** | `schedule` + `workflow_dispatch` | `*/30 * * * *` | Fetch the full feed (ENTSO-E day-ahead included), produce to Kafka, trigger the Databricks job |
 | **Publish Dashboard Snapshot** | `schedule` + `workflow_dispatch` + `workflow_run` | `7,37 * * * *` | Export a fresh 30-day snapshot, commit only when the payload changed |
+| **Flights Data to Kafka** | `schedule` + `workflow_dispatch` | `17 0,3,7,10,14,17,21 * * *` | Fetch one adsb.lol grid snapshot, produce `flights-positions`, trigger the flights ingest, bridge the topic into MotherDuck |
 
 The live lane is additive. It only refreshes the feeds that actually change inside a five-minute window, so ENTSO-E's day-ahead quota is not spent by the fast loop. The 30-minute workflow remains the full-feed path.
 
@@ -680,6 +685,7 @@ Energy-realtime/
 ├── .github/
 │   └── workflows/
 │       ├── dual_to_kafka.yml          # 30-minute full producer + Databricks trigger
+│       ├── flights_to_kafka.yml       # adsb.lol snapshot → Kafka → Databricks → MotherDuck
 │       ├── live_feed.yml              # 5-minute live producer + ingest + live.json
 │       ├── dashboard-quality.yml      # static dashboard load and UI tests
 │       └── publish_dashboard.yml      # snapshot export + guarded commit
@@ -710,13 +716,16 @@ Energy-realtime/
 │   │   └── specs/                     # Archify source specifications
 │   └── README.md                      # dashboard-specific docs
 ├── resources/
-│   └── energy_job.yml                 # Databricks job resource
+│   ├── energy_job.yml                 # Databricks job resource
+│   └── flights_job.yml                # flights availableNow job resource
 ├── scripts/
 │   ├── export_dashboard_data.py       # SQL API exporter
 │   ├── export_live_data.py            # five-minute live tail exporter
+│   ├── bridge_flights_to_motherduck.py  # Kafka → MotherDuck upsert bridge
 │   └── dashboard_shards.py            # index + UTC-day shard writer
 ├── src/
 │   ├── kafka_ingest.ipynb             # Structured Streaming notebook
+│   ├── flights_ingest.ipynb           # availableNow Kafka → Delta flights notebook
 │   └── energy_realtime/
 │       ├── __init__.py
 │       ├── main.py                    # template CLI entry point
@@ -727,6 +736,7 @@ Energy-realtime/
 │   └── load/                          # local mirror, load test, browser audit
 ├── fixtures/
 ├── producer_dual.py                   # AEMO NEM + ENTSO-E + Elecz producer
+├── producer_flights.py                # adsb.lol snapshot → Kafka producer
 ├── workers/
 │   └── live/                          # optional realtime relay (Cloudflare Worker)
 │       ├── src/index.js               # presence Durable Object + Databricks proxy
@@ -855,6 +865,7 @@ databricks configure
 databricks bundle validate --target dev
 databricks bundle deploy --target dev
 databricks bundle run energy_kafka_job --target dev
+databricks bundle run flights_kafka_job --target dev
 ```
 
 The bundle builds a wheel with `uv build --wheel`, includes every YAML in `resources/`, and deploys the `energy_kafka_job` with the notebook task from `src/kafka_ingest.ipynb`.
@@ -896,6 +907,7 @@ Set these under **Settings → Secrets and variables → Actions → Secrets**.
 | `ENTSOE_API_KEY` | Producer | Optional ENTSO-E Transparency API key |
 | `DATABRICKS_HOST` | Producer trigger, exporter | Workspace URL |
 | `DATABRICKS_TOKEN` | Producer trigger, exporter | Databricks personal access token |
+| `MOTHERDUCK_TOKEN` | Flights bridge | MotherDuck access token; the bridge skips when unset |
 
 ### GitHub Actions variables
 
@@ -909,6 +921,21 @@ Set these under **Settings → Secrets and variables → Actions → Variables**
 | `ENTSOE_ZONES` | 48-zone default | Comma-separated ENTSO-E zones; `all` uses the whole registry |
 | `ELECZ_ZONES` | `DE_LU` | Comma-separated Elecz zones, or `all` |
 | `ENTSOE_LOOKBACK_HOURS` | `48` | Hours of day-ahead history to read |
+| `FLIGHTS_TOPIC` | `flights-positions` | Kafka topic for adsb.lol aircraft messages |
+| `FLIGHTS_DATABRICKS_JOB_ID` | none | Flights ingest job id; the trigger step skips when unset |
+| `MOTHERDUCK_DATABASE` | `flights` | MotherDuck database for the flights bridge |
+| `MOTHERDUCK_TABLE` | `flights_positions` | MotherDuck table for the flights bridge |
+
+### Flights pipeline
+
+The flights pipeline reuses the Kafka and Databricks credentials above and adds
+`MOTHERDUCK_TOKEN`. One adsb.lol fetch feeds the static globe, Kafka
+(`flights-positions`), Databricks (`flights_positions`), and MotherDuck
+(`flights.flights_positions`). The workflow skips the Databricks trigger when
+`FLIGHTS_DATABRICKS_JOB_ID` is unset and skips the bridge when
+`MOTHERDUCK_TOKEN` is unset, so each hop can be enabled on its own. See
+[`docs/flights-pipeline.md`](docs/flights-pipeline.md) for the message contract,
+the setup steps, and the Free Edition egress caveat.
 
 ### Realtime layer configuration
 

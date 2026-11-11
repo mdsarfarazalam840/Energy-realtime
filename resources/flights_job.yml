@@ -1,0 +1,8 @@
+resources:
+  jobs:
+    flights_kafka_job:
+      name: flights_kafka_job
+      tasks:
+      - task_key: flights_streaming
+        notebook_task:
+          notebook_path: ../src/flights_ingest.ipynb
