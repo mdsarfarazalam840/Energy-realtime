@@ -1,11 +1,11 @@
 /* Flights page data layer: snapshot parsing, the deterministic demo deck, and
  * formatting helpers. Everything the page shows comes from a single
  * same-origin JSON file (docs/data/flights.json, cached by
- * scripts/cache_flights.mjs); no browser-side call reaches the OpenSky API.
+ * scripts/cache_flights.mjs); no browser-side call reaches the adsb.lol API.
  *
- * The live feed is OpenSky Network's anonymous states/all tier, which is rate
- * limited — hence a committed snapshot plus a labelled demo fallback rather
- * than per-visitor polling. */
+ * The public adsb.lol feed is keyless but regional and rate limited — hence a
+ * committed snapshot plus a labelled demo fallback rather than per-visitor
+ * polling. */
 
 export const FLIGHTS_URL = "data/flights.json";
 export const SCHEMA_VERSION = 1;

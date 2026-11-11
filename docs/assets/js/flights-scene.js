@@ -266,7 +266,7 @@ export function createScene(root, options = {}) {
       colors[index * 3 + 2] = 1;
     }
     if (!planePoints.geometry || !planePoints.geometry.getAttribute("position")) {
-      planePoints.setGeometry(new THREE.BufferGeometry());
+      planePoints.geometry = new THREE.BufferGeometry();
     }
     const geometry = planePoints.geometry;
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -461,7 +461,7 @@ export function createScene(root, options = {}) {
   updateCamera();
   setPlanes([]);
 
-  const start = performance.now();
+  let start = performance.now();
   function frame(now) {
     const delta = Math.min(0.1, (now - start) / 1000);
     start = now;

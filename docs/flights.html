@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#04060f">
-  <meta name="description" content="VoltScope Flights — OpenSky Network aircraft positions plotted live on a 3D globe.">
-  <title>VoltScope Flights — OpenSky Network Flight Tracker</title>
+  <meta name="description" content="VoltScope Flights — adsb.lol aircraft positions plotted live on a 3D globe.">
+  <title>VoltScope Flights — adsb.lol Flight Tracker</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2304060f'/%3E%3Cpath d='M20 3 3 11l7 2.3L12.5 21 20 13.2z' fill='none' stroke='%237fe9ff' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="assets/css/flights.css?v=20261110-3">
+  <link rel="stylesheet" href="assets/css/flights.css?v=20261111-2">
 </head>
 <body>
   <div class="app flights-app" id="app">
@@ -76,8 +76,8 @@
       </div>
 
       <aside class="info-panel">
-        <p class="info-eyebrow"><span class="badge">Anonymous tier</span> Network layer</p>
-        <h1>OpenSky Network flights</h1>
+        <p class="info-eyebrow"><span class="badge">ODbL 1.0</span> Community network</p>
+        <h1>adsb.lol flights</h1>
         <p class="summary" id="flights-summary">—</p>
 
         <div class="control">
@@ -122,7 +122,7 @@
             </ul>
           </div>
         </div>
-        <p class="help-small">Shortcuts stay inert while focus is in a form field. The anonymous OpenSky tier is rate limited; this page ships a committed cache instead of a per-visitor poll.</p>
+        <p class="help-small">Shortcuts stay inert while focus is in a form field. adsb.lol rate limits its public API, so this page ships a committed regional snapshot instead of a per-visitor poll.</p>
       </div>
     </dialog>
 
@@ -150,7 +150,7 @@
       }
     }
   </script>
-  <script type="module" src="assets/js/flights.js?v=20261110-3"></script>
+  <script type="module" src="assets/js/flights.js?v=20261111-2"></script>
   <script>
     setTimeout(function () {
       var boot = document.getElementById("boot");

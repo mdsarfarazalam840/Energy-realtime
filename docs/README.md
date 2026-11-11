@@ -28,18 +28,25 @@ API (no key needed). If the network is unreachable it falls back to a bundled
 demo headline set so the dashboard never stalls. The page is tested end-to-end
 by `tests/load/tech_ui.py`.
 
-## Flights page (OpenSky Network)
+## Flights page (adsb.lol)
 
-`flights.html` plots OpenSky Network aircraft on a 3D globe — a wireframe
-Earth, a seeded starfield, one vertex-coloured dot per aircraft, and a
-hand-rolled orbit camera (drag to rotate, scroll to zoom, click to pin).
+`flights.html` plots adsb.lol aircraft on a 3D globe — a wireframe Earth, a
+seeded starfield, one vertex-coloured dot per aircraft, and a hand-rolled orbit
+camera (drag to rotate, scroll to zoom, click to pin).
 
-OpenSky's anonymous `states/all` tier is rate limited, so the page never calls
-the API: it reads the committed `data/flights.json` snapshot and falls back to
-a labelled deterministic demo deck. `scripts/cache_flights.mjs` writes the
-snapshot, refreshed hourly by `.github/workflows/cache_flights.yml` with
-jittered retries; there is no API key anywhere, and the cache lives in git so
-a failed fetch cannot blank the globe.
+The public adsb.lol API is keyless but regional: `/v2/point` covers at most
+250 NM around a point, and only the feeder-only readsb API returns a whole-world
+snapshot. So the page never calls the API. It reads the committed
+`data/flights.json` snapshot and falls back to a labelled deterministic demo
+deck. `scripts/cache_flights.mjs` samples a grid of 250 NM circles over the
+busy aviation regions, merges and de-duplicates the replies, derives each
+country from its ICAO 24-bit address block, and writes the snapshot. The
+`.github/workflows/flights_to_kafka.yml` job refreshes it seven times a day, one
+request every six seconds with jittered retries — 448 of adsb.lol's 500 daily
+requests, leaving headroom for retries. The same run produces the snapshot to
+Kafka for the Databricks and MotherDuck lanes, so the quota is spent once.
+There is no API key anywhere, and the cache lives in git so a failed fetch
+cannot blank the globe. Data is used under the ODbL 1.0 licence.
 
 The page is tested end-to-end by `tests/load/flights_ui.py` against a local
 mirror of `docs/` — never the live host.

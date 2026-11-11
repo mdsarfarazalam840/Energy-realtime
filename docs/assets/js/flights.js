@@ -12,12 +12,12 @@ import {
   formatAge,
   formatStamp,
   formatCoord,
-} from "./flights-data.js?v=20261110-3";
-import { createScene } from "./flights-scene.js?v=20261110-3";
+} from "./flights-data.js?v=20261111-2";
+import { createScene } from "./flights-scene.js?v=20261111-2";
 
 const $ = (id) => document.getElementById(id);
 const THEME_KEY = "voltscope-flights-theme";
-const STALE_AFTER_MS = 90 * 60000; // the cache workflow runs hourly; past this the pipeline is suspect
+const STALE_AFTER_MS = 5 * 3600000; // cache runs 7x/day; the longest gap is 4 h
 const TOAST_MS = 4500;
 
 let toastTimer = 0;
@@ -123,16 +123,16 @@ function updateStatus() {
       const age = state.asOfMs === null ? null : Date.now() - state.asOfMs;
       kind = age !== null && age > STALE_AFTER_MS ? "stale" : "live";
       text = kind === "stale" ? "Snapshot is stale" : "Live snapshot";
-      els.source.textContent = "OpenSky";
+      els.source.textContent = "adsb.lol";
       els.asOf.textContent = state.asOfMs === null ? "—" : `as of ${formatStamp(state.asOfMs)}`;
       sub = state.asOfMs === null
         ? `${plottedCount(state.planes)} aircraft · update time unknown`
         : `${plottedCount(state.planes)} aircraft · ${formatAge(age)} old`;
     }
   }
-  status.dataset.state = kind;
-  statusText.textContent = text;
-  statusSub.textContent = sub;
+  els.status.dataset.state = kind;
+  els.statusText.textContent = text;
+  els.statusSub.textContent = sub;
 }
 
 function updateSummary(visible) {
@@ -201,22 +201,26 @@ function setData(snapshot) {
   updateStatus();
 }
 
+function finishFirstPaint() {
+  if (!state.firstPaint) return;
+  state.firstPaint = false;
+  if (els.loading) els.loading.classList.add("is-done");
+  if (els.boot) els.boot.classList.add("is-done");
+  if (els.bootSub) els.bootSub.textContent = `${plottedCount(state.planes)} aircraft charted`;
+}
+
 async function loadSnapshot({ announce = false } = {}) {
   try {
     const snapshot = await fetchFlights();
     setData(snapshot);
+    finishFirstPaint();
     if (announce) showToast(`Snapshot refreshed · ${plottedCount(state.planes)} aircraft`);
-    if (state.firstPaint) {
-      state.firstPaint = false;
-      if (els.loading) els.loading.classList.add("is-done");
-      if (els.boot) els.boot.classList.add("is-done");
-      if (els.bootSub) els.bootSub.textContent = `${plottedCount(state.planes)} aircraft charted`;
-    }
     return true;
   } catch (error) {
     console.warn("[flights] snapshot load failed:", error);
     if (state.planes.length === 0) {
       setData(parseSnapshot(buildDemoSnapshot()));
+      finishFirstPaint();
       showToast("No readable flights snapshot — showing demo data.");
     } else if (announce) {
       showToast("Refresh failed — showing the last good snapshot.");

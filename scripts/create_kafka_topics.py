@@ -4,7 +4,7 @@
 Uses the same Aiven Kafka credentials (SASL_SSL, SCRAM-SHA-256) as the
 producers and Databricks ingest notebooks.
 
-Topics: crypto-market, energy-prices
+Topics: crypto-market, energy-prices, flights-positions
 """
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ CA_LOCATION = os.environ.get("KAFKA_CA_LOCATION", "aiven_ca.pem")
 TOPICS = [
     NewTopic("crypto-market", num_partitions=1, replication_factor=1),
     NewTopic("energy-prices", num_partitions=1, replication_factor=1),
+    NewTopic("flights-positions", num_partitions=1, replication_factor=1),
 ]
 
 
