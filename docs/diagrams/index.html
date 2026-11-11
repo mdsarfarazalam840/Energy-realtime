@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VoltScope — System diagrams</title>
-<meta name="description" content="Interactive architecture, data flow, and editorial pipeline diagrams for the VoltScope energy price platform.">
+<meta name="description" content="Interactive architecture, data flow, platform lane, and editorial pipeline diagrams for the VoltScope energy price platform.">
 <style>
   :root {
     --paper: #f7f4ee;
@@ -92,10 +92,20 @@
 <main class="page">
   <p class="eyebrow">VoltScope · Diagrams</p>
   <h1>How the data moves</h1>
-  <p class="standfirst">Three views of one system: runtime topology, pipeline lineage, and the editorial path from market signal to public dashboard. The first two are interactive and self-contained.</p>
+  <p class="standfirst">Four views of one system: runtime topology, pipeline lineage, every ingestion lane on one grid, and the editorial path from market signal to public dashboard. Three are interactive and self-contained.</p>
   <div class="rule"></div>
 
   <div class="grid">
+    <a class="card" href="platform.html">
+      <img class="thumb" src="../assets/diagrams/platform-preview.png" alt="Interactive platform data flow diagram across energy, crypto, flights, and cached feeds">
+      <div class="body">
+        <span class="kicker">Archify · interactive</span>
+        <h2>Platform data flow</h2>
+        <p>Every lane on one grid: three Kafka topics into Delta, the flights mirror in MotherDuck, cached JSON for Finance, Tech, AI, and Space, and the static edge to eight pages.</p>
+        <span class="open">OPEN DIAGRAM →</span>
+      </div>
+    </a>
+
     <a class="card card--wide" href="pipeline.html">
       <img class="thumb" src="../assets/diagrams/pipeline-preview.png" alt="Editorial diagram of the VoltScope pipeline from market APIs to the public dashboard">
       <div class="body">
