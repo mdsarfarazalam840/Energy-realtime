@@ -83,7 +83,10 @@ jobs:
           python-version: "3.11"
 
       - name: Install producer and bridge dependencies
-        run: pip install "confluent-kafka>=2.4" duckdb pandas
+        # MotherDuck's extension rejects DuckDB v2.x, so pin the newest release
+        # it still supports. Unpinned `duckdb` resolves to 2.0.0 and the bridge
+        # dies with "Your DuckDB version (v2.0.0) is not yet supported".
+        run: pip install "confluent-kafka>=2.4" "duckdb==1.5.6" pandas
 
       - name: Write Kafka CA certificate
         run: printf '%s\n' "${{ secrets.KAFKA_CA_PEM }}" > aiven_ca.pem
