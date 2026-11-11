@@ -246,7 +246,7 @@ Four diagram artifacts live in `docs/diagrams/`, three generated with [Archify](
 | Diagram | Tool | Source | Purpose |
 |---|---|---|---|
 | [System architecture](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html) | Archify 3.2 | `docs/diagrams/specs/architecture.json` | Runtime components, live lane, guided views, trust boundary; per-room presence relay |
-| [Energy data flow](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html) | Archify 3.2 | `docs/diagrams/specs/dataflow.json` | Lineage from feeds through Kafka and Delta to the shard and live-tail artifacts |
+| [Energy data flow](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html) | Archify 3.2 | `docs/diagrams/specs/dataflow.json` | Lineage from feeds through Kafka and Delta to the schema v2 shards, the six-hour live tail, and the page that polls it every 12 seconds |
 | [Platform data flow](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/platform.html) | Archify 3.2 | `docs/diagrams/specs/platform.json` | Every lane on one grid: energy, crypto, and flights topics into Delta, the MotherDuck mirror, cached JSON products, and the static edge |
 | [Editorial pipeline](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/pipeline.html) | diagram-design 2.6 | `docs/diagrams/pipeline.html` (inline SVG) | One primary path left-to-right: feeds to public dashboard |
 
@@ -332,7 +332,7 @@ sequenceDiagram
 
 [![Interactive energy data flow diagram](docs/assets/diagrams/dataflow-preview.png)](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html)
 
-The data flow is generated from [`docs/diagrams/specs/dataflow.json`](docs/diagrams/specs/dataflow.json) with [Archify](https://github.com/tt-a1i/archify). It keeps the five stages and the two publication lanes visible without adding a second main path. The relay lane carries per-page presence (`/ws?room=<page>`) alongside the static `live.json` tail; the editorial overview (`docs/diagrams/pipeline.html`) follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) rules.
+The data flow is generated from [`docs/diagrams/specs/dataflow.json`](docs/diagrams/specs/dataflow.json) with [Archify](https://github.com/tt-a1i/archify). It keeps the five stages, both publication lanes, and the live lane through to the page visible without adding a second main path. The optional relay (`/api/live`, `/ws?room=<page>`) is carried in the diagram's cards rather than a sixth column; the editorial overview (`docs/diagrams/pipeline.html`) follows the [diagram-design](https://github.com/cathrynlavery/diagram-design) rules.
 
 ### Stage contract
 
