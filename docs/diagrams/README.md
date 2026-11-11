@@ -6,7 +6,7 @@ Four diagrams, four jobs:
 |---|---|---|
 | `pipeline.html` | Static HTML + inline SVG | Editorial overview: market APIs to public dashboard |
 | `architecture.html` | Interactive Archify artifact | Runtime components, live lane, guided views, trust boundary |
-| `dataflow.html` | Interactive Archify artifact | Lineage from feeds through Kafka and Delta to the shard and live-tail artifacts |
+| `dataflow.html` | Interactive Archify artifact | Lineage from feeds through Kafka and Delta to the shards, the live tail, and the page that polls it |
 | `platform.html` | Interactive Archify artifact | Every ingestion lane: energy, crypto, flights, and cached feeds, plus the MotherDuck mirror |
 
 The gallery is `index.html`. GitHub Pages serves the folder at:
@@ -19,7 +19,7 @@ The interactive diagrams are generated from JSON, not hand-edited:
 
 ```text
 specs/architecture.json    17 components, 18 connections, 2 boundaries, 4 views
-specs/dataflow.json        12 nodes, 11 flows, 5 stages, 3 views
+specs/dataflow.json        13 nodes, 13 flows, 5 stages, 4 views
 specs/platform.json        16 nodes, 15 flows, 5 stages, 4 views
 ```
 

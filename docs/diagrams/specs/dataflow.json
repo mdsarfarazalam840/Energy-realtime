@@ -3,10 +3,10 @@
   "diagram_type": "dataflow",
   "meta": {
     "title": "VoltScope Energy Data Flow",
-    "subtitle": "Three market feeds become versioned static artifacts the browser can cache safely",
+    "subtitle": "Three market feeds become a durable Delta table, a six-hour live tail, and versioned static artifacts",
     "output": "docs/diagrams/dataflow.html",
     "quality_profile": "showcase",
-    "viewBox": [1075, 620],
+    "viewBox": [1075, 820],
     "views": [
       {
         "id": "market-feeds",
@@ -21,10 +21,16 @@
         "note": "Kafka absorbs bursts; Delta keeps append-only history for both export lanes."
       },
       {
+        "id": "live-lane",
+        "label": "Live lane",
+        "focus": ["live-producer", "kafka", "databricks", "delta", "live-export", "live-json", "browser"],
+        "note": "A five-minute producer appends to Delta, the live export writes a six-hour tail, and the page re-polls it every 12 seconds."
+      },
+      {
         "id": "publication",
         "label": "Publication",
-        "focus": ["delta", "exporter", "live-export", "shards", "live-json"],
-        "note": "The snapshot exporter writes schema v2 shards; the live exporter writes a small tail."
+        "focus": ["delta", "exporter", "shards", "live-json", "browser"],
+        "note": "Snapshot shards load on demand; the relay can also proxy Delta reads with a 20-second KV cache."
       }
     ]
   },
@@ -41,7 +47,7 @@
     { "id": "elecz", "type": "external", "label": "Elecz", "sublabel": "DE spot", "stage": 0, "row": 2, "tag": "cents/kWh" },
 
     { "id": "producer", "type": "backend", "label": "Dual producer", "sublabel": "requests + entsoe-py", "stage": 1, "row": 1, "tag": "30 min · FX to EUR" },
-    { "id": "live-producer", "type": "backend", "label": "Live producer", "sublabel": "AEMO + Elecz only", "stage": 1, "row": 3, "tag": "5 min" },
+    { "id": "live-producer", "type": "backend", "label": "Live producer", "sublabel": "AEMO + Elecz only", "stage": 1, "row": 3, "tag": "every 5 min" },
 
     { "id": "kafka", "type": "messagebus", "label": "Aiven Kafka", "sublabel": "energy-prices", "stage": 2, "row": 1, "tag": "SASL_SSL · SCRAM" },
 
@@ -49,28 +55,31 @@
     { "id": "delta", "type": "database", "label": "Delta table", "sublabel": "energy_prices_realtime", "stage": 3, "row": 2, "tag": "append-only" },
 
     { "id": "exporter", "type": "backend", "label": "Snapshot export", "sublabel": "30-day window", "stage": 4, "row": 0, "tag": "schema v2 shards" },
-    { "id": "shards", "type": "database", "label": "index + days", "sublabel": "docs/data", "stage": 4, "row": 1, "tag": "UTC-day files" },
-    { "id": "live-export", "type": "backend", "label": "Live export", "sublabel": "360-minute window", "stage": 4, "row": 2, "tag": "live.json · schema v1" },
-    { "id": "live-json", "type": "database", "label": "live.json", "sublabel": "newest readings", "stage": 4, "row": 3, "tag": "2000-row cap" }
+    { "id": "shards", "type": "database", "label": "index + days", "sublabel": "docs/data", "stage": 4, "row": 1, "tag": "browser fetches by day" },
+    { "id": "live-export", "type": "backend", "label": "Live export", "sublabel": "360-minute window", "stage": 4, "row": 2, "tag": "every 5 min" },
+    { "id": "live-json", "type": "database", "label": "live.json", "sublabel": "newest readings", "stage": 4, "row": 3, "tag": "2000-row cap" },
+    { "id": "browser", "type": "frontend", "label": "VoltScope page", "sublabel": "three.js dashboard", "stage": 4, "row": 4, "tag": "loads shards · polls tail" }
   ],
   "flows": [
     { "from": "aemo", "to": "producer", "label": "dispatch prices", "classification": "AUD/MWh · 5 min", "variant": "default" },
-    { "from": "entsoe", "to": "producer", "label": "day-ahead curves", "classification": "EUR/MWh · hourly", "variant": "default", "route": "straight" },
+    { "from": "entsoe", "to": "producer", "label": "day-ahead curves", "classification": "EUR/MWh · hourly", "variant": "default", "route": "straight", "labelAt": [205, 320] },
     { "from": "elecz", "to": "live-producer", "label": "spot price", "classification": "EUR/MWh · 30 min", "variant": "default" },
 
-    { "from": "producer", "to": "kafka", "label": "normalized JSON", "classification": "52 zones + 5 regions", "variant": "emphasis", "route": "straight" },
-    { "from": "live-producer", "to": "kafka", "label": "fast JSON", "classification": "5 regions + DE", "variant": "emphasis" },
+    { "from": "producer", "to": "kafka", "label": "normalized", "classification": "JSON · 52 zones + 5 regions", "variant": "emphasis", "route": "straight", "labelAt": [422, 226] },
+    { "from": "live-producer", "to": "kafka", "label": "fast JSON", "classification": "5 regions + DE", "variant": "emphasis", "labelAt": [422, 430] },
     { "from": "kafka", "to": "databricks", "label": "readStream", "classification": "latest offsets", "variant": "emphasis" },
     { "from": "databricks", "to": "delta", "label": "append rows", "classification": "checkpointed stream", "variant": "emphasis" },
 
-    { "from": "delta", "to": "exporter", "label": "30-day window", "classification": "SQL Statement API", "variant": "default" },
-    { "from": "delta", "to": "live-export", "label": "360-minute tail", "classification": "SQL Statement API", "variant": "default", "route": "straight" },
-    { "from": "exporter", "to": "shards", "label": "publish shards", "classification": "index.json + days/*.json", "variant": "emphasis", "labelDy": 25 },
-    { "from": "live-export", "to": "live-json", "label": "publish tail", "classification": "deduped · rounded", "variant": "emphasis" }
+    { "from": "delta", "to": "exporter", "label": "30-day window", "classification": "SQL Statement API", "variant": "default", "labelAt": [905, 330] },
+    { "from": "delta", "to": "live-export", "label": "360-minute tail", "classification": "SQL Statement API", "variant": "default", "route": "straight", "labelAt": [852, 402] },
+    { "from": "exporter", "to": "shards", "label": "publish shards", "classification": "index.json + days/*.json", "variant": "emphasis", "labelDy": 18 },
+    { "from": "live-export", "to": "live-json", "label": "publish tail", "classification": "deduped · rounded", "variant": "emphasis" },
+
+    { "from": "live-json", "to": "browser", "label": "poll 12 s", "classification": "newest 6 hours · 12 s poll", "variant": "emphasis" }
   ],
   "cards": [
     { "dot": "amber", "title": "One Message Contract", "items": ["timestamp, zone, price, source", "AEMO AUD/MWh converts to EUR/MWh with the daily Frankfurter rate", "Native price and FX rate stay in Kafka"] },
     { "dot": "cyan", "title": "Durable By Default", "items": ["Delta keeps append-only history", "Checkpoint lives in a Unity Catalog volume", "availableNow drains then stops"] },
-    { "dot": "emerald", "title": "Browser-Safe Publication", "items": ["The SQL token never leaves Actions", "Points are deduped by source, zone, and time", "Atomic writes prevent partial JSON"] }
+    { "dot": "emerald", "title": "Live Freshness", "items": ["The 5-minute lane appends to the same Delta table", "live.json carries the newest 6 hours and is polled every 12 s", "The optional relay proxies Delta reads with a 20 s KV cache"] }
   ]
 }
