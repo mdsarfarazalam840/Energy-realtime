@@ -28,6 +28,34 @@ API (no key needed). If the network is unreachable it falls back to a bundled
 demo headline set so the dashboard never stalls. The page is tested end-to-end
 by `tests/load/tech_ui.py`.
 
+## AI & Tech Trends page (Hugging Face)
+
+`ai.html` is a 3D "AI observatory" feed of the top trending models on the
+Hugging Face Hub. It pulls models at runtime from the public
+`https://huggingface.co/api/models?limit=100` endpoint (no API key needed),
+sorted by `trendingScore` descending, and shows each model's name, author,
+trending score, downloads, likes, pipeline tag, and library. Models float as
+glowing data cards on a ring around a neural core in the 3D stage, with a
+sortable board and a focus panel on the side.
+
+Why: AI is the hottest topic right now. You can see what developers are
+building and which models are trending on Hugging Face.
+
+The page follows the same fail-safe pattern as the other widgets:
+
+1. Live Hugging Face Hub API → trending models.
+2. Committed cache `docs/data/ai-trends.json` (written by
+   `scripts/cache_hf.mjs`, refreshed by the `hf_cache.yml` GitHub Action every
+   30 minutes) when the live API is unreachable.
+3. Bundled demo snapshot as the last resort, clearly labeled as demo.
+
+The cache script fetches up to 100 models and commits the snapshot only when
+it changes, so a failed fetch can never blank the page.
+
+```bash
+node scripts/cache_hf.mjs          # writes docs/data/ai-trends.json
+```
+
 ## Flights page (adsb.lol)
 
 `flights.html` plots adsb.lol aircraft on a 3D globe — a wireframe Earth, a
