@@ -9428,6 +9428,17 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0000909832-26-000134",
+      "cik": "0000909832",
+      "document": "cost-20261107.htm",
+      "filed": "2026-11-10",
+      "form": "8-K",
+      "items": "5.02,8.01,9.01",
+      "period": "2026-11-07",
+      "ticker": "COST",
+      "url": "https://www.sec.gov/Archives/edgar/data/909832/000090983226000134/cost-20261107.htm"
+    },
+    {
       "accession": "0001140361-26-042798",
       "cik": "0000320193",
       "document": "ef20085077_8k.htm",
@@ -12321,17 +12332,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/909832/000090983226000029/cost-20260215.htm"
     },
     {
-      "accession": "0000909832-26-000025",
-      "cik": "0000909832",
-      "document": "cost-20260305.htm",
-      "filed": "2026-03-05",
-      "form": "8-K",
-      "items": "2.02,9.01",
-      "period": "2026-03-05",
-      "ticker": "COST",
-      "url": "https://www.sec.gov/Archives/edgar/data/909832/000090983226000025/cost-20260305.htm"
-    },
-    {
       "accession": "0001140361-26-006577",
       "cik": "0000320193",
       "document": "ef20060722_8k.htm",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
     }
   ],
-  "generated_at": "2026-11-09T22:27:06Z",
+  "generated_at": "2026-11-11T06:36:34Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12388,7 +12388,7 @@
       "8-K": 185,
       "DEF 14A": 11
     },
-    "latest_filed": "2026-11-09",
+    "latest_filed": "2026-11-10",
     "sectors": [
       "Energy",
       "Financials",
