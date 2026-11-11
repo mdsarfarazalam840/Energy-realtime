@@ -1,0 +1,422 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "VoltScope Platform Data Flow",
+    "output": "docs/diagrams/platform.html",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      780
+    ],
+    "views": [
+      {
+        "id": "streaming-lanes",
+        "label": "Streaming lanes",
+        "focus": [
+          "market",
+          "coingecko",
+          "adsblol",
+          "energy-producers",
+          "crypto-producer",
+          "flights-snapshot",
+          "kafka",
+          "databricks",
+          "delta"
+        ],
+        "note": "Three topics share one Kafka cluster; each Databricks notebook drains its own topic with availableNow."
+      },
+      {
+        "id": "serving",
+        "label": "Serving",
+        "focus": [
+          "delta",
+          "exporters",
+          "artifacts",
+          "pages",
+          "browsers"
+        ],
+        "note": "Exporters read the lakehouse over SQL, commit JSON to docs/data, and Pages serves it with no token in the page."
+      },
+      {
+        "id": "edge-caches",
+        "label": "Edge caches",
+        "focus": [
+          "publics",
+          "cache-jobs",
+          "artifacts",
+          "pages"
+        ],
+        "note": "Finance, Tech Pulse, AI trends, and Space ship cached JSON instead of a streaming table, alongside the flights map snapshot."
+      },
+      {
+        "id": "mirrors",
+        "label": "Flights mirror",
+        "focus": [
+          "adsblol",
+          "flights-snapshot",
+          "kafka",
+          "motherduck"
+        ],
+        "note": "One adsb.lol grid pass writes flights.json and produces flights-positions; the bridge mirrors that topic into MotherDuck."
+      }
+    ]
+  },
+  "stages": [
+    {
+      "label": "Feeds"
+    },
+    {
+      "label": "Collect"
+    },
+    {
+      "label": "Transit"
+    },
+    {
+      "label": "Lakehouse"
+    },
+    {
+      "label": "Publish"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "publics",
+      "type": "external",
+      "label": "Public feeds",
+      "sublabel": "SEC · HN · APOD",
+      "stage": 0,
+      "row": 0,
+      "tag": "public APIs"
+    },
+    {
+      "id": "market",
+      "type": "external",
+      "label": "Market feeds",
+      "sublabel": "3 feeds",
+      "stage": 0,
+      "row": 1,
+      "tag": "5 min – daily"
+    },
+    {
+      "id": "adsblol",
+      "type": "external",
+      "label": "adsb.lol",
+      "sublabel": "250 NM grid",
+      "stage": 0,
+      "row": 2,
+      "tag": "keyless API"
+    },
+    {
+      "id": "coingecko",
+      "type": "external",
+      "label": "CoinGecko",
+      "sublabel": "100 coins",
+      "stage": 0,
+      "row": 3,
+      "tag": "keyless API"
+    },
+    {
+      "id": "cache-jobs",
+      "type": "backend",
+      "label": "Cache jobs",
+      "sublabel": "4 cache jobs",
+      "stage": 1,
+      "row": 0,
+      "tag": "30 min – 6 h"
+    },
+    {
+      "id": "energy-producers",
+      "type": "backend",
+      "label": "Energy producers",
+      "sublabel": "30 min + 5 min",
+      "stage": 1,
+      "row": 1,
+      "tag": "GitHub Actions"
+    },
+    {
+      "id": "flights-snapshot",
+      "type": "backend",
+      "label": "Flights snapshot",
+      "sublabel": "cache_flights.mjs",
+      "stage": 1,
+      "row": 2,
+      "tag": "every 3 h"
+    },
+    {
+      "id": "crypto-producer",
+      "type": "backend",
+      "label": "Crypto producer",
+      "sublabel": "producer_crypto.py",
+      "stage": 1,
+      "row": 3,
+      "tag": "every 5 min"
+    },
+    {
+      "id": "kafka",
+      "type": "messagebus",
+      "label": "Aiven Kafka",
+      "sublabel": "3 topics",
+      "stage": 2,
+      "row": 1,
+      "tag": "SASL_SSL · SCRAM"
+    },
+    {
+      "id": "databricks",
+      "type": "cloud",
+      "label": "Databricks jobs",
+      "sublabel": "3 notebooks",
+      "stage": 3,
+      "row": 1,
+      "tag": "Bundle · UC"
+    },
+    {
+      "id": "delta",
+      "type": "database",
+      "label": "Delta Lake",
+      "sublabel": "3 tables",
+      "stage": 3,
+      "row": 2,
+      "tag": "append-only"
+    },
+    {
+      "id": "exporters",
+      "type": "backend",
+      "label": "Exporters",
+      "sublabel": "3 exporters",
+      "stage": 3,
+      "row": 3,
+      "tag": "SQL Statement API"
+    },
+    {
+      "id": "motherduck",
+      "type": "database",
+      "label": "MotherDuck",
+      "sublabel": "flights_positions",
+      "stage": 3,
+      "row": 4,
+      "tag": "DuckDB upsert"
+    },
+    {
+      "id": "artifacts",
+      "type": "database",
+      "label": "Static JSON",
+      "sublabel": "docs/data",
+      "stage": 4,
+      "row": 0,
+      "tag": "schema v1 + v2"
+    },
+    {
+      "id": "pages",
+      "type": "cloud",
+      "label": "GitHub Pages",
+      "sublabel": "main · /docs",
+      "stage": 4,
+      "row": 1,
+      "tag": "no build step"
+    },
+    {
+      "id": "browsers",
+      "type": "frontend",
+      "label": "Public pages",
+      "sublabel": "8 dashboards",
+      "stage": 4,
+      "row": 2,
+      "tag": "no token, no build"
+    }
+  ],
+  "flows": [
+    {
+      "from": "publics",
+      "to": "cache-jobs",
+      "label": "feeds",
+      "classification": "4 APIs",
+      "variant": "default"
+    },
+    {
+      "from": "market",
+      "to": "energy-producers",
+      "label": "dispatch",
+      "classification": "EUR/MWh",
+      "variant": "default"
+    },
+    {
+      "from": "adsblol",
+      "to": "flights-snapshot",
+      "label": "grid pass",
+      "classification": "1 call",
+      "variant": "default"
+    },
+    {
+      "from": "coingecko",
+      "to": "crypto-producer",
+      "label": "prices",
+      "classification": "CoinGecko",
+      "variant": "default"
+    },
+    {
+      "from": "energy-producers",
+      "to": "kafka",
+      "label": "produce",
+      "classification": "energy-prices",
+      "variant": "emphasis",
+      "labelAt": [
+        415,
+        238
+      ]
+    },
+    {
+      "from": "flights-snapshot",
+      "to": "kafka",
+      "label": "produce",
+      "classification": "flights-positions",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          430,
+          385
+        ],
+        [
+          430,
+          271
+        ]
+      ],
+      "labelAt": [
+        430,
+        336
+      ]
+    },
+    {
+      "from": "crypto-producer",
+      "to": "kafka",
+      "label": "produce",
+      "classification": "crypto-market",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "bottom",
+      "via": [
+        [
+          530,
+          499
+        ]
+      ],
+      "labelAt": [
+        530,
+        438
+      ]
+    },
+    {
+      "from": "kafka",
+      "to": "databricks",
+      "label": "readStream",
+      "classification": "availableNow",
+      "variant": "emphasis",
+      "labelAt": [
+        640,
+        212
+      ]
+    },
+    {
+      "from": "kafka",
+      "to": "motherduck",
+      "label": "consume",
+      "classification": "bridge upsert",
+      "variant": "default",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [
+          620,
+          271
+        ],
+        [
+          620,
+          613
+        ]
+      ],
+      "labelAt": [
+        620,
+        500
+      ]
+    },
+    {
+      "from": "databricks",
+      "to": "delta",
+      "label": "append rows",
+      "classification": "checkpointed",
+      "variant": "emphasis"
+    },
+    {
+      "from": "cache-jobs",
+      "to": "artifacts",
+      "label": "cached JSON",
+      "variant": "default"
+    },
+    {
+      "from": "delta",
+      "to": "exporters",
+      "label": "SQL window",
+      "classification": "30 d · 6 h · 7 d",
+      "variant": "default",
+      "labelAt": [
+        745,
+        442
+      ]
+    },
+    {
+      "from": "exporters",
+      "to": "artifacts",
+      "label": "commit",
+      "classification": "atomic",
+      "variant": "emphasis",
+      "labelAt": [
+        655,
+        440
+      ]
+    },
+    {
+      "from": "artifacts",
+      "to": "pages",
+      "label": "Pages build",
+      "variant": "default"
+    },
+    {
+      "from": "pages",
+      "to": "browsers",
+      "label": "HTTPS",
+      "classification": "static files",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Three Streaming Topics",
+      "items": [
+        "energy-prices carries AEMO, ENTSO-E, and Elecz",
+        "crypto-market carries CoinGecko coins and trending",
+        "flights-positions carries one keyed message per aircraft"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "One Lakehouse, One Mirror",
+      "items": [
+        "Each notebook drains its topic with availableNow",
+        "Delta keeps append-only history under Unity Catalog",
+        "The flights bridge upserts the same topic into MotherDuck"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Static By Default",
+      "items": [
+        "Finance, Tech, AI, Space, and the flight map ship cached JSON",
+        "Exporters commit atomically, so Pages never serves a partial file",
+        "Each producer workflow dispatches its own ingest job"
+      ]
+    }
+  ]
+}

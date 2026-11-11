@@ -1,12 +1,13 @@
 # VoltScope diagrams
 
-Three diagrams, three jobs:
+Four diagrams, four jobs:
 
 | File | Type | Purpose |
 |---|---|---|
 | `pipeline.html` | Static HTML + inline SVG | Editorial overview: market APIs to public dashboard |
 | `architecture.html` | Interactive Archify artifact | Runtime components, live lane, guided views, trust boundary |
 | `dataflow.html` | Interactive Archify artifact | Lineage from feeds through Kafka and Delta to the shard and live-tail artifacts |
+| `platform.html` | Interactive Archify artifact | Every ingestion lane: energy, crypto, flights, and cached feeds, plus the MotherDuck mirror |
 
 The gallery is `index.html`. GitHub Pages serves the folder at:
 
@@ -19,6 +20,7 @@ The interactive diagrams are generated from JSON, not hand-edited:
 ```text
 specs/architecture.json    17 components, 18 connections, 2 boundaries, 4 views
 specs/dataflow.json        12 nodes, 11 flows, 5 stages, 3 views
+specs/platform.json        16 nodes, 15 flows, 5 stages, 4 views
 ```
 
 Regenerate after editing a spec with Archify 3.2:
@@ -27,6 +29,7 @@ Regenerate after editing a spec with Archify 3.2:
 # From a checkout of tt-a1i/archify
 node archify/bin/archify.mjs finalize architecture docs/diagrams/specs/architecture.json docs/diagrams/architecture.html --quality showcase --json
 node archify/bin/archify.mjs finalize dataflow docs/diagrams/specs/dataflow.json docs/diagrams/dataflow.html --quality showcase --json
+node archify/bin/archify.mjs finalize dataflow docs/diagrams/specs/platform.json docs/diagrams/platform.html --quality showcase --json
 ```
 
 `finalize` runs validate, deliver, strict provenance check, and the browser gate, then writes a self-contained HTML file with theme switching, pan/zoom, search, focus, guided views, and export. The generated file is checked into `docs/` so GitHub Pages needs no build step.

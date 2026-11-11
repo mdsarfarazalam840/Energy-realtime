@@ -83,6 +83,7 @@ The repository started from the Databricks **default-python** Declarative Automa
 | Diagram gallery | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/> | All system diagrams in one place |
 | System architecture | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html> | Interactive runtime topology and trust boundary |
 | Energy data flow | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html> | Interactive lineage from feeds to browser |
+| Platform data flow | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/platform.html> | Every lane on one grid: energy, crypto, flights, cached feeds |
 | Editorial pipeline | <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/pipeline.html> | Static HTML + SVG overview with summary cards |
 | Repository | <https://github.com/mdsarfarazalam840/Energy-realtime> | Source, workflows, issues, history |
 
@@ -240,19 +241,48 @@ The runtime diagram shows where data moves; this map shows where that behavior l
 
 ### Diagrams & system design
 
-Three diagram artifacts live in `docs/diagrams/`, two generated with [Archify](https://github.com/tt-a1i/archify) from JSON specs and one hand-authored editorial diagram following the [diagram-design](https://github.com/cathrynlavery/diagram-design) rules:
+Four diagram artifacts live in `docs/diagrams/`, three generated with [Archify](https://github.com/tt-a1i/archify) from JSON specs and one hand-authored editorial diagram following the [diagram-design](https://github.com/cathrynlavery/diagram-design) rules:
 
 | Diagram | Tool | Source | Purpose |
 |---|---|---|---|
 | [System architecture](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html) | Archify 3.2 | `docs/diagrams/specs/architecture.json` | Runtime components, live lane, guided views, trust boundary; per-room presence relay |
 | [Energy data flow](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html) | Archify 3.2 | `docs/diagrams/specs/dataflow.json` | Lineage from feeds through Kafka and Delta to the shard and live-tail artifacts |
+| [Platform data flow](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/platform.html) | Archify 3.2 | `docs/diagrams/specs/platform.json` | Every lane on one grid: energy, crypto, and flights topics into Delta, the MotherDuck mirror, cached JSON products, and the static edge |
 | [Editorial pipeline](https://mdsaifedu.eu.cc/Energy-realtime/diagrams/pipeline.html) | diagram-design 2.6 | `docs/diagrams/pipeline.html` (inline SVG) | One primary path left-to-right: feeds to public dashboard |
+
+### Diagram previews
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="https://mdsaifedu.eu.cc/Energy-realtime/diagrams/platform.html"><img src="docs/assets/diagrams/platform-preview.png" alt="VoltScope platform data flow: every ingestion lane on one grid" width="100%"></a>
+      <sub><b>Platform data flow</b> — energy, crypto, flights, and cached feeds; guided views for lanes, serving, caches, and the MotherDuck mirror</sub>
+    </td>
+    <td width="50%" valign="top">
+      <a href="https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html"><img src="docs/assets/diagrams/architecture-preview.png" alt="VoltScope interactive system architecture" width="100%"></a>
+      <sub><b>System architecture</b> — runtime components, live lane, and the trust boundary</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html"><img src="docs/assets/diagrams/dataflow-preview.png" alt="VoltScope energy data flow from feeds to published artifacts" width="100%"></a>
+      <sub><b>Energy data flow</b> — five stages from feeds to the shard manifest and live tail</sub>
+    </td>
+    <td width="50%" valign="top">
+      <a href="https://mdsaifedu.eu.cc/Energy-realtime/diagrams/pipeline.html"><img src="docs/assets/diagrams/pipeline-preview.png" alt="VoltScope editorial pipeline diagram" width="100%"></a>
+      <sub><b>Editorial pipeline</b> — one primary path, hand-authored inline SVG</sub>
+    </td>
+  </tr>
+</table>
+
+All four are hosted from `docs/diagrams/` by GitHub Pages, so the links above open the interactive artifacts with no build step. The gallery at <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/> shows the same four previews.
 
 Regenerate the Archify artifacts after editing a spec:
 
 ```bash
 node archify/bin/archify.mjs finalize architecture docs/diagrams/specs/architecture.json docs/diagrams/architecture.html --quality showcase --json
 node archify/bin/archify.mjs finalize dataflow docs/diagrams/specs/dataflow.json docs/diagrams/dataflow.html --quality showcase --json
+node archify/bin/archify.mjs finalize dataflow docs/diagrams/specs/platform.json docs/diagrams/platform.html --quality showcase --json
 ```
 
 `finalize` runs validate, deliver, strict provenance check, and the browser gate, then writes a self-contained HTML file checked into `docs/` so GitHub Pages needs no build step. The editorial pipeline diagram is hand-authored inline SVG (4px grid, hairline rules, one accent family, mono sublabels) and needs no generator.

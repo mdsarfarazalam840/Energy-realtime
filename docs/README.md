@@ -14,6 +14,7 @@ The same Pages site hosts the architecture and data-flow diagrams:
 - Gallery: <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/>
 - Architecture: <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/architecture.html>
 - Data flow: <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/dataflow.html>
+- Platform data flow: <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/platform.html>
 - Editorial pipeline: <https://mdsaifedu.eu.cc/Energy-realtime/diagrams/pipeline.html>
 
 The interactive diagrams are generated from `diagrams/specs/*.json` with

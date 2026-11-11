@@ -16,3 +16,5 @@ opencode.json
 node_modules/
 .deno/
 graphify-out/
+.agents/
+.claude/
