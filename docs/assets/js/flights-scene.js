@@ -146,7 +146,10 @@ export function createScene(root, options = {}) {
 
   let renderer = null;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // Hand the page canvas to three so the render target is the visible element.
+    // Without this, WebGLRenderer builds its own detached canvas and the page
+    // canvas stays at its default 300x150, showing nothing.
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   } catch {
     renderer = null;
   }
@@ -201,7 +204,7 @@ export function createScene(root, options = {}) {
     sizeAttenuation: true,
     vertexColors: true,
   });
-  const planePoints = new THREE.Points();
+  const planePoints = new THREE.Points(new THREE.BufferGeometry(), pointsMaterial);
   scene.add(planePoints);
 
   function applyPalette() {
@@ -253,6 +256,13 @@ export function createScene(root, options = {}) {
           Math.cos(latRad) * Math.sin(lonRad) * PLANE_RADIUS,
         ),
         base: clone01(hexToRgb01(palette.planes)),
+        // Keep the caller's row so the hover tooltip can show callsign, country,
+        // coordinates and age without a second lookup.
+        callsign: plane.callsign,
+        country: plane.country,
+        lat: plane.lat,
+        lon: plane.lon,
+        lastUpdateMs: plane.lastUpdateMs,
       });
     }
     const positions = new Float32Array(planes.length * 3);
