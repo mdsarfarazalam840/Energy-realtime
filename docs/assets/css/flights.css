@@ -332,6 +332,15 @@ html[data-theme="light"] .scene-fallback {
   color: var(--muted);
 }
 
+html[data-theme="light"] .flight-tip {
+  border-color: rgba(11, 127, 168, 0.28);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 24px rgba(16, 32, 54, 0.12);
+}
+html[data-theme="light"] .flight-tip span {
+  color: var(--faint);
+}
+
 /* ---------- Info panel ---------- */
 
 .info-panel {
@@ -406,10 +415,16 @@ html[data-theme="light"] .badge {
   padding: 6px 8px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background: transparent;
+  background: var(--panel);
   color: var(--text);
   font: inherit;
   font-size: 12.5px;
+}
+.control select:hover { border-color: rgba(127, 233, 255, 0.35); }
+html[data-theme="light"] .control select:hover { border-color: rgba(11, 127, 168, 0.45); }
+.control select option {
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 .selected {
@@ -461,6 +476,7 @@ html[data-theme="light"] .scene-hint {
   font-size: 12.5px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
+html[data-theme="light"] .toast { box-shadow: 0 10px 30px rgba(16, 32, 54, 0.12); }
 
 .boot {
   position: fixed;
@@ -541,10 +557,12 @@ html[data-theme="light"] .scene-hint {
   color: var(--text);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
 }
+html[data-theme="light"] .help-dialog { box-shadow: 0 24px 60px rgba(16, 32, 54, 0.14); }
 
 .help-dialog::backdrop {
   background: rgba(3, 6, 13, 0.6);
 }
+html[data-theme="light"] .help-dialog::backdrop { background: rgba(16, 32, 54, 0.35); }
 
 .help-head {
   display: flex;
