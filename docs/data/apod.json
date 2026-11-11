@@ -3,26 +3,16 @@
   "meta": {
     "source": "nasa-apod-cache",
     "count": 14,
-    "image_count": 13,
-    "video_count": 1,
+    "image_count": 14,
+    "video_count": 0,
     "other_count": 0,
-    "first_date": "2026-10-28",
-    "latest_date": "2026-11-10",
+    "first_date": "2026-10-29",
+    "latest_date": "2026-11-11",
     "window_days": 14,
-    "generated_at": "2026-11-10T19:54:18.574Z",
-    "cached_at": "2026-11-10T19:54:18.574Z"
+    "generated_at": "2026-11-11T06:54:03.719Z",
+    "cached_at": "2026-11-11T06:54:03.719Z"
   },
   "entries": [
-    {
-      "date": "2026-10-28",
-      "title": "The Mutual Occultation of Ganymede and Io",
-      "explanation": "Jupiter is one of the least lonely planets in the Solar System, at least when it comes to natural satellites. 115 moons have been discovered orbiting Jupiter so far! ( Saturn has the most with 293, but who’s counting. ) Ganymede and Io, two of Jupiter’s Galilean moons, met in the sky on October 20th, 2026. Today’s video captures the meeting, with Ganymede briefly blocking Io from view. This event, when an astronomical object passes in front of another and either completely or partially blocks it, is called a mutual occultation. The mutual occultations of Galilean moons are rare to witness because they require Earth’s edge-on view of their orbits. This occurs once every 6 years when Jupiter reaches its equinox and appears less “tilted”. Ganymede is also casting its shadow on Jupiter’s right side. Any fictional Jovian species within the shadow would experience a solar eclipse! Tomorrow’s picture: a planet grows horns",
-      "media_type": "video",
-      "url": "https://science.nasa.gov/image-article/apod-2026-october-28-the-mutual-occultation-of-ganymede-and-io/",
-      "hdurl": "",
-      "thumbnail_url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/occultation.jpeg?w=1600&h=1000&fit=clip&crop=faces%2Cfocalpoint",
-      "copyright": ""
-    },
     {
       "date": "2026-10-29",
       "title": "The Horns of Venus",
@@ -152,6 +142,16 @@
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Moonsaturn6_Ortu_2124.jpg?w=2124&h=1582&fit=clip&crop=faces%2Cfocalpoint",
       "thumbnail_url": "",
       "copyright": ""
+    },
+    {
+      "date": "2026-11-11",
+      "title": "NGC 4449: Small Galaxy, Big Impact",
+      "explanation": "Don’t judge a galaxy by its size. Our home galaxy, the Milky Way, is about 100,000 light years across. This huge expanse of space contains hundreds of billions of stars! The smallest galaxies, called dwarf galaxies, are about 1/10th the size of the Milky Way and only contain a few billion stars. They are also the most common type of galaxy in the whole universe. Today’s image shows one such dwarf galaxy, NGC 4449, captured by the Hubble Space Telescope. NGC 4449 and similar dwarf galaxies are missing more oxygen than models predict. This suggests their stellar winds and supernovae are surprisingly effective at blowing away oxygen and other heavy elements. Turns out these tiny galaxies may play a big role in spreading heavy elements — the building blocks of stars, planets, and life — throughout the universe! Tomorrow’s picture: a date in Poland",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/missions/hubble/galaxies/irregular/NGC%204449.jpg?w=2048&h=1320&fit=clip&crop=faces%2Cfocalpoint",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/missions/hubble/galaxies/irregular/NGC%204449.jpg?w=2048&h=1320&fit=clip&crop=faces%2Cfocalpoint",
+      "thumbnail_url": "",
+      "copyright": "NASA, ESA, A. Aloisi (STScI/ESA), and the Hubble Heritage (STScI/AURA)-ESA/Hubble Collaboration"
     }
   ],
   "demo": false
