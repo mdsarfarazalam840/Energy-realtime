@@ -1,0 +1,292 @@
+{
+  "generated_at": "2026-11-11T08:00:41Z",
+  "checks": [
+    {
+      "name": "page title names the dashboard",
+      "ok": true,
+      "detail": "VoltScope Global News & Culture \u2014 What the World Is Reading"
+    },
+    {
+      "name": "hero headline is present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "status reports the live feed",
+      "ok": true,
+      "detail": "Wikipedia live"
+    },
+    {
+      "name": "KPIs are populated",
+      "ok": true,
+      "detail": "11 | 5.7M | Sports | 513.6k"
+    },
+    {
+      "name": "story count matches the stubbed feed",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "maintenance pages are filtered out",
+      "ok": true,
+      "detail": "11 rows"
+    },
+    {
+      "name": "no Wikipedia namespace pages reach the board",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the lead story is the most-viewed real article",
+      "ok": true,
+      "detail": "01\t\nTaylor Swift\nMusic \u00b7 Wikipedia\n\t\n17.7% of views\n\t1.0M"
+    },
+    {
+      "name": "board count summarises the feed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "spotlight shows the lead story",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "3D scene creates a WebGL canvas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "category legend renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "category mix renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Music category inferred",
+      "ok": true,
+      "detail": "01\t\nTaylor Swift\nMusic \u00b7 Wikipedia\n\t\n17.7% of views\n\t1.0M"
+    },
+    {
+      "name": "Sports category inferred",
+      "ok": true,
+      "detail": "04\t\n2026 FIFA World Cup\nSports \u00b7 Wikipedia\n\t\n12.4% of views\n"
+    },
+    {
+      "name": "Finance category inferred",
+      "ok": true,
+      "detail": "05\t\nBitcoin\nFinance \u00b7 Wikipedia\n\t\n10.6% of views\n\t600.0k"
+    },
+    {
+      "name": "History category inferred",
+      "ok": true,
+      "detail": "03\t\nWorld War II\nHistory \u00b7 Wikipedia\n\t\n14.2% of views\n\t800.0"
+    },
+    {
+      "name": "clicking a story selects exactly one row",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "focus panel shows the selected story",
+      "ok": true,
+      "detail": "FINANCE\nBitcoin\nRANK\n#5\nVIEWS \u00b7 24H\n600.0k\nSHARE OF FEED\n10.6%\nGAP TO LEAD\n400.0"
+    },
+    {
+      "name": "focus panel reports the original rank",
+      "ok": true,
+      "detail": "FINANCE\nBitcoin\nRANK\n#5\nVIEWS \u00b7 24H\n600.0k\nSHARE OF FEED\n10.6%\nGAP TO LEAD\n400.0k\nOpen on Wikipedia \u2197\nClear\n\nArticle id:"
+    },
+    {
+      "name": "focus links to Wikipedia",
+      "ok": true,
+      "detail": "https://en.wikipedia.org/wiki/Bitcoin"
+    },
+    {
+      "name": "search filters the ranking",
+      "ok": true,
+      "detail": "1 rows"
+    },
+    {
+      "name": "board count explains the filter",
+      "ok": true,
+      "detail": "1 of 11 match \u201cbitcoin\u201d"
+    },
+    {
+      "name": "Escape clears the filter",
+      "ok": true,
+      "detail": "11 rows"
+    },
+    {
+      "name": "title sort puts the alphabetically first story on top",
+      "ok": true,
+      "detail": "04\t\n2026 FIFA World Cup\nSports \u00b7 Wikipedia\n\t\n12.4% of views\n"
+    },
+    {
+      "name": "views sort restores the lead story",
+      "ok": true,
+      "detail": "01\t\nTaylor Swift\nMusic \u00b7 Wikipedia\n\t\n17.7% of views\n\t1.0M"
+    },
+    {
+      "name": "theme shortcut switches to light",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "theme shortcut switches back to dark",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "auto-refresh can be paused",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "next-refresh label reports the pause",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "auto-refresh can be resumed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "help dialog opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "help dialog closes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "spotlight focuses the lead story",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "constellation theme switch keeps the canvas alive",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console or page errors on the live page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile ranking renders every story",
+      "ok": true,
+      "detail": "11 rows"
+    },
+    {
+      "name": "mobile layout has no horizontal overflow",
+      "ok": true,
+      "detail": "0px"
+    },
+    {
+      "name": "mobile keeps the 3D stage",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile hides the share column",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile search field is usable",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile selection updates Focus",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console or page errors on mobile",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo fallback renders a full board",
+      "ok": true,
+      "detail": "10 rows"
+    },
+    {
+      "name": "demo fallback is labelled in the status",
+      "ok": true,
+      "detail": "Demo feed"
+    },
+    {
+      "name": "demo fallback is labelled in feed health",
+      "ok": true,
+      "detail": "DEMO DATA"
+    },
+    {
+      "name": "demo fallback keeps the 3D scene",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "demo fallback starts at rank one",
+      "ok": true,
+      "detail": "01\t\nUnited States\nCountry \u00b7 Wikipedia\n\t\n"
+    },
+    {
+      "name": "no page errors on the demo fallback",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "index.html links to the news page",
+      "ok": true,
+      "detail": "index.html"
+    },
+    {
+      "name": "crypto.html links to the news page",
+      "ok": true,
+      "detail": "crypto.html"
+    },
+    {
+      "name": "finance.html links to the news page",
+      "ok": true,
+      "detail": "finance.html"
+    },
+    {
+      "name": "tech.html links to the news page",
+      "ok": true,
+      "detail": "tech.html"
+    },
+    {
+      "name": "ai.html links to the news page",
+      "ok": true,
+      "detail": "ai.html"
+    },
+    {
+      "name": "space.html links to the news page",
+      "ok": true,
+      "detail": "space.html"
+    },
+    {
+      "name": "flights.html links to the news page",
+      "ok": true,
+      "detail": "flights.html"
+    },
+    {
+      "name": "news page links back to energy",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "passed": 57,
+  "failed": 0
+}
