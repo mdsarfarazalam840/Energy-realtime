@@ -9428,6 +9428,17 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0001045810-26-000082",
+      "cik": "0001045810",
+      "document": "nvda-20261111.htm",
+      "filed": "2026-11-12",
+      "form": "8-K",
+      "items": "5.02,9.01",
+      "period": "2026-11-11",
+      "ticker": "NVDA",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000082/nvda-20261111.htm"
+    },
+    {
       "accession": "0000909832-26-000134",
       "cik": "0000909832",
       "document": "cost-20261107.htm",
@@ -11782,17 +11793,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/1403161/000119312526219432/d64238d8k.htm"
     },
     {
-      "accession": "0001045810-26-000036",
-      "cik": "0001045810",
-      "document": "nvda-20260512.htm",
-      "filed": "2026-05-12",
-      "form": "DEF 14A",
-      "items": "",
-      "period": "2026-06-24",
-      "ticker": "NVDA",
-      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000036/nvda-20260512.htm"
-    },
-    {
       "accession": "0001193125-26-215875",
       "cik": "0001403161",
       "document": "d59695d8k.htm",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
     }
   ],
-  "generated_at": "2026-11-11T06:36:34Z",
+  "generated_at": "2026-11-12T20:00:24Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12385,10 +12385,10 @@
     "form_counts": {
       "10-K": 7,
       "10-Q": 65,
-      "8-K": 185,
-      "DEF 14A": 11
+      "8-K": 186,
+      "DEF 14A": 10
     },
-    "latest_filed": "2026-11-10",
+    "latest_filed": "2026-11-12",
     "sectors": [
       "Energy",
       "Financials",
