@@ -9428,6 +9428,17 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0001193125-26-458525",
+      "cik": "0001326801",
+      "document": "d177728d8k.htm",
+      "filed": "2026-11-12",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-11-12",
+      "ticker": "META",
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000119312526458525/d177728d8k.htm"
+    },
+    {
       "accession": "0001045810-26-000082",
       "cik": "0001045810",
       "document": "nvda-20261111.htm",
@@ -12035,17 +12046,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/59478/000005947826000043/lly-20260430.htm"
     },
     {
-      "accession": "0001628280-26-028364",
-      "cik": "0001326801",
-      "document": "meta-20260429.htm",
-      "filed": "2026-04-29",
-      "form": "8-K",
-      "items": "2.02,9.01",
-      "period": "2026-04-29",
-      "ticker": "META",
-      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026028364/meta-20260429.htm"
-    },
-    {
       "accession": "0001403161-26-000079",
       "cik": "0001403161",
       "document": "v-20260331.htm",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
     }
   ],
-  "generated_at": "2026-11-12T20:00:24Z",
+  "generated_at": "2026-11-13T06:52:53Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
