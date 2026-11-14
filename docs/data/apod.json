@@ -6,23 +6,13 @@
     "image_count": 14,
     "video_count": 0,
     "other_count": 0,
-    "first_date": "2026-10-31",
-    "latest_date": "2026-11-13",
+    "first_date": "2026-11-01",
+    "latest_date": "2026-11-14",
     "window_days": 14,
-    "generated_at": "2026-11-13T19:55:58.753Z",
-    "cached_at": "2026-11-13T19:55:58.753Z"
+    "generated_at": "2026-11-14T06:51:06.294Z",
+    "cached_at": "2026-11-14T06:51:06.294Z"
   },
   "entries": [
-    {
-      "date": "2026-10-31",
-      "title": "Night on a Spooky Planet",
-      "explanation": "What spooky planet is this? Planet Earth on a dark and stormy night, of course. The ghostly scene was photographed at Hverir, a geothermally active area found along northeastern Iceland’s volcanic landscape. Triggered by solar activity, geomagnetic storms have unleashed energetic particles trapped in Earth’s magnetic field. Penetrating the planet’s upper atmosphere at high latitudes, the particles create auroral displays in the starry night sky. Ghostly towers of steam and gas are venting from local fumaroles to dance against the eerie, greenish northern lights. For now, auroral activity on planet Earth remains in a high state as the Sun is only in early phases of decline from the peak of its solar activity cycle. And soon, other ghostly apparitions may dance in your neighborhood. Happy Halloween! Tomorrow’s picture: many moons",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/Hverir_Vetter_1300.jpg?w=1300&h=867&fit=clip&crop=faces%2Cfocalpoint",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/Hverir_Vetter_1300.jpg?w=1300&h=867&fit=clip&crop=faces%2Cfocalpoint",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-11-01",
       "title": "Colors of the Moon",
@@ -152,6 +142,16 @@
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Andromeda_closeupCruz4096.jpg?w=4096&h=2902&fit=clip&crop=faces%2Cfocalpoint",
       "thumbnail_url": "",
       "copyright": ""
+    },
+    {
+      "date": "2026-11-14",
+      "title": "Apollo 12 and Surveyor 3",
+      "explanation": "Put on your red/blue glasses and gaze across the western Ocean of Storms on the surface of the Moon. The 3D anaglyph shows Apollo 12 astronaut Pete Conrad visiting the Surveyor 3 spacecraft in November of 1969. Surveyor 3 had landed at the site on the inside slope of a small crater about 2 1/2 years earlier in April of 1967. Visible on the horizon beyond the far crater wall, Apollo 12’s Lunar Module Intrepid touched down less than 200 meters (650 feet) away, easy moonwalking distance from the robotic Surveyor spacecraft. This stereo image was carefully created from two separate pictures ( AS12-48-7133, AS12-48-7134 ) captured on the lunar surface. They depict the scene from only slightly different viewpoints, approximating the separation between human eyes. Tomorrow’s picture: meteors through Orion",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/KF-ApAn48-7133-4.jpg?w=2181&h=2200&fit=clip&crop=faces%2Cfocalpoint",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/KF-ApAn48-7133-4.jpg?w=2181&h=2200&fit=clip&crop=faces%2Cfocalpoint",
+      "thumbnail_url": "",
+      "copyright": "Apollo 12, Alan Bean – Stereo Image Copyright: Kevin Frank"
     }
   ],
   "demo": false
