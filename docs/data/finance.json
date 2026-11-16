@@ -5,7 +5,7 @@
       "exchange": "Nasdaq",
       "filings_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320193&type=&dateb=&owner=include&count=40",
       "fiscal_year": 2026,
-      "fiscal_year_end": "0926",
+      "fiscal_year_end": "0925",
       "latest": {
         "assets": 404548000000.0,
         "cash": 36305000000.0,
@@ -9428,6 +9428,17 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0000104169-26-000165",
+      "cik": "0000104169",
+      "document": "wmt-20261113.htm",
+      "filed": "2026-11-16",
+      "form": "8-K",
+      "items": "5.02,9.01",
+      "period": "2026-11-13",
+      "ticker": "WMT",
+      "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000165/wmt-20261113.htm"
+    },
+    {
       "accession": "0001193125-26-458525",
       "cik": "0001326801",
       "document": "d177728d8k.htm",
@@ -12310,17 +12321,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/21344/000110465926028215/ko-20260429xdef14a.htm"
     },
     {
-      "accession": "0000104169-26-000057",
-      "cik": "0000104169",
-      "document": "wmt-20260310.htm",
-      "filed": "2026-03-13",
-      "form": "8-K",
-      "items": "8.01",
-      "period": "2026-03-10",
-      "ticker": "WMT",
-      "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000057/wmt-20260310.htm"
-    },
-    {
       "accession": "0000909832-26-000029",
       "cik": "0000909832",
       "document": "cost-20260215.htm",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
     }
   ],
-  "generated_at": "2026-11-13T06:52:53Z",
+  "generated_at": "2026-11-16T22:13:49Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12388,7 +12388,7 @@
       "8-K": 186,
       "DEF 14A": 10
     },
-    "latest_filed": "2026-11-12",
+    "latest_filed": "2026-11-16",
     "sectors": [
       "Energy",
       "Financials",
