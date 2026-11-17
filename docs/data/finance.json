@@ -9428,6 +9428,39 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0000354950-26-000184",
+      "cik": "0000354950",
+      "document": "hd-20261117.htm",
+      "filed": "2026-11-17",
+      "form": "8-K",
+      "items": "2.02,9.01",
+      "period": "2026-11-17",
+      "ticker": "HD",
+      "url": "https://www.sec.gov/Archives/edgar/data/354950/000035495026000184/hd-20261117.htm"
+    },
+    {
+      "accession": "0000354950-26-000182",
+      "cik": "0000354950",
+      "document": "hd-20261113.htm",
+      "filed": "2026-11-17",
+      "form": "8-K",
+      "items": "5.02,7.01,9.01",
+      "period": "2026-11-13",
+      "ticker": "HD",
+      "url": "https://www.sec.gov/Archives/edgar/data/354950/000035495026000182/hd-20261113.htm"
+    },
+    {
+      "accession": "0000019617-26-000407",
+      "cik": "0000019617",
+      "document": "jpm-20261117.htm",
+      "filed": "2026-11-17",
+      "form": "8-K",
+      "items": "5.02",
+      "period": "2026-11-17",
+      "ticker": "JPM",
+      "url": "https://www.sec.gov/Archives/edgar/data/19617/000001961726000407/jpm-20261117.htm"
+    },
+    {
       "accession": "0000104169-26-000165",
       "cik": "0000104169",
       "document": "wmt-20261113.htm",
@@ -11353,17 +11386,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/21344/000155278126000366/e26287_ko-8k.htm"
     },
     {
-      "accession": "0000019617-26-000241",
-      "cik": "0000019617",
-      "document": "jpm-20260624.htm",
-      "filed": "2026-06-25",
-      "form": "8-K",
-      "items": "5.02",
-      "period": "2026-06-24",
-      "ticker": "JPM",
-      "url": "https://www.sec.gov/Archives/edgar/data/19617/000001961726000241/jpm-20260624.htm"
-    },
-    {
       "accession": "0001193125-26-275783",
       "cik": "0001045810",
       "document": "d48176d8k.htm",
@@ -12299,17 +12321,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/59478/000005947826000029/lly-20260317.htm"
     },
     {
-      "accession": "0001628280-26-019436",
-      "cik": "0000354950",
-      "document": "hd-20260201.htm",
-      "filed": "2026-03-18",
-      "form": "10-K",
-      "items": "",
-      "period": "2026-02-01",
-      "ticker": "HD",
-      "url": "https://www.sec.gov/Archives/edgar/data/354950/000162828026019436/hd-20260201.htm"
-    },
-    {
       "accession": "0001104659-26-028215",
       "cik": "0000021344",
       "document": "ko-20260429xdef14a.htm",
@@ -12343,17 +12354,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126006577/ef20060722_8k.htm"
     },
     {
-      "accession": "0000354950-26-000026",
-      "cik": "0000354950",
-      "document": "hd-20260224.htm",
-      "filed": "2026-02-24",
-      "form": "8-K",
-      "items": "2.02,9.01",
-      "period": "2026-02-24",
-      "ticker": "HD",
-      "url": "https://www.sec.gov/Archives/edgar/data/354950/000035495026000026/hd-20260224.htm"
-    },
-    {
       "accession": "0000059478-26-000013",
       "cik": "0000059478",
       "document": "lly-20251231.htm",
@@ -12376,19 +12376,19 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
     }
   ],
-  "generated_at": "2026-11-16T22:13:49Z",
+  "generated_at": "2026-11-17T21:00:16Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
     "currency": "USD",
     "filing_count": 268,
     "form_counts": {
-      "10-K": 7,
+      "10-K": 6,
       "10-Q": 65,
-      "8-K": 186,
+      "8-K": 187,
       "DEF 14A": 10
     },
-    "latest_filed": "2026-11-16",
+    "latest_filed": "2026-11-17",
     "sectors": [
       "Energy",
       "Financials",
