@@ -9,8 +9,8 @@
     "first_date": "2026-11-04",
     "latest_date": "2026-11-17",
     "window_days": 14,
-    "generated_at": "2026-11-17T08:16:31.161Z",
-    "cached_at": "2026-11-17T08:16:31.161Z"
+    "generated_at": "2026-11-17T21:13:24.137Z",
+    "cached_at": "2026-11-17T21:13:24.137Z"
   },
   "entries": [
     {
@@ -78,8 +78,8 @@
       "title": "Saturn Behind the Moon",
       "explanation": "Sometimes Saturn disappears. It doesn’t really go away, of course — it just disappears from our view when Earth’s Moon moves in front. Such a Saturn ian eclipse, more formally called an occultation, was visible in early 2025 along a small swath of Earth — from Greenland through central Europe and into northern Africa. The featured image is a digital fusion of three images, the first of just Saturn before it disappeared, and then two more of the Moon with different exposure lengths. The images were taken from Sardinia, Italy, after sunset. The bright dot near Saturn is not a moon of Saturn, but rather the star 85 Aquarii, which is further behind Saturn than Saturn is behind the Moon. The next time the Moon moves in front of Saturn, as visible from some place on Earth, will be in 2031. Tomorrow’s picture: small but mighty",
       "media_type": "image",
-      "url": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/Moonsaturn6_Ortu_2124.jpg/jcr:content/renditions/cq5dam.web.1280.1280.jpeg",
-      "hdurl": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/Moonsaturn6_Ortu_2124.jpg/jcr:content/renditions/cq5dam.web.1280.1280.jpeg",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Moonsaturn6_Ortu_2124.jpg?w=2124&h=1582&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Moonsaturn6_Ortu_2124.jpg?w=2124&h=1582&fit=clip",
       "thumbnail_url": "",
       "copyright": ""
     },
@@ -118,8 +118,8 @@
       "title": "Apollo 12 and Surveyor 3",
       "explanation": "Put on your red/blue glasses and gaze across the western Ocean of Storms on the surface of the Moon. The 3D anaglyph shows Apollo 12 astronaut Pete Conrad visiting the Surveyor 3 spacecraft in November of 1969. Surveyor 3 had landed at the site on the inside slope of a small crater about 2 1/2 years earlier in April of 1967. Visible on the horizon beyond the far crater wall, Apollo 12’s Lunar Module Intrepid touched down less than 200 meters (650 feet) away, easy moonwalking distance from the robotic Surveyor spacecraft. This stereo image was carefully created from two separate pictures ( AS12-48-7133, AS12-48-7134 ) captured on the lunar surface. They depict the scene from only slightly different viewpoints, approximating the separation between human eyes. Tomorrow’s picture: meteors through Orion",
       "media_type": "image",
-      "url": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/KF-ApAn48-7133-4.jpg/jcr:content/renditions/cq5dam.web.1280.1280.jpeg",
-      "hdurl": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/KF-ApAn48-7133-4.jpg/jcr:content/renditions/cq5dam.web.1280.1280.jpeg",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/KF-ApAn48-7133-4.jpg?w=2181&h=2200&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/KF-ApAn48-7133-4.jpg?w=2181&h=2200&fit=clip",
       "thumbnail_url": "",
       "copyright": "Apollo 12, Alan Bean – Stereo Image Copyright: Kevin Frank"
     },
