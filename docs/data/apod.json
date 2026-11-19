@@ -6,30 +6,20 @@
     "image_count": 14,
     "video_count": 0,
     "other_count": 0,
-    "first_date": "2026-11-05",
-    "latest_date": "2026-11-18",
+    "first_date": "2026-11-06",
+    "latest_date": "2026-11-19",
     "window_days": 14,
-    "generated_at": "2026-11-18T20:47:26.526Z",
-    "cached_at": "2026-11-18T20:47:26.526Z"
+    "generated_at": "2026-11-19T07:45:01.055Z",
+    "cached_at": "2026-11-19T07:45:01.055Z"
   },
   "entries": [
-    {
-      "date": "2026-11-05",
-      "title": "Enceladus in Silhouette",
-      "explanation": "One of our Solar System’s most tantalizing worlds, Enceladus is backlit by the Sun in this Cassini spacecraft image from November 1, 2009. The dramatic illumination reveals the plumes that continuously spew into space from the south pole of Saturn’s 500 kilometer diameter moon. Discovered by Cassini in 2005, the icy plumes are likely connected to an ocean beneath the ice shell of Enceladus. They supply material directly to Saturn’s outer, tenuous E ring and make the surface of Enceladus as reflective as snow. Across the scene, Saturn’s icy rings scatter sunlight toward Cassini’s cameras. Beyond the rings (lower right), the night side of 80 kilometer diameter moon Pandora is faintly lit by Saturnlight. Tomorrow’s picture: pixels in space",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/PIA17144EnceladusPandora.png/jcr:content/renditions/cq5dam.web.1280.1280.png",
-      "hdurl": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/PIA17144EnceladusPandora.png/jcr:content/renditions/cq5dam.web.1280.1280.png",
-      "thumbnail_url": "",
-      "copyright": "Cassini Imaging Team, SSI, JPL, ESA, NASA"
-    },
     {
       "date": "2026-11-06",
       "title": "A Farewell to Swift",
       "explanation": "It is time to say goodbye to NASA ‘s Neil Gehrels Swift Observatory. After nearly 22 years of service, the satellite re-entered Earth’s atmosphere on November 4 at 7:39 EST over the North Sumatra region of Indonesia. The featured image is a mosaic created in 2018 using some of the first million images captured by the satellite’s Ultraviolet/Optical Telescope. Swift had a combination of instruments, including an X-ray telescope and a gamma-ray telescope, that worked together to enable humanity to study, in unprecedented detail, the fastest and most energetic explosions in the universe. The most recent solar maximum accelerated the decay of the satellite’s orbit. An innovative mission to rescue Swift by boosting its orbit was not successful. Swift burned on reentry like a shooting star, but the impressive data acquired by the telescope over its mission will continue to bring light to the mysteries of the cosmos for years to come. May it keep inspiring new missions to boldly go into space, explore new data and seek out new science. Tomorrow’s picture: Moon Massif",
       "media_type": "image",
-      "url": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg/jcr:content/renditions/cq5dam.web.1280.1280.jpeg",
-      "hdurl": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg/jcr:content/renditions/cq5dam.web.1280.1280.jpeg",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&h=3744&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&h=3744&fit=clip",
       "thumbnail_url": "",
       "copyright": ""
     },
@@ -150,6 +140,16 @@
       "media_type": "image",
       "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/solar_M_flare.jpg?w=3000&h=2759&fit=clip",
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/solar_M_flare.jpg?w=3000&h=2759&fit=clip",
+      "thumbnail_url": "",
+      "copyright": ""
+    },
+    {
+      "date": "2026-11-19",
+      "title": "The Horsehead and Flame Nebulas",
+      "explanation": "Today’s image could have been a painting. But what do these colors mean? The brightest star, left of the center, is blue Alnitak (the Girdle): a triple star system best known for being the easternmost star in Orion’s Belt. The instantly recognizable shape of a dark horse’s head at the center is the aptly named Horsehead Nebula. It is about five light-years tall and lies approximately 1,500 light-years away. It is made of dust and gas that obscure the red glow behind it, which is caused by hydrogen gas being ionized by the bright star Sigma Orionis at the top. The orange nebula with dark filaments on the left is the Flame Nebula. Closer to the Horsehead, the blue reflection nebula NGC 2023 is actively forming stars. The data for this “painting” were collected for almost six hours at the Utah Desert Remote Observatories, but the equipment was remotely controlled by the astrophotographer from his home, over 2,000 km away in Illinois. Tomorrow’s picture: what’s next?",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Horsehead_Nebula_Killion.jpg?w=6000&h=4800&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Horsehead_Nebula_Killion.jpg?w=6000&h=4800&fit=clip",
       "thumbnail_url": "",
       "copyright": ""
     }
