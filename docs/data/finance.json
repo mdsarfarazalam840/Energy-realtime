@@ -9428,6 +9428,17 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0000310158-26-000255",
+      "cik": "0000310158",
+      "document": "mrk-20261116.htm",
+      "filed": "2026-11-18",
+      "form": "8-K",
+      "items": "5.02,9.01",
+      "period": "2026-11-16",
+      "ticker": "MRK",
+      "url": "https://www.sec.gov/Archives/edgar/data/310158/000031015826000255/mrk-20261116.htm"
+    },
+    {
       "accession": "0001045810-26-000088",
       "cik": "0001045810",
       "document": "nvda-20261117.htm",
@@ -12266,17 +12277,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000076/jnj-20260414.htm"
     },
     {
-      "accession": "0001193125-26-147704",
-      "cik": "0000310158",
-      "document": "d85708ddef14a.htm",
-      "filed": "2026-04-08",
-      "form": "DEF 14A",
-      "items": "",
-      "period": "2026-05-26",
-      "ticker": "MRK",
-      "url": "https://www.sec.gov/Archives/edgar/data/310158/000119312526147704/d85708ddef14a.htm"
-    },
-    {
       "accession": "0000354950-26-000090",
       "cik": "0000354950",
       "document": "hd-20260406.htm",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
     }
   ],
-  "generated_at": "2026-11-18T07:37:54Z",
+  "generated_at": "2026-11-19T07:33:49Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12385,10 +12385,10 @@
     "form_counts": {
       "10-K": 6,
       "10-Q": 65,
-      "8-K": 187,
-      "DEF 14A": 10
+      "8-K": 188,
+      "DEF 14A": 9
     },
-    "latest_filed": "2026-11-17",
+    "latest_filed": "2026-11-18",
     "sectors": [
       "Energy",
       "Financials",
