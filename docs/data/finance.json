@@ -9428,6 +9428,17 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0000104169-26-000168",
+      "cik": "0000104169",
+      "document": "wmt-20261119.htm",
+      "filed": "2026-11-19",
+      "form": "8-K",
+      "items": "2.02,9.01",
+      "period": "2026-11-19",
+      "ticker": "WMT",
+      "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000168/wmt-20261119.htm"
+    },
+    {
       "accession": "0000310158-26-000255",
       "cik": "0000310158",
       "document": "mrk-20261116.htm",
@@ -12299,17 +12310,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526144028/d87999d8k.htm"
     },
     {
-      "accession": "0000104169-26-000067",
-      "cik": "0000104169",
-      "document": "wmt-20260327.htm",
-      "filed": "2026-03-27",
-      "form": "8-K",
-      "items": "8.01",
-      "period": "2026-03-27",
-      "ticker": "WMT",
-      "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000067/wmt-20260327.htm"
-    },
-    {
       "accession": "0000059478-26-000029",
       "cik": "0000059478",
       "document": "lly-20260317.htm",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
     }
   ],
-  "generated_at": "2026-11-19T07:33:49Z",
+  "generated_at": "2026-11-19T20:43:50Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12388,7 +12388,7 @@
       "8-K": 188,
       "DEF 14A": 9
     },
-    "latest_filed": "2026-11-18",
+    "latest_filed": "2026-11-19",
     "sectors": [
       "Energy",
       "Financials",
