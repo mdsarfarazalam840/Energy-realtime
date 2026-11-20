@@ -6,23 +6,13 @@
     "image_count": 14,
     "video_count": 0,
     "other_count": 0,
-    "first_date": "2026-11-06",
-    "latest_date": "2026-11-19",
+    "first_date": "2026-11-07",
+    "latest_date": "2026-11-20",
     "window_days": 14,
-    "generated_at": "2026-11-19T20:53:22.464Z",
-    "cached_at": "2026-11-19T20:53:22.464Z"
+    "generated_at": "2026-11-20T07:36:52.761Z",
+    "cached_at": "2026-11-20T07:36:52.761Z"
   },
   "entries": [
-    {
-      "date": "2026-11-06",
-      "title": "A Farewell to Swift",
-      "explanation": "It is time to say goodbye to NASA ‘s Neil Gehrels Swift Observatory. After nearly 22 years of service, the satellite re-entered Earth’s atmosphere on November 4 at 7:39 EST over the North Sumatra region of Indonesia. The featured image is a mosaic created in 2018 using some of the first million images captured by the satellite’s Ultraviolet/Optical Telescope. Swift had a combination of instruments, including an X-ray telescope and a gamma-ray telescope, that worked together to enable humanity to study, in unprecedented detail, the fastest and most energetic explosions in the universe. The most recent solar maximum accelerated the decay of the satellite’s orbit. An innovative mission to rescue Swift by boosting its orbit was not successful. Swift burned on reentry like a shooting star, but the impressive data acquired by the telescope over its mission will continue to bring light to the mysteries of the cosmos for years to come. May it keep inspiring new missions to boldly go into space, explore new data and seek out new science. Tomorrow’s picture: Moon Massif",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&h=3744&fit=clip",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&h=3744&fit=clip",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-11-07",
       "title": "De Gerlache-Kocher Massif",
@@ -150,6 +140,16 @@
       "media_type": "image",
       "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Horsehead_Nebula_Killion.jpg?w=6000&h=4800&fit=clip",
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Horsehead_Nebula_Killion.jpg?w=6000&h=4800&fit=clip",
+      "thumbnail_url": "",
+      "copyright": ""
+    },
+    {
+      "date": "2026-11-20",
+      "title": "V-G-R",
+      "explanation": "On November 17, fans of interstellar spaceflight around planet Earth were invited to shine a message into the night sky. Traced by a flashlight beam switched on and off, the dashes and dots of a Morse code message captured in this time exposure from the Emirates Astronomical Observatory, are read V-G-R. That’s a call sign for the Voyager 1 spacecraft currently in interstellar space some 26 billion kilometers away. How long did it take the message to reach humanity’s most distant interstellar spacecraft? Traveling at the speed of light, the answer is one day. In fact, the Voyager 1 spacecraft was confirmed to reach its one light-day distance milestone on November 18, at 10:16:07 UTC, nearly 50 years after launch in 1977. For extra credit, fans of math can calculate that at one light-day per 50 years, Voyager 1 will reach its one light-year (365 light-days) distance milestone in about 18,250 years. Tomorrow’s picture: pixels in space",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/IMG_4364N_Kyriazis.jpg?w=3898&h=4724&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/IMG_4364N_Kyriazis.jpg?w=3898&h=4724&fit=clip",
       "thumbnail_url": "",
       "copyright": ""
     }
