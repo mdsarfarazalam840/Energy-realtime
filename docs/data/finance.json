@@ -3256,10 +3256,6 @@
       "name": "HOME DEPOT, INC.",
       "quarterly_net_income": [
         [
-          "2024-04-28",
-          3600000000.0
-        ],
-        [
           "2024-07-28",
           4561000000.0
         ],
@@ -3286,13 +3282,13 @@
         [
           "2026-08-02",
           4766000000.0
+        ],
+        [
+          "2026-11-01",
+          3713000000.0
         ]
       ],
       "quarterly_revenue": [
-        [
-          "2024-04-28",
-          36418000000.0
-        ],
         [
           "2024-07-28",
           43175000000.0
@@ -3320,6 +3316,10 @@
         [
           "2026-08-02",
           47861000000.0
+        ],
+        [
+          "2026-11-01",
+          43398000000.0
         ]
       ],
       "ratios": {
@@ -9428,6 +9428,28 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0001628280-26-075287",
+      "cik": "0000354950",
+      "document": "hd-20261101.htm",
+      "filed": "2026-11-20",
+      "form": "10-Q",
+      "items": "",
+      "period": "2026-11-01",
+      "ticker": "HD",
+      "url": "https://www.sec.gov/Archives/edgar/data/354950/000162828026075287/hd-20261101.htm"
+    },
+    {
+      "accession": "0000002488-26-000218",
+      "cik": "0000002488",
+      "document": "amd-20261118.htm",
+      "filed": "2026-11-20",
+      "form": "8-K",
+      "items": "5.03,9.01",
+      "period": "2026-11-18",
+      "ticker": "AMD",
+      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000218/amd-20261118.htm"
+    },
+    {
       "accession": "0000104169-26-000168",
       "cik": "0000104169",
       "document": "wmt-20261119.htm",
@@ -11925,17 +11947,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/59478/000005947826000048/lly-20260504.htm"
     },
     {
-      "accession": "0000002488-26-000076",
-      "cik": "0000002488",
-      "document": "amd-20260328.htm",
-      "filed": "2026-05-06",
-      "form": "10-Q",
-      "items": "",
-      "period": "2026-03-28",
-      "ticker": "AMD",
-      "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000076/amd-20260328.htm"
-    },
-    {
       "accession": "0000731766-26-000127",
       "cik": "0000731766",
       "document": "unh-20260331.htm",
@@ -12288,17 +12299,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000076/jnj-20260414.htm"
     },
     {
-      "accession": "0000354950-26-000090",
-      "cik": "0000354950",
-      "document": "hd-20260406.htm",
-      "filed": "2026-04-07",
-      "form": "DEF 14A",
-      "items": "",
-      "period": "2026-05-21",
-      "ticker": "HD",
-      "url": "https://www.sec.gov/Archives/edgar/data/354950/000035495026000090/hd-20260406.htm"
-    },
-    {
       "accession": "0001193125-26-144028",
       "cik": "0001730168",
       "document": "d87999d8k.htm",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
     }
   ],
-  "generated_at": "2026-11-19T20:43:50Z",
+  "generated_at": "2026-11-21T07:18:41Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12385,10 +12385,10 @@
     "form_counts": {
       "10-K": 6,
       "10-Q": 65,
-      "8-K": 188,
-      "DEF 14A": 9
+      "8-K": 189,
+      "DEF 14A": 8
     },
-    "latest_filed": "2026-11-19",
+    "latest_filed": "2026-11-20",
     "sectors": [
       "Energy",
       "Financials",
