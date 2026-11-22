@@ -6,23 +6,13 @@
     "image_count": 14,
     "video_count": 0,
     "other_count": 0,
-    "first_date": "2026-11-08",
-    "latest_date": "2026-11-21",
+    "first_date": "2026-11-09",
+    "latest_date": "2026-11-22",
     "window_days": 14,
-    "generated_at": "2026-11-21T19:37:29.826Z",
-    "cached_at": "2026-11-21T19:37:29.826Z"
+    "generated_at": "2026-11-22T07:13:48.298Z",
+    "cached_at": "2026-11-22T07:13:48.298Z"
   },
   "entries": [
-    {
-      "date": "2026-11-08",
-      "title": "Major Fireball Meteor",
-      "explanation": "The sky glows with soft pinkish colors of fading twilight in this serendipitous mountaintop vista. Taken in subfreezing temperatures, the thoughtfully composed photo shows snowy, rugged peaks seen from a mountain pass on 2017 November 14. Below lies the village of La Villa, Alta Badia in Italy ‘s Dolomite Alps. Above the nestled village lights, the constellation Ursa Major hangs over the northern horizon. But most stunning is the intense fireball meteor. It was captured during the camera’s exposure by chance as it flashed east to west across the northern horizon, under Ursa Major’s familiar Big Dipper asterism. Sightings of this major fireball meteor were widely reported in European skies, making it one of the most reported fireball events ever for planet Earth’s American Meteor Society and the International Meteor Organization. The meteor’s measured track over Germany is consistent with its origin near the active radiant of November’s Northern Taurid Meteor Shower, a shower associated with dust from Encke’s comet. Tomorrow’s picture: witch sky?",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg/jcr:content/renditions/cq5dam.thumbnail.48.48.png",
-      "hdurl": "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg/jcr:content/renditions/cq5dam.thumbnail.48.48.png",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-11-09",
       "title": "Rigel and the Witch Head Nebula",
@@ -152,6 +142,16 @@
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Neptune-South-Pole-Voyager-2_2327x1670.jpg?w=2327&h=1670&fit=clip",
       "thumbnail_url": "",
       "copyright": ""
+    },
+    {
+      "date": "2026-11-22",
+      "title": "Swirls and Colors on Jupiter from Juno",
+      "explanation": "What creates the colors in Jupiter’s clouds? No one is sure. The thick atmosphere of Jupiter is mostly hydrogen and helium, elements which are colorless at the low temperatures of the Jovian cloud tops. Which trace molecules provide the colors remains a topic of research, although small amounts of ammonium hydrosulfide are one leading candidate. What is clear from the featured color-enhanced image — and many similar images — is that lighter clouds are typically higher up than darker ones. Pictured, light clouds swirl around reddish regions toward the lower right, while they appear to cover over some darker domains on the upper right. The featured image was taken by the robotic Juno spacecraft in 2018 during its 14th low pass over Jupiter. Juno continues in its looping elliptical orbit, swooping near the huge planet every 33 days and exploring a slightly different sector each time around. Tomorrow’s picture: emerging darkness",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/JupiterSwirls_JunoBrealey_3709.jpg?w=3709&h=2772&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/JupiterSwirls_JunoBrealey_3709.jpg?w=3709&h=2772&fit=clip",
+      "thumbnail_url": "",
+      "copyright": "NASA, Juno, SwRI, MSSS"
     }
   ],
   "demo": false
