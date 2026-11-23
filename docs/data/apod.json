@@ -6,23 +6,13 @@
     "image_count": 14,
     "video_count": 0,
     "other_count": 0,
-    "first_date": "2026-11-09",
-    "latest_date": "2026-11-22",
+    "first_date": "2026-11-10",
+    "latest_date": "2026-11-23",
     "window_days": 14,
-    "generated_at": "2026-11-22T19:54:11.504Z",
-    "cached_at": "2026-11-22T19:54:11.504Z"
+    "generated_at": "2026-11-23T07:58:33.279Z",
+    "cached_at": "2026-11-23T07:58:33.279Z"
   },
   "entries": [
-    {
-      "date": "2026-11-09",
-      "title": "Rigel and the Witch Head Nebula",
-      "explanation": "Does the blue nebula look like the head of a witch? The nebula is known popularly as the Witch Head Nebula because, it is said, the nebula’s shape resembles a Halloween-style caricature of a witch’s head. Exactly how, though, can be a topic of imaginative speculation. What is clear is that IC 2118 is about 50 light-years across and made of gas and dust that points to — because it has been partly eroded by — the nearby star Rigel. One of the brighter stars in the constellation Orion, Rigel lies just below the center of the featured image. The blue color of the Witch Head Nebula and is caused not only by Rigel’s intense blue starlight but also because the dust grains scatter blue light more efficiently than red. The same physical process causes Earth’s daytime sky to appear blue, although the scatterers in planet Earth’s atmosphere are molecules of nitrogen and oxygen. Tomorrow’s picture: suddenly Saturn",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&h=1990&fit=clip",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&h=1990&fit=clip",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-11-10",
       "title": "Saturn Behind the Moon",
@@ -152,6 +142,16 @@
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/JupiterSwirls_JunoBrealey_3709.jpg?w=3709&h=2772&fit=clip",
       "thumbnail_url": "",
       "copyright": "NASA, Juno, SwRI, MSSS"
+    },
+    {
+      "date": "2026-11-23",
+      "title": "The Emergence of Dark Nebula Lynds 1251",
+      "explanation": "If you stare into space for a long time, what might you see? At first, you might only see the usual brightest stars, but if your eyes (or camera) could continue to collect light, you would see increasingly more. In the direction of the featured image, after only a few minutes, you would begin to notice some regions without stars. As your staring continued, the dark region would become better defined, and after a full 20 hours, you would notice a strange dark structure. To celebrate, you use digital processing to brighten the image and enhance the colors. At the end, you might have an excellent image of Lynds 1251 (LDN 1251), a star -forming region laced with opaque brown-appearing interstellar dust. Also known as the Rotten Fish Nebula, LDN 1251 is home not only to young stars and dust, but also, your long staring indicates, energetic shock waves, fast stellar winds, and powerfully beamed jets. Tomorrow’s picture: galaxies ringing",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Ldn1251Comparison_Cruz_2160.jpg?w=2160&h=2700&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Ldn1251Comparison_Cruz_2160.jpg?w=2160&h=2700&fit=clip",
+      "thumbnail_url": "",
+      "copyright": ""
     }
   ],
   "demo": false
