@@ -9428,6 +9428,17 @@
   "demo": false,
   "filings": [
     {
+      "accession": "0001193125-26-475973",
+      "cik": "0001652044",
+      "document": "d91615d8k.htm",
+      "filed": "2026-11-24",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "period": "2026-11-24",
+      "ticker": "GOOGL",
+      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526475973/d91615d8k.htm"
+    },
+    {
       "accession": "0001628280-26-075541",
       "cik": "0001326801",
       "document": "meta-20261118.htm",
@@ -11650,17 +11661,6 @@
       "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000111/wmt-20260604.htm"
     },
     {
-      "accession": "0001193125-26-257724",
-      "cik": "0001652044",
-      "document": "d83560d8k.htm",
-      "filed": "2026-06-04",
-      "form": "8-K",
-      "items": "1.01,7.01,8.01,9.01",
-      "period": "2026-06-04",
-      "ticker": "GOOGL",
-      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526257724/d83560d8k.htm"
-    },
-    {
       "accession": "0001730168-26-000051",
       "cik": "0001730168",
       "document": "avgo-20260603.htm",
@@ -12376,7 +12376,7 @@
       "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm"
     }
   ],
-  "generated_at": "2026-11-23T23:58:59Z",
+  "generated_at": "2026-11-24T22:31:31Z",
   "meta": {
     "archive": "https://www.sec.gov/edgar/search/",
     "company_count": 27,
@@ -12388,7 +12388,7 @@
       "8-K": 193,
       "DEF 14A": 7
     },
-    "latest_filed": "2026-11-23",
+    "latest_filed": "2026-11-24",
     "sectors": [
       "Energy",
       "Financials",
