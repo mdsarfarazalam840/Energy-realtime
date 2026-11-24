@@ -2,15 +2,15 @@
   "schema_version": 1,
   "meta": {
     "source": "nasa-apod-cache",
-    "count": 13,
-    "image_count": 13,
+    "count": 14,
+    "image_count": 14,
     "video_count": 0,
     "other_count": 0,
     "first_date": "2026-11-11",
-    "latest_date": "2026-11-23",
+    "latest_date": "2026-11-24",
     "window_days": 14,
-    "generated_at": "2026-11-24T00:10:48.005Z",
-    "cached_at": "2026-11-24T00:10:48.005Z"
+    "generated_at": "2026-11-24T10:13:12.427Z",
+    "cached_at": "2026-11-24T10:13:12.427Z"
   },
   "entries": [
     {
@@ -140,6 +140,16 @@
       "media_type": "image",
       "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Ldn1251Comparison_Cruz_2160.jpg?w=2160&h=2700&fit=clip",
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Ldn1251Comparison_Cruz_2160.jpg?w=2160&h=2700&fit=clip",
+      "thumbnail_url": "",
+      "copyright": ""
+    },
+    {
+      "date": "2026-11-24",
+      "title": "Galaxies Battle in the NGC 7771 Group",
+      "explanation": "After this galaxy battle, only one galaxy will remain. Already visible in the featured picture are rings and faint star swirls from previous gravitational encounters. Known collectively as the NGC 7771 Group, these galaxies lie almost 200 million light-years away toward the high-flying constellation Pegasus. The largest galaxy, barred spiral NGC 7771 on the lower right, is itself about 75,000 light-years across, and the galaxy on the upper left is spiral NGC 7769, which is almost as large. As these and other smaller galaxies make repeated close passages, they will all likely merge into one very large galaxy. Playing out over billions of years, the merger process is understood to be a normal part of the evolution of galaxies. Studying galaxy clashes like this helps humanity to better understand the possible merger between our own Milky Way and Andromeda galaxies. Tomorrow’s picture: open space",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/NGC7771group_Marinoni_1179.jpg?w=1179&h=1422&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/NGC7771group_Marinoni_1179.jpg?w=1179&h=1422&fit=clip",
       "thumbnail_url": "",
       "copyright": ""
     }
