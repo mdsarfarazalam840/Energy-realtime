@@ -2,27 +2,17 @@
   "schema_version": 1,
   "meta": {
     "source": "nasa-apod-cache",
-    "count": 14,
-    "image_count": 14,
+    "count": 13,
+    "image_count": 13,
     "video_count": 0,
     "other_count": 0,
-    "first_date": "2026-11-10",
+    "first_date": "2026-11-11",
     "latest_date": "2026-11-23",
     "window_days": 14,
-    "generated_at": "2026-11-23T07:58:33.279Z",
-    "cached_at": "2026-11-23T07:58:33.279Z"
+    "generated_at": "2026-11-24T00:10:48.005Z",
+    "cached_at": "2026-11-24T00:10:48.005Z"
   },
   "entries": [
-    {
-      "date": "2026-11-10",
-      "title": "Saturn Behind the Moon",
-      "explanation": "Sometimes Saturn disappears. It doesn’t really go away, of course — it just disappears from our view when Earth’s Moon moves in front. Such a Saturn ian eclipse, more formally called an occultation, was visible in early 2025 along a small swath of Earth — from Greenland through central Europe and into northern Africa. The featured image is a digital fusion of three images, the first of just Saturn before it disappeared, and then two more of the Moon with different exposure lengths. The images were taken from Sardinia, Italy, after sunset. The bright dot near Saturn is not a moon of Saturn, but rather the star 85 Aquarii, which is further behind Saturn than Saturn is behind the Moon. The next time the Moon moves in front of Saturn, as visible from some place on Earth, will be in 2031. Tomorrow’s picture: small but mighty",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Moonsaturn6_Ortu_2124.jpg?w=2124&h=1582&fit=clip",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Moonsaturn6_Ortu_2124.jpg?w=2124&h=1582&fit=clip",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-11-11",
       "title": "NGC 4449: Small Galaxy, Big Impact",
