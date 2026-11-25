@@ -3,26 +3,16 @@
   "meta": {
     "source": "nasa-apod-cache",
     "count": 14,
-    "image_count": 14,
-    "video_count": 0,
+    "image_count": 13,
+    "video_count": 1,
     "other_count": 0,
-    "first_date": "2026-11-11",
-    "latest_date": "2026-11-24",
+    "first_date": "2026-11-12",
+    "latest_date": "2026-11-25",
     "window_days": 14,
-    "generated_at": "2026-11-24T22:39:53.742Z",
-    "cached_at": "2026-11-24T22:39:53.742Z"
+    "generated_at": "2026-11-25T08:57:47.142Z",
+    "cached_at": "2026-11-25T08:57:47.142Z"
   },
   "entries": [
-    {
-      "date": "2026-11-11",
-      "title": "NGC 4449: Small Galaxy, Big Impact",
-      "explanation": "Don’t judge a galaxy by its size. Our home galaxy, the Milky Way, is about 100,000 light years across. This huge expanse of space contains hundreds of billions of stars! The smallest galaxies, called dwarf galaxies, are about 1/10th the size of the Milky Way and only contain a few billion stars. They are also the most common type of galaxy in the whole universe. Today’s image shows one such dwarf galaxy, NGC 4449, captured by the Hubble Space Telescope. NGC 4449 and similar dwarf galaxies are missing more oxygen than models predict. This suggests their stellar winds and supernovae are surprisingly effective at blowing away oxygen and other heavy elements. Turns out these tiny galaxies may play a big role in spreading heavy elements — the building blocks of stars, planets, and life — throughout the universe! Tomorrow’s picture: a date in Poland",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/missions/hubble/galaxies/irregular/NGC%204449.jpg?w=2048&h=1320&fit=clip",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/missions/hubble/galaxies/irregular/NGC%204449.jpg?w=2048&h=1320&fit=clip",
-      "thumbnail_url": "",
-      "copyright": "NASA, ESA, A. Aloisi (STScI/ESA), and the Hubble Heritage (STScI/AURA)-ESA/Hubble Collaboration"
-    },
     {
       "date": "2026-11-12",
       "title": "Moon, Venus and Spica Meet",
@@ -152,6 +142,16 @@
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/NGC7771group_Marinoni_1179.jpg?w=1179&h=1422&fit=clip",
       "thumbnail_url": "",
       "copyright": ""
+    },
+    {
+      "date": "2026-11-25",
+      "title": "SPHEREx Seeing Through Dust",
+      "explanation": "What is blocking the center of the Milky Way? During its 13 billion years, our Milky Way has collected a lot of dust. In contrast to the skin cells, dirt, pollen, and other debris that make up the dust behind your couch, cosmic dust is hundreds of times smaller and made of tiny compounds of oxygen, carbon, and other elements released into space when a star dies. Today’s video shows infrared light from the Milky Way’s center gathered by NASA’s SPHEREx satellite. Each false color in the video corresponds to the infrared color associated with the wavelength shown in the top left. In the near-infrared, like 1.2 microns, light gets absorbed and scatters off of dust particles. SPHEREx then sees the Galactic Center almost entirely blocked by clouds of dust. In the mid-infrared, though, light is able to pierce through the dust and reach SPHEREx. This is similar to, but not exactly, why sunsets are red! Tomorrow’s picture: a sandy view of the Milky Way",
+      "media_type": "video",
+      "url": "https://science.nasa.gov/image-article/apod-2026-november-25-spherex-seeing-through-dust/",
+      "hdurl": "",
+      "thumbnail_url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/spherex_1.2micron.png?w=3274&h=2040&fit=clip",
+      "copyright": "Credit: NASA/JPL-Caltech SPHEREx; data from NASA/IPAC IRSA."
     }
   ],
   "demo": false
