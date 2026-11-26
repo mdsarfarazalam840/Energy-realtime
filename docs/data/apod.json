@@ -6,23 +6,13 @@
     "image_count": 13,
     "video_count": 1,
     "other_count": 0,
-    "first_date": "2026-11-12",
-    "latest_date": "2026-11-25",
+    "first_date": "2026-11-13",
+    "latest_date": "2026-11-26",
     "window_days": 14,
-    "generated_at": "2026-11-25T21:53:29.709Z",
-    "cached_at": "2026-11-25T21:53:29.709Z"
+    "generated_at": "2026-11-26T08:43:37.155Z",
+    "cached_at": "2026-11-26T08:43:37.155Z"
   },
   "entries": [
-    {
-      "date": "2026-11-12",
-      "title": "Moon, Venus and Spica Meet",
-      "explanation": "Not all those who wander are lost. A night sky example is that planets wander, and in fact the very word “planet” comes from “wandering star” in Greek. As planets shift relative to fixed stars, they may appear from our perspective to get closer to other astronomical objects. Such meetings are called conjunctions. They don’t happen by chance, but follow the precise laws of celestial mechanics. This peaceful image, captured in Poland, shows the crescent Moon above the Tatra Mountains, and bright Venus close by, a little lower in the horizon. The bright star to the left of Venus is Spica in the constellation of Virgo, the Maiden. Spica is one of the brightest stars in the sky, only about 250 light-years away. It was found in 1890 that Spica is a binary star: two massive blue stars orbiting each other every 4 days. But earlier this year it was reported that Spica, the current companion of wandering Venus, is actually a triple system. Tomorrow’s picture: what’s next?",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/conjunction-bubak.jpg?w=1638&h=2048&fit=clip",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/conjunction-bubak.jpg?w=1638&h=2048&fit=clip",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-11-13",
       "title": "NGC 206 and the Star Clouds of Andromeda",
@@ -152,6 +142,16 @@
       "hdurl": "",
       "thumbnail_url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/spherex_1.2micron.png?w=3274&h=2040&fit=clip",
       "copyright": "Credit: NASA/JPL-Caltech SPHEREx; data from NASA/IPAC IRSA."
+    },
+    {
+      "date": "2026-11-26",
+      "title": "Eye in the Sky: The Milky Way over Lençóis",
+      "explanation": "Beauty is in the eye of the beholder. And there is much to behold in today’s featured image. The Milky Way shines bright in the sky of Brazil, over the white sand dunes and dark lagoons of Lençóis Maranhenses National Park. We can see different parts of the Milky Way as it apparently rotates in the sky every night and throughout the year. This composite image was taken later in the night in July from a latitude of approximately 2º south. It shows some prominent Milky Way features, such as dark dust lanes and colorful nebulas. But does the Galaxy really appear arched like a rainbow in the sky? No, this is an artifact of a picture taken with a wide-angle lens. As the Galaxy was artfully framed by the photographer, it matches the contour of the dark lagoon creating the illusion of a cosmic eye, half in space and half on the ground. Is this eye in the sky looking back at you? Tomorrow’s picture: what’s next?",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Milky_Way_Lencois.jpg?w=2576&h=2276&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Milky_Way_Lencois.jpg?w=2576&h=2276&fit=clip",
+      "thumbnail_url": "",
+      "copyright": ""
     }
   ],
   "demo": false
