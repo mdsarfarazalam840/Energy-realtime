@@ -6,23 +6,13 @@
     "image_count": 13,
     "video_count": 1,
     "other_count": 0,
-    "first_date": "2026-11-13",
-    "latest_date": "2026-11-26",
+    "first_date": "2026-11-14",
+    "latest_date": "2026-11-27",
     "window_days": 14,
-    "generated_at": "2026-11-26T21:49:05.881Z",
-    "cached_at": "2026-11-26T21:49:05.881Z"
+    "generated_at": "2026-11-27T16:50:29.735Z",
+    "cached_at": "2026-11-27T16:50:29.735Z"
   },
   "entries": [
-    {
-      "date": "2026-11-13",
-      "title": "NGC 206 and the Star Clouds of Andromeda",
-      "explanation": "The large stellar association cataloged as NGC 206 is nestled within the dusty arms of the neighboring Andromeda galaxy along with the galaxy’s pinkish star-forming regions. Also known as M31, the spiral galaxy is a mere 2.5 million light-years away. NGC 206 is found at the center of this sharp and detailed close-up of the southwestern extent of Andromeda’s disk. The bright, blue stars of NGC 206 indicate its youth. In fact, its youngest massive stars are less than 10 million years old. Much larger than the open or galactic clusters of young stars in the disk of our Milky Way galaxy, NGC 206 spans about 4,000 light-years. That’s comparable in size to the giant stellar nurseries NGC 604 in nearby spiral M33 and the Tarantula Nebula in the Large Magellanic Cloud. Tomorrow’s picture: pixels on the Moon",
-      "media_type": "image",
-      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Andromeda_closeupCruz4096.jpg?w=4096&h=2902&fit=clip",
-      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Andromeda_closeupCruz4096.jpg?w=4096&h=2902&fit=clip",
-      "thumbnail_url": "",
-      "copyright": ""
-    },
     {
       "date": "2026-11-14",
       "title": "Apollo 12 and Surveyor 3",
@@ -150,6 +140,16 @@
       "media_type": "image",
       "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Milky_Way_Lencois.jpg?w=2576&h=2276&fit=clip",
       "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Milky_Way_Lencois.jpg?w=2576&h=2276&fit=clip",
+      "thumbnail_url": "",
+      "copyright": ""
+    },
+    {
+      "date": "2026-11-27",
+      "title": "The Moon Watchers",
+      "explanation": "On November 24, all denizens of our fair planet could watch the Moon rise opposite the setting Sun. Easy to spot in twilight skies above fields, fences, backyards, and even stone walls, the Moon was big and bright, and at its full phase. Known to some as a Beaver Moon, November’s Full Moon was also near perigee, the closest point in its elliptical orbit around planet Earth. That made it one of the biggest and brightest Full Moons, also known as a supermoon. In fact, November’s Full Moon was the first in a series of four consecutive Full Moons near perigee. So your next chance to watch a supermoon rise will be when the Cold Moon rises on December 23. Tomorrow’s picture: remember where you parked",
+      "media_type": "image",
+      "url": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Plenilunio1_2048r.jpg?w=2023&h=2048&fit=clip",
+      "hdurl": "https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Plenilunio1_2048r.jpg?w=2023&h=2048&fit=clip",
       "thumbnail_url": "",
       "copyright": ""
     }
